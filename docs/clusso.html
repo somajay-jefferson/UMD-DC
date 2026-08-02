@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CLUSSO</title>
+<meta name="description" content="CLUSSO drawn end to end: pooling, clustering, cluster-weighted averaging and the alternating structured lasso, with a twelve-patient worked example computed by the real code.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%94%AC</text></svg>">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CLUSSO">
+<meta property="og:description" content="CLUSSO drawn end to end: pooling, clustering, cluster-weighted averaging and the alternating structured lasso, with a twelve-patient worked example computed by the real code.">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="theme-toggle" id="themetoggle" type="button" aria-label="Toggle colour theme">Dark</button>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Algorithm one</p>
+    <h1>CLUSSO</h1>
+    <p class="standfirst">Scalar&#8209;on&#8209;matrix regression when every patient hands you a different number of rows.</p>
+    <nav class="sitenav">
+      <a href="index.html">Overview</a>
+      <a href="clusso.html" aria-current="page">CLUSSO</a>
+      <a href="random-clusso.html">Random CLUSSO</a>
+      <a href="ps-fdr.html">PS-Fdr</a>
+      <a href="fdr-clusso.html">FDR-CLUSSO</a>
+    </nav>
+  </header>
+
+<!-- ================= CLUSSO ================= -->
+  <section>
+    <h2>Algorithm one</h2>
+    <h3>CLUSSO</h3>
+
+    <div class="prose">
+      <p>
+        Each patient arrives as a matrix, not a vector: one row per tubule
+        segmented from their biopsy slide, one column per image feature. The
+        row count varies wildly between patients &mdash; a median near 929
+        tubules, interquartile range roughly 570 to 1,377. The outcome being
+        predicted is a single number, eGFR, a measure of kidney function.
+      </p>
+      <p>
+        That shape breaks every existing scalar&#8209;on&#8209;matrix method, which
+        requires the same matrix dimensions for everyone. Two structural
+        problems, actually: the matrices are <em class="term">unbalanced</em>,
+        and their rows are <em class="term">unordered</em> &mdash; tubule 7 in
+        one patient has nothing to do with tubule 7 in another. Clustering
+        fixes both at once, and preserves heterogeneity that plain averaging
+        would destroy.
+      </p>
+    </div>
+
+    <div class="eq plain">
+      <math display="block">
+        <mrow>
+          <mo>{</mo>
+          <msub><mi>X</mi><mi>i</mi></msub>
+          <mo>&#x2208;</mo>
+          <msup><mi>&#x211D;</mi><mrow><msub><mi>p</mi><mi>i</mi></msub><mo>&#xD7;</mo><mi>q</mi></mrow></msup>
+          <mo>,</mo>
+          <mspace width="0.4em"></mspace>
+          <msub><mi>y</mi><mi>i</mi></msub>
+          <mo>&#x2208;</mo>
+          <mi>&#x211D;</mi>
+          <mo>:</mo>
+          <mspace width="0.3em"></mspace>
+          <mi>i</mi><mo>=</mo><mn>1</mn><mo>,</mo><mo>&#x2026;</mo><mo>,</mo><mi>n</mi>
+          <mo>}</mo>
+        </mrow>
+      </math>
+      <p class="eq-note">Rows vary in number and carry no shared ordering. Columns are the same 57 features for everyone.</p>
+    </div>
+
+    <ol class="pipeline">
+
+      <li class="stage">
+        <div class="stage-num">1</div>
+        <div class="stage-body">
+          <h4>Pool</h4>
+          <p>Every tubule from every patient goes into one matrix. Not per&#8209;patient &mdash; the clustering has to be global so that &ldquo;cluster 1&rdquo; means the same thing for everyone.</p>
+          <div class="eq">
+            <math display="block">
+              <mrow>
+                <mi>&#x1D54B;</mi><mo>&#x2208;</mo>
+                <msup><mi>&#x211D;</mi><mrow>
+                  <mo>(</mo><munder><mo>&#x2211;</mo><mi>i</mi></munder><msub><mi>p</mi><mi>i</mi></msub><mo>)</mo>
+                  <mo>&#xD7;</mo><mi>q</mi>
+                </mrow></msup>
+              </mrow>
+            </math>
+            <p class="eq-note">Roughly 225,000 &times; 57 for the NEPTUNE cohort.</p>
+          </div>
+        </div>
+      </li>
+
+      <li class="stage">
+        <div class="stage-num">2</div>
+        <div class="stage-body">
+          <h4>Cluster</h4>
+          <p>Gaussian mixture model with <math><mrow><mi>G</mi><mo>=</mo><mn>2</mn></mrow></math>. Every tubule gets a label &mdash; nominally atrophic versus non&#8209;atrophic, though the paper only formally assumes a two&#8209;component latent mixture.</p>
+          <div class="eq">
+            <math display="block">
+              <mrow>
+                <msubsup><mi>T</mi><mi>j</mi><mi>i</mi></msubsup>
+                <mo>&#x27F6;</mo>
+                <mtext>label</mtext>
+                <mo>&#x2208;</mo>
+                <mo>{</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>}</mo>
+              </mrow>
+            </math>
+            <p class="eq-note">Unsupervised. This step never sees the outcome.</p>
+          </div>
+        </div>
+      </li>
+
+      <li class="stage">
+        <div class="stage-num">3</div>
+        <div class="stage-body">
+          <h4>Average and reweight</h4>
+          <p>Collapse within patient and within cluster. The weights are each patient&rsquo;s share of tubules per cluster &mdash; which matters because the <em class="term">proportion</em> of atrophic tubules is itself the known prognostic signal.</p>
+
+          <div class="eq">
+            <math display="block">
+              <mrow>
+                <msubsup>
+                  <mover accent="true"><mi>X</mi><mo>^</mo></mover>
+                  <mrow><mi>i</mi><mo>,</mo><mi>k</mi></mrow>
+                  <mo>&#x2217;</mo>
+                </msubsup>
+                <mo>=</mo>
+                <mfrac>
+                  <mrow>
+                    <munderover><mo>&#x2211;</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><msub><mi>p</mi><mi>i</mi></msub></munderover>
+                    <mi>&#x1D7D9;</mi><mo>(</mo><msubsup><mi>T</mi><mi>j</mi><mi>i</mi></msubsup><mo>&#x2208;</mo><msub><mover accent="true"><mi>&#x1D54B;</mi><mo>^</mo></mover><mi>k</mi></msub><mo>)</mo>
+                    <mspace width="0.15em"></mspace>
+                    <msubsup><mi>T</mi><mi>j</mi><mi>i</mi></msubsup>
+                  </mrow>
+                  <mrow>
+                    <munderover><mo>&#x2211;</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><msub><mi>p</mi><mi>i</mi></msub></munderover>
+                    <mi>&#x1D7D9;</mi><mo>(</mo><msubsup><mi>T</mi><mi>j</mi><mi>i</mi></msubsup><mo>&#x2208;</mo><msub><mover accent="true"><mi>&#x1D54B;</mi><mo>^</mo></mover><mi>k</mi></msub><mo>)</mo>
+                  </mrow>
+                </mfrac>
+              </mrow>
+            </math>
+            <p class="eq-note">Row <math><mi>k</mi></math> of the cluster&#8209;averaged matrix: the mean of patient <math><mi>i</mi></math>&rsquo;s tubules assigned to cluster <math><mi>k</mi></math>.</p>
+          </div>
+
+          <div class="eq">
+            <math display="block">
+              <mrow>
+                <msubsup><mover accent="true"><mi>w</mi><mo>^</mo></mover><mi>k</mi><mi>i</mi></msubsup>
+                <mo>=</mo>
+                <mfrac><mn>1</mn><msub><mi>p</mi><mi>i</mi></msub></mfrac>
+                <munderover><mo>&#x2211;</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><msub><mi>p</mi><mi>i</mi></msub></munderover>
+                <mi>&#x1D7D9;</mi><mo>(</mo><msubsup><mi>T</mi><mi>j</mi><mi>i</mi></msubsup><mo>&#x2208;</mo><msub><mover accent="true"><mi>&#x1D54B;</mi><mo>^</mo></mover><mi>k</mi></msub><mo>)</mo>
+              </mrow>
+            </math>
+            <p class="eq-note">The observed share of that patient&rsquo;s tubules landing in cluster <math><mi>k</mi></math>.</p>
+          </div>
+
+          <div class="eq">
+            <math display="block">
+              <mrow>
+                <msubsup>
+                  <mover accent="true"><mi>X</mi><mo>^</mo></mover>
+                  <mi>i</mi>
+                  <mrow><mo>&#x2217;</mo><mo>&#x2217;</mo></mrow>
+                </msubsup>
+                <mo>=</mo>
+                <mi>diag</mi>
+                <mo>(</mo>
+                <msubsup><mover accent="true"><mi>w</mi><mo>^</mo></mover><mn>1</mn><mi>i</mi></msubsup>
+                <mo>,</mo>
+                <msubsup><mover accent="true"><mi>w</mi><mo>^</mo></mover><mn>2</mn><mi>i</mi></msubsup>
+                <mo>)</mo>
+                <mspace width="0.2em"></mspace>
+                <msubsup>
+                  <mover accent="true"><mi>X</mi><mo>^</mo></mover>
+                  <mi>i</mi>
+                  <mo>&#x2217;</mo>
+                </msubsup>
+                <mspace width="1.4em"></mspace>
+                <mo>&#x2208;</mo>
+                <mspace width="0.3em"></mspace>
+                <msup><mi>&#x211D;</mi><mrow><mn>2</mn><mo>&#xD7;</mo><mi>q</mi></mrow></msup>
+              </mrow>
+            </math>
+            <p class="eq-note">Balanced at last &mdash; two rows for every patient, regardless of tubule count.</p>
+          </div>
+
+          <div class="note">
+            <span><strong>This is the payoff.</strong> Averaging across <em>all</em> tubules would flatten a genuinely bimodal distribution &mdash; atrophic tubules have thickened basement membranes &mdash; producing a number that describes neither population.</span>
+          </div>
+        </div>
+      </li>
+
+      <li class="stage">
+        <div class="stage-num">4</div>
+        <div class="stage-body">
+          <h4>Structured lasso</h4>
+          <p>Two coefficient vectors instead of one: <math><mi>&#x3B1;</mi></math> for rows (clusters), <math><mi>&#x3B2;</mi></math> for columns (features). Solved by alternating, because the objective is bilinear and therefore non&#8209;convex.</p>
+
+          <div class="eq">
+            <math display="block">
+              <mrow>
+                <msub><mi>y</mi><mi>i</mi></msub><mo>=</mo>
+                <msup><mi>&#x3B1;</mi><mo>&#x22A4;</mo></msup>
+                <msubsup><mover accent="true"><mi>X</mi><mo>^</mo></mover><mi>i</mi><mrow><mo>&#x2217;</mo><mo>&#x2217;</mo></mrow></msubsup>
+                <mi>&#x3B2;</mi>
+                <mo>+</mo>
+                <msub><mi>&#x3B5;</mi><mi>i</mi></msub>
+              </mrow>
+            </math>
+          </div>
+
+          <div class="eq">
+            <math display="block">
+              <mrow>
+                <mo movablelimits="false">arg&#x2009;min</mo>
+                <mspace width="0.35em"></mspace>
+                <mfrac><mn>1</mn><mi>n</mi></mfrac>
+                <munderover><mo>&#x2211;</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover>
+                <msup>
+                  <mrow><mo>(</mo>
+                    <msub><mi>y</mi><mi>i</mi></msub><mo>&#x2212;</mo>
+                    <msup><mi>&#x3B1;</mi><mo>&#x22A4;</mo></msup>
+                    <msubsup><mover accent="true"><mi>X</mi><mo>^</mo></mover><mi>i</mi><mrow><mo>&#x2217;</mo><mo>&#x2217;</mo></mrow></msubsup>
+                    <mi>&#x3B2;</mi>
+                  <mo>)</mo></mrow>
+                  <mn>2</mn>
+                </msup>
+                <mo>+</mo>
+                <msub><mi>&#x3BB;</mi><mi>n</mi></msub>
+                <mrow><mo>&#x2016;</mo><mi>&#x3B2;</mi><mo>&#x2016;</mo></mrow>
+                <mrow><msub><mrow></mrow><mn>1</mn></msub></mrow>
+              </mrow>
+            </math>
+            <p class="eq-note">Subject to <math><mrow><mo>&#x2016;</mo><mi>&#x3B1;</mi><mo>&#x2016;</mo><msub><mrow></mrow><mn>1</mn></msub><mo>=</mo><mn>1</mn></mrow></math> and a fixed sign on the largest component of <math><mi>&#x3B2;</mi></math>, for identifiability.</p>
+          </div>
+
+          <div class="algo">
+            <div class="ln"><span class="kw">repeat</span> up to 50 times</div>
+            <div class="ln i1">
+              fix <math><mi>&#x3B1;</mi></math>:
+              <math><mrow><mi>Z</mi><mo>=</mo><msup><mi>&#x3B1;</mi><mo>&#x22A4;</mo></msup><msup><mover accent="true"><mi>X</mi><mo>^</mo></mover><mrow><mo>&#x2217;</mo><mo>&#x2217;</mo></mrow></msup></mrow></math>
+              <span class="cmt">n &times; q</span>
+            </div>
+            <div class="ln i2">
+              <math><mrow><mi>&#x3B2;</mi><mo>&#x2190;</mo><mi>lasso</mi><mo>(</mo><mi>Z</mi><mo>,</mo><mi>y</mi><mo>;</mo><mi>&#x3BB;</mi><mo>)</mo></mrow></math>
+            </div>
+            <div class="ln i1">
+              fix <math><mi>&#x3B2;</mi></math>:
+              <math><mrow><mi>W</mi><mo>=</mo><msup><mover accent="true"><mi>X</mi><mo>^</mo></mover><mrow><mo>&#x2217;</mo><mo>&#x2217;</mo></mrow></msup><mi>&#x3B2;</mi></mrow></math>
+              <span class="cmt">n &times; 2</span>
+            </div>
+            <div class="ln i2">
+              <math><mrow><mi>&#x3B1;</mi><mo>&#x2190;</mo><mi>OLS</mi><mo>(</mo><mi>W</mi><mo>,</mo><mi>y</mi><mo>)</mo></mrow></math>
+            </div>
+            <div class="ln"><span class="kw">until</span>
+              <math><mrow>
+                <mo>&#x2016;</mo>
+                <mi>&#x3B2;</mi><mo>&#x2297;</mo><mi>&#x3B1;</mi>
+                <mo>&#x2212;</mo>
+                <msub><mi>&#x3B2;</mi><mn>0</mn></msub><mo>&#x2297;</mo><msub><mi>&#x3B1;</mi><mn>0</mn></msub>
+                <mo>&#x2016;</mo>
+                <mo>&lt;</mo><mn>0.01</mn>
+              </mrow></math>
+            </div>
+            <hr class="algo-sep">
+            <div class="ln"><math><mi>&#x3BB;</mi></math> chosen by 5&#8209;fold cross&#8209;validation <span class="cmt">non-convex &#8594; 5 random restarts, keep best objective</span></div>
+          </div>
+
+          <div class="note">
+            <span><strong>Only <math><mi>&#x3B2;</mi></math> is penalized.</strong> The paper deliberately departs from Zhao &amp; Leng here &mdash; both clusters must stay in the model, so <math><mi>&#x3B1;</mi></math> is left unregularized. The selected set is always about features, never clusters.</span>
+          </div>
+        </div>
+      </li>
+
+    </ol>
+
+    <div class="eq" style="margin-top:28px;">
+      <math display="block">
+        <mrow>
+          <mi>S</mi><mo>=</mo>
+          <mo>{</mo>
+          <mi>j</mi>
+          <mo>:</mo>
+          <msub><mover accent="true"><mi>&#x3B2;</mi><mo>^</mo></mover><mi>j</mi></msub>
+          <mo>&#x2260;</mo><mn>0</mn>
+          <mo>}</mo>
+        </mrow>
+      </math>
+      <p class="eq-note">The selected feature set &mdash; the only thing <a href="ps-fdr.html">PS&#8209;Fdr</a> will need.</p>
+    </div>
+  </section>
+
+<!-- ================= WORKED EXAMPLE ================= -->
+  <section>
+    <h2>Twelve patients, three features, start to finish</h2>
+    <h3>A worked example</h3>
+
+    <div class="prose">
+      <p>
+        Everything below was produced by running the repository&rsquo;s own
+        estimator &mdash; <code>Mainfunction_albet.py</code> and its glmnet&#8209;matching
+        lasso &mdash; on a cohort small enough to print in full. Two tubule
+        populations, normal at roughly <strong>(2, 10)</strong> and atrophic at
+        <strong>(6, 2)</strong>, with measurement noise
+        <math><mrow><msub><mi>&#x3C3;</mi><mi>R</mi></msub><mo>=</mo><mn>0.3</mn></mrow></math>
+        added to every tubule.
+      </p>
+      <p>
+        The third feature is the interesting one. Call it nuclei per tubule: it
+        varies from patient to patient but is <em class="term">identical in both
+        tubule populations</em> and has nothing to do with the outcome. It is a
+        pure nuisance, planted so we can watch whether the lasso kills it.
+      </p>
+    </div>
+
+    <div class="eq" style="margin-top:20px;">
+      <math display="block">
+        <mrow>
+          <msup><mi>&#x3B1;</mi><mo>&#x2217;</mo></msup><mo>=</mo>
+          <mo>(</mo><mn>1</mn><mo>,</mo><mn>3</mn><mo>)</mo>
+          <mspace width="2.4em"></mspace>
+          <msup><mi>&#x3B2;</mi><mo>&#x2217;</mo></msup><mo>=</mo>
+          <mo>(</mo><mn>2</mn><mo>,</mo><mo>&#x2212;</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo>
+          <mspace width="2.4em"></mspace>
+          <mi>&#x3C3;</mi><mo>=</mo><mn>0.5</mn>
+        </mrow>
+      </math>
+      <p class="eq-note">The truth we are trying to recover. Atrophic tubules count three times as much; feature 3 has no effect at all.</p>
+    </div>
+
+    <!-- ---------- STAGE 0 ---------- -->
+    <div class="exhead"><span class="exnum">0</span> The raw matrices &mdash; 3 of 12 patients shown</div>
+
+    <div class="legend">
+      <span><i class="swatch norm"></i> normal tubule</span>
+      <span><i class="swatch atro"></i> atrophic tubule</span>
+      <span>columns: TBM thickness &middot; lumen area &middot; nuclei (nuisance)</span>
+    </div>
+
+    <div class="ex-grid">
+
+      <div class="patient">
+        <div class="patient-head"><b>Patient A</b><span>5 tubules &middot; 20% atrophic</span></div>
+        <table class="tub">
+          <thead><tr><th>tubule</th><th>TBM</th><th>lumen</th><th>nuclei</th></tr></thead>
+          <tbody>
+            <tr class="atro"><td>1</td><td>6.00</td><td>2.09</td><td>4.92</td></tr>
+            <tr class="norm"><td>2</td><td>1.73</td><td>9.86</td><td>4.70</td></tr>
+            <tr class="norm"><td>3</td><td>2.02</td><td>10.40</td><td>4.85</td></tr>
+            <tr class="norm"><td>4</td><td>1.81</td><td>10.15</td><td>5.11</td></tr>
+            <tr class="norm"><td>5</td><td>2.03</td><td>9.72</td><td>4.99</td></tr>
+          </tbody>
+        </table>
+        <div class="collapse">
+          <div class="crow r1"><span class="lbl">row 1 &middot; w = 0.80</span><span class="val">1.52, 8.03, 3.93</span></div>
+          <div class="crow r2"><span class="lbl">row 2 &middot; w = 0.20</span><span class="val">1.20, 0.42, 0.98</span></div>
+          <div class="crow sum"><span class="lbl">sum</span><span class="val">2.72, 8.44, 4.91</span></div>
+          <div class="crow naive"><span class="lbl">naive average</span><span class="val">2.72, 8.44, 4.91</span></div>
+        </div>
+      </div>
+
+      <div class="patient">
+        <div class="patient-head"><b>Patient B</b><span>4 tubules &middot; 50% atrophic</span></div>
+        <table class="tub">
+          <thead><tr><th>tubule</th><th>TBM</th><th>lumen</th><th>nuclei</th></tr></thead>
+          <tbody>
+            <tr class="atro"><td>1</td><td>6.21</td><td>1.60</td><td>6.86</td></tr>
+            <tr class="atro"><td>2</td><td>5.43</td><td>1.61</td><td>6.45</td></tr>
+            <tr class="norm"><td>3</td><td>1.93</td><td>9.62</td><td>7.08</td></tr>
+            <tr class="norm"><td>4</td><td>2.05</td><td>9.94</td><td>6.24</td></tr>
+          </tbody>
+        </table>
+        <div class="collapse">
+          <div class="crow r1"><span class="lbl">row 1 &middot; w = 0.50</span><span class="val">0.99, 4.89, 3.33</span></div>
+          <div class="crow r2"><span class="lbl">row 2 &middot; w = 0.50</span><span class="val">2.91, 0.80, 3.33</span></div>
+          <div class="crow sum"><span class="lbl">sum</span><span class="val">3.90, 5.69, 6.66</span></div>
+          <div class="crow naive"><span class="lbl">naive average</span><span class="val">3.90, 5.69, 6.66</span></div>
+        </div>
+      </div>
+
+      <div class="patient">
+        <div class="patient-head"><b>Patient C</b><span>5 tubules &middot; 80% atrophic</span></div>
+        <table class="tub">
+          <thead><tr><th>tubule</th><th>TBM</th><th>lumen</th><th>nuclei</th></tr></thead>
+          <tbody>
+            <tr class="atro"><td>1</td><td>5.84</td><td>1.99</td><td>4.03</td></tr>
+            <tr class="atro"><td>2</td><td>5.54</td><td>1.86</td><td>3.71</td></tr>
+            <tr class="atro"><td>3</td><td>5.76</td><td>2.32</td><td>3.76</td></tr>
+            <tr class="atro"><td>4</td><td>5.99</td><td>2.27</td><td>3.82</td></tr>
+            <tr class="norm"><td>5</td><td>1.97</td><td>10.03</td><td>4.02</td></tr>
+          </tbody>
+        </table>
+        <div class="collapse">
+          <div class="crow r1"><span class="lbl">row 1 &middot; w = 0.20</span><span class="val">0.39, 2.01, 0.80</span></div>
+          <div class="crow r2"><span class="lbl">row 2 &middot; w = 0.80</span><span class="val">4.63, 1.69, 3.06</span></div>
+          <div class="crow sum"><span class="lbl">sum</span><span class="val">5.02, 3.69, 3.87</span></div>
+          <div class="crow naive"><span class="lbl">naive average</span><span class="val">5.02, 3.69, 3.87</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ---------- STAGE 1 + 2 ---------- -->
+    <div class="exhead"><span class="exnum">1&#8202;&ndash;&#8202;2</span> Pool all 73 tubules, then cluster them</div>
+
+    <div class="prose">
+      <p>
+        Every tubule from all twelve patients goes into one
+        <math><mrow><mn>73</mn><mo>&#xD7;</mo><mn>3</mn></mrow></math> matrix.
+        Plotted on the two informative features, the mixture is not subtle
+        &mdash; which is the point of a toy. The mixture model recovered the
+        true labels perfectly.
+      </p>
+    </div>
+
+    <div class="scatterbox">
+      <svg id="scatter" viewBox="0 0 460 300" role="img"
+           aria-label="Scatter of 73 pooled tubules showing two well-separated clusters"></svg>
+      <div class="scatter-cap">
+        <span><i class="swatch norm"></i> assigned cluster 1 &mdash; 34 tubules</span>
+        <span><i class="swatch atro"></i> assigned cluster 2 &mdash; 39 tubules</span>
+        <span class="acc">clustering accuracy 100%</span>
+      </div>
+    </div>
+
+    <!-- ---------- STAGE 3 ---------- -->
+    <div class="exhead"><span class="exnum">3</span> Average, weight, and stack into the design tensor</div>
+
+    <div class="scroll-x">
+      <table class="design">
+        <thead>
+          <tr class="grp">
+            <th></th>
+            <th colspan="2">cluster shares</th>
+            <th colspan="2">cluster means &mdash; before weighting</th>
+            <th colspan="2">rows of the design matrix &mdash; after weighting</th>
+            <th></th>
+            <th></th>
+          </tr>
+          <tr>
+            <th>patient</th><th>w&#8321;</th><th>w&#8322;</th>
+            <th>c&#8321; &mdash; normal</th><th>c&#8322; &mdash; atrophic</th>
+            <th>row 1 = w&#8321; &middot; c&#8321;</th><th>row 2 = w&#8322; &middot; c&#8322;</th>
+            <th>row&#8321; + row&#8322;<br><span class="sub2">= naive average</span></th>
+            <th>y</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>A</td><td>0.80</td><td>0.20</td><td class="v1">1.90, 10.03, <span class="n3">4.91</span></td><td class="v2">6.00, 2.09, <span class="n3">4.92</span></td><td class="v1">1.52, 8.03, 3.93</td><td class="v2">1.20, 0.42, 0.98</td><td>2.72, 8.44, 4.91</td><td class="y">0.20</td></tr>
+          <tr><td>B</td><td>0.50</td><td>0.50</td><td class="v1">1.99, 9.78, <span class="n3">6.66</span></td><td class="v2">5.82, 1.60, <span class="n3">6.66</span></td><td class="v1">0.99, 4.89, 3.33</td><td class="v2">2.91, 0.80, 3.33</td><td>3.90, 5.69, 6.66</td><td class="y">12.06</td></tr>
+          <tr><td>C</td><td>0.20</td><td>0.80</td><td class="v1">1.97, 10.03, <span class="n3">4.02</span></td><td class="v2">5.78, 2.11, <span class="n3">3.83</span></td><td class="v1">0.39, 2.01, 0.80</td><td class="v2">4.63, 1.69, 3.06</td><td>5.02, 3.69, 3.87</td><td class="y">20.99</td></tr>
+          <tr><td>D</td><td>0.67</td><td>0.33</td><td class="v1">1.90, 10.31, <span class="n3">8.04</span></td><td class="v2">5.58, 2.14, <span class="n3">8.22</span></td><td class="v1">1.27, 6.88, 5.36</td><td class="v2">1.86, 0.71, 2.74</td><td>3.13, 7.59, 8.10</td><td class="y">3.86</td></tr>
+          <tr><td>E</td><td>0.25</td><td>0.75</td><td class="v1">1.92, 10.28, <span class="n3">2.92</span></td><td class="v2">5.97, 2.02, <span class="n3">2.88</span></td><td class="v1">0.48, 2.57, 0.73</td><td class="v2">4.48, 1.51, 2.16</td><td>4.95, 4.08, 2.89</td><td class="y">20.96</td></tr>
+          <tr><td>F</td><td>0.75</td><td>0.25</td><td class="v1">2.06, 10.18, <span class="n3">9.09</span></td><td class="v2">5.94, 1.67, <span class="n3">9.00</span></td><td class="v1">1.54, 7.64, 6.82</td><td class="v2">1.49, 0.42, 2.25</td><td>3.03, 8.05, 9.07</td><td class="y">3.08</td></tr>
+          <tr><td>G</td><td>0.30</td><td>0.70</td><td class="v1">1.72, 9.92, <span class="n3">6.04</span></td><td class="v2">5.85, 2.01, <span class="n3">5.91</span></td><td class="v1">0.52, 2.98, 1.81</td><td class="v2">4.10, 1.41, 4.14</td><td>4.61, 4.38, 5.95</td><td class="y">18.63</td></tr>
+          <tr><td>H</td><td>0.40</td><td>0.60</td><td class="v1">2.19, 9.84, <span class="n3">2.12</span></td><td class="v2">5.88, 1.85, <span class="n3">2.03</span></td><td class="v1">0.88, 3.94, 0.85</td><td class="v2">3.53, 1.11, 1.22</td><td>4.40, 5.05, 2.07</td><td class="y">15.15</td></tr>
+          <tr><td>I</td><td>0.71</td><td>0.29</td><td class="v1">1.83, 9.90, <span class="n3">5.07</span></td><td class="v2">5.82, 1.80, <span class="n3">5.07</span></td><td class="v1">1.30, 7.07, 3.62</td><td class="v2">1.66, 0.51, 1.45</td><td>2.97, 7.59, 5.07</td><td class="y">3.65</td></tr>
+          <tr><td>J</td><td>0.17</td><td>0.83</td><td class="v1">1.85, 10.09, <span class="n3">7.99</span></td><td class="v2">6.01, 1.71, <span class="n3">8.06</span></td><td class="v1">0.31, 1.68, 1.33</td><td class="v2">5.00, 1.42, 6.72</td><td>5.31, 3.10, 8.05</td><td class="y">24.20</td></tr>
+          <tr><td>K</td><td>0.67</td><td>0.33</td><td class="v1">2.17, 10.14, <span class="n3">3.04</span></td><td class="v2">6.04, 2.00, <span class="n3">3.10</span></td><td class="v1">1.45, 6.76, 2.03</td><td class="v2">2.01, 0.67, 1.03</td><td>3.46, 7.43, 3.06</td><td class="y">5.78</td></tr>
+          <tr><td>L</td><td>0.25</td><td>0.75</td><td class="v1">1.93, 10.01, <span class="n3">6.74</span></td><td class="v2">5.62, 2.19, <span class="n3">6.74</span></td><td class="v1">0.48, 2.50, 1.69</td><td class="v2">4.21, 1.64, 5.05</td><td>4.70, 4.15, 6.74</td><td class="y">18.91</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <span><strong>Follow one row across.</strong> Patient A&rsquo;s four normal
+      tubules average to <code>(1.90, 10.03, 4.91)</code>. Multiply by
+      w&#8321; = 0.80 and you get row 1, <code>(1.52, 8.03, 3.93)</code>. That is
+      the only place the weights are ever used &mdash; once, here, and then they
+      are absorbed into the numbers. Every figure here is displayed to two decimals while the arithmetic runs at full precision &mdash; so 0.80 &times; 10.03 reads 8.02 by hand, where the row shows 8.03 from the unrounded 10.0334.</span>
+    </div>
+
+    <div class="note" style="margin-top:12px;">
+      <span><strong>Now read the third number in the two cluster-mean columns.</strong>
+      4.91 against 4.92. 6.66 against 6.66. 5.07 against 5.07. The nuisance
+      feature is the same in both populations for every single patient &mdash; it
+      carries no cluster structure whatsoever, which is exactly why it deserves to
+      be dropped. Compare that to features 1 and 2, which separate cleanly around
+      1.9 against 5.9 and 10.0 against 2.0.</span>
+    </div>
+
+    <div class="note" style="margin-top:12px;">
+      <span><strong>The last two design columns are one column.</strong> row&#8321; + row&#8322;
+      equals the naive average for every patient, to machine precision &mdash;
+      largest discrepancy across all 12 patients and 3 features is
+      <code>1.78e&#8209;15</code>. The rows partition the naive vector; that is the
+      identity, not a coincidence.</span>
+    </div>
+
+    <div class="eq" style="margin-top:20px;">
+      <math display="block">
+        <mrow>
+          <msub><mi>y</mi><mi>i</mi></msub><mo>=</mo>
+          <msup><mrow><mo>(</mo><msup><mi>&#x3B1;</mi><mo>&#x2217;</mo></msup><mo>)</mo></mrow><mo>&#x22A4;</mo></msup>
+          <msubsup><mover accent="true"><mi>X</mi><mo>^</mo></mover><mi>i</mi><mrow><mo>&#x2217;</mo><mo>&#x2217;</mo></mrow></msubsup>
+          <msup><mi>&#x3B2;</mi><mo>&#x2217;</mo></msup>
+          <mo>+</mo><msub><mi>&#x3B5;</mi><mi>i</mi></msub>
+          <mspace width="2.0em"></mspace>
+          <msub><mi>&#x3B5;</mi><mi>i</mi></msub><mo>&#x223C;</mo>
+          <mi>N</mi><mo>(</mo><mn>0</mn><mo>,</mo><msup><mn>0.5</mn><mn>2</mn></msup><mo>)</mo>
+        </mrow>
+      </math>
+      <p class="eq-note">
+        The last column, <math><mi>y</mi></math>, is the outcome being predicted &mdash;
+        this toy&rsquo;s stand-in for eGFR. It is the target, not part of the design.
+        For patient A: row&#8321; + 3&middot;row&#8322; = (5.12, 9.28, 6.88), dotted with
+        <math><mrow><msup><mi>&#x3B2;</mi><mo>&#x2217;</mo></msup><mo>=</mo><mo>(</mo><mn>2</mn><mo>,</mo><mo>&#x2212;</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></mrow></math>
+        gives 0.96, and the observed 0.20 is that plus a noise draw of &minus;0.76.
+        Feature 3 contributes nothing, because
+        <math><mrow><msubsup><mi>&#x3B2;</mi><mn>3</mn><mo>&#x2217;</mo></msubsup><mo>=</mo><mn>0</mn></mrow></math>.
+      </p>
+    </div>
+
+    <div class="note" style="margin-top:16px;">
+      <span><strong>Sort that column by w&#8322; and it climbs almost monotonically</strong>
+      &mdash; 0.20 at 20% atrophic, 24.20 at 83%. Not luck: with
+      <math><mrow><msup><mi>&#x3B1;</mi><mo>&#x2217;</mo></msup><mo>=</mo><mo>(</mo><mn>1</mn><mo>,</mo><mn>3</mn><mo>)</mo></mrow></math>
+      the atrophic row counts triple, which is the simulated form of &ldquo;percentage
+      of tubules with atrophy predicts worse kidney function.&rdquo;</span>
+    </div>
+
+    <!-- ---------- STANDARDIZATION ---------- -->
+    <div class="exhead"><span class="exnum">&#8901;</span> Inside the lasso &mdash; standardizing before the penalty</div>
+
+    <div class="prose">
+      <p>
+        Before any penalty is applied, <math><mrow><mi>Z</mi><mo>=</mo><msup><mi>&#x3B1;</mi><mo>&#x22A4;</mo></msup><msup><mover accent="true"><mi>X</mi><mo>^</mo></mover><mrow><mo>&#x2217;</mo><mo>&#x2217;</mo></mrow></msup></mrow></math>
+        gets column&#8209;wise z&#8209;scored across the twelve patients. The raw columns
+        differ in spread by more than a factor of two, and an
+        <math><msub><mi>L</mi><mn>1</mn></msub></math> penalty is not
+        scale&#8209;invariant &mdash; without this, lambda would silently punish the
+        narrow column hardest.
+      </p>
+    </div>
+
+    <div class="scroll-x">
+      <table class="alpha">
+        <thead>
+          <tr><th>column of Z</th><th>mean</th><th>SD, raw</th><th>SD, standardized</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1 &mdash; TBM</td><td>2.009</td><td>0.443</td><td>1.000</td></tr>
+          <tr><td>2 &mdash; lumen</td><td>2.885</td><td>0.925</td><td>1.000</td></tr>
+          <tr><td>3 &mdash; nuclei</td><td>2.768</td><td>1.088</td><td>1.000</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="eq-note" style="margin-top:12px;">
+      Patient A&rsquo;s row of Z goes from <code>(1.360, 4.222, 2.457)</code> raw
+      to <code>(&#8722;1.467, 1.445, &#8722;0.286)</code> standardized. The coefficients
+      are divided back by these scales on the way out, so
+      <math><mover accent="true"><mi>&#x3B2;</mi><mo>^</mo></mover></math> is
+      reported in original units.
+    </div>
+
+    <!-- ---------- STAGE 4 ---------- -->
+    <div class="exhead"><span class="exnum">4</span> Alternate until it stops moving</div>
+
+    <div class="prose">
+      <p>
+        Starting from <math><mrow><mi>&#x3B1;</mi><mo>=</mo><mo>(</mo><mn>0.5</mn><mo>,</mo><mn>0.5</mn><mo>)</mo></mrow></math>
+        and <math><mrow><mi>&#x3B2;</mi><mo>=</mo><mo>(</mo><mn>0.3</mn><mo>,</mo><mo>&#x2212;</mo><mn>0.3</mn><mo>,</mo><mn>0.3</mn><mo>)</mo></mrow></math>
+        at <math><mrow><mi>&#x3BB;</mi><mo>=</mo><mn>0.35</mn></mrow></math>.
+        Three passes is all it takes here.
+      </p>
+    </div>
+
+    <div class="scroll-x">
+      <table class="alpha trace">
+        <thead>
+          <tr><th>pass</th><th>alpha (normalized)</th><th>beta (normalized)</th><th>change</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>0.307, 0.693</td><td>0.651, &#8722;0.349, <b class="zero">0.000</b></td><td>0.38528</td></tr>
+          <tr><td>2</td><td>0.295, 0.705</td><td>0.675, &#8722;0.325, <b class="zero">0.000</b></td><td>0.03038</td></tr>
+          <tr><td>3</td><td>0.293, 0.707</td><td>0.679, &#8722;0.321, <b class="zero">0.000</b></td><td class="conv">0.00519 &#10003;</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <span><strong>The nuisance feature is zeroed on the very first pass</strong>
+      and never comes back. That is the lasso doing its job &mdash; and it is the
+      single thing <a href="ps-fdr.html">PS&#8209;Fdr</a> will read off, over and over, from thousands of
+      resamples.</span>
+    </div>
+
+    <!-- ---------- OUTPUT ---------- -->
+    <div class="exhead"><span class="exnum">&#10003;</span> What came out</div>
+
+    <div class="split">
+      <div class="panel good">
+        <h4>CLUSSO</h4>
+        <table class="alpha compact">
+          <tbody>
+            <tr><td><math><mover accent="true"><mi>&#x3B2;</mi><mo>^</mo></mover></math></td><td>0.679, &#8722;0.321, <b class="zero">0.000</b></td></tr>
+            <tr><td>truth, L1&#8209;normalized</td><td class="dim">0.667, &#8722;0.333, 0.000</td></tr>
+            <tr><td>selected</td><td><b>{1, 2}</b> &mdash; correct</td></tr>
+            <tr><td><math><mover accent="true"><mi>&#x3B1;</mi><mo>^</mo></mover></math>, normalized</td><td>0.293, 0.707</td></tr>
+            <tr><td>truth</td><td class="dim">0.250, 0.750</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="panel bad">
+        <h4>Naive lasso</h4>
+        <table class="alpha compact">
+          <tbody>
+            <tr><td><math><mover accent="true"><mi>&#x3B2;</mi><mo>^</mo></mover></math></td><td>0.669, &#8722;0.325, <b class="fp">0.005</b></td></tr>
+            <tr><td>truth, L1&#8209;normalized</td><td class="dim">0.667, &#8722;0.333, 0.000</td></tr>
+            <tr><td>selected</td><td><b class="fp">{1, 2, 3}</b> &mdash; one false positive</td></tr>
+            <tr><td colspan="2" class="dim" style="padding-top:14px;">0.005 clears the paper&rsquo;s own 0.001 cutoff, so the nuisance feature counts as a discovery.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ---------- HONESTY ---------- -->
+    <div class="exhead"><span class="exnum">?</span> Is that one run, or is it real?</div>
+
+    <div class="prose">
+      <p>
+        One draw proves nothing, so I re&#8209;ran the whole pipeline &mdash; fresh
+        tubules, fresh nuisance values, fresh outcome noise, fresh clustering
+        &mdash; a few hundred times. The direction holds, but the honest picture
+        is a <em class="term">trade&#8209;off</em>, not a clean win.
+      </p>
+    </div>
+
+    <div class="scroll-x">
+      <table class="alpha sweep">
+        <thead>
+          <tr><th>lambda</th><th>picks the nuisance feature</th><th>misses a real feature</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>0.05</td><td>75.8%</td><td>28.3%</td></tr>
+          <tr><td>0.10</td><td>57.5%</td><td>31.7%</td></tr>
+          <tr><td>0.20</td><td>40.8%</td><td>39.2%</td></tr>
+          <tr class="here"><td>0.35 &nbsp;&larr; shown above</td><td>23.3%</td><td>40.8%</td></tr>
+          <tr><td>0.60</td><td>14.2%</td><td>44.2%</td></tr>
+          <tr><td>1.00</td><td>8.3%</td><td>50.0%</td></tr>
+          <tr class="spread"><td>naive lasso, CV&#8209;tuned</td><td>57.5%</td><td>0.8%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="prose" style="margin-top:22px;">
+      <p>
+        Read the middle column downward and lambda is revealed for what it is: a
+        dial. Turn it up and false discoveries fall away; turn it up further and
+        real features start disappearing too. The naive lasso sits at 57.5% false
+        positives &mdash; matched exactly by CLUSSO at
+        <math><mrow><mi>&#x3BB;</mi><mo>=</mo><mn>0.10</mn></mrow></math>, where
+        CLUSSO is the weaker method. Only by accepting a much higher miss rate
+        does CLUSSO buy its lower false positive rate here.
+      </p>
+      <p>
+        That is <em class="term">not</em> the paper&rsquo;s finding, and the gap
+        is worth naming: twelve patients and three features is orders of
+        magnitude smaller than the 300 to 2,000 subjects and 10 to 200 features
+        the simulation study uses, and CLUSSO&rsquo;s advantage is reported to
+        grow with the number of features. A toy this size demonstrates the
+        <em class="term">mechanism</em>, not the comparative performance.
+      </p>
+      <p>
+        But look at what the dial implies. Somebody has to choose a point on that
+        curve, and cross&#8209;validation chooses it by minimizing prediction error
+        &mdash; a criterion with no relationship whatsoever to how many of the
+        selected features are real. Nothing in the table lets you say
+        <em class="term">&ldquo;give me a set that is at most 10% false.&rdquo;</em>
+      </p>
+      <p>
+        That sentence is the entire reason <a href="ps-fdr.html">the second algorithm</a> exists.
+      </p>
+    </div>
+  </section>
+
+  <script>
+  (function () {
+    var pts = [[6.0,2.09],[1.73,9.86],[2.02,10.4],[1.81,10.15],[2.03,9.72],[6.21,1.6],[5.43,1.61],[1.93,9.62],[2.05,9.94],[5.84,1.99],[5.54,1.86],[5.76,2.32],[5.99,2.27],[1.97,10.03],[5.63,2.02],[5.54,2.26],[1.81,10.6],[1.64,10.02],[1.94,10.2],[2.2,10.43],[6.06,1.86],[5.64,1.83],[6.27,2.34],[5.76,2.19],[5.86,1.97],[6.21,1.9],[1.92,10.46],[1.91,10.11],[5.94,1.67],[1.87,10.35],[1.99,10.2],[2.32,10.0],[5.61,2.1],[5.39,1.91],[6.05,2.67],[5.81,2.06],[5.95,1.94],[6.16,1.69],[6.01,1.68],[1.74,10.29],[2.03,9.82],[1.4,9.66],[5.36,2.25],[6.23,1.75],[6.04,1.54],[2.43,9.98],[1.95,9.71],[5.84,1.98],[5.81,1.62],[1.95,10.29],[1.79,9.9],[2.0,9.89],[1.59,9.76],[1.8,9.68],[6.42,1.56],[5.81,1.47],[5.99,2.02],[6.14,1.84],[5.67,1.64],[1.85,10.09],[5.87,1.85],[5.91,1.95],[6.35,2.2],[1.83,9.59],[2.29,9.96],[2.23,10.25],[1.86,10.45],[2.26,10.15],[2.56,10.45],[5.49,2.25],[6.0,2.25],[5.37,2.08],[1.93,10.01]];
+    var lab = [2,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,1,1,1,1,2,2,2,2,2,2,1,1,2,1,1,1,2,2,2,2,2,2,2,1,1,1,2,2,2,1,1,2,2,1,1,1,1,1,2,2,2,2,2,1,2,2,2,1,1,1,1,1,1,2,2,2,1];
+    var svg = document.getElementById('scatter');
+    if (!svg) return;
+    var W = 460, H = 300, L = 52, R = 16, T = 16, B = 44;
+    var xs = pts.map(function (p) { return p[0]; });
+    var ys = pts.map(function (p) { return p[1]; });
+    var x0 = 1, x1 = 7, y0 = 1, y1 = 11;
+    function px(v) { return L + (v - x0) / (x1 - x0) * (W - L - R); }
+    function py(v) { return (H - B) - (v - y0) / (y1 - y0) * (H - B - T); }
+    var out = [];
+    // frame
+    out.push('<line class="ax" x1="' + L + '" y1="' + (H - B) + '" x2="' + (W - R) + '" y2="' + (H - B) + '"/>');
+    out.push('<line class="ax" x1="' + L + '" y1="' + T + '" x2="' + L + '" y2="' + (H - B) + '"/>');
+    // ticks
+    [2, 4, 6].forEach(function (t) {
+      out.push('<line class="tick" x1="' + px(t) + '" y1="' + (H - B) + '" x2="' + px(t) + '" y2="' + (H - B + 5) + '"/>');
+      out.push('<text class="tl" x="' + px(t) + '" y="' + (H - B + 18) + '" text-anchor="middle">' + t + '</text>');
+    });
+    [2, 6, 10].forEach(function (t) {
+      out.push('<line class="tick" x1="' + (L - 5) + '" y1="' + py(t) + '" x2="' + L + '" y2="' + py(t) + '"/>');
+      out.push('<text class="tl" x="' + (L - 10) + '" y="' + (py(t) + 4) + '" text-anchor="end">' + t + '</text>');
+    });
+    out.push('<text class="axl" x="' + ((L + W - R) / 2) + '" y="' + (H - 6) + '" text-anchor="middle">TBM thickness</text>');
+    out.push('<text class="axl" transform="translate(14,' + ((T + H - B) / 2) + ') rotate(-90)" text-anchor="middle">lumen area</text>');
+    for (var i = 0; i < pts.length; i++) {
+      out.push('<circle class="pt' + lab[i] + '" cx="' + px(pts[i][0]).toFixed(1) +
+               '" cy="' + py(pts[i][1]).toFixed(1) + '" r="4.2"/>');
+    }
+    svg.innerHTML = out.join('');
+  })();
+  </script>
+
+  <footer>
+    <p>Rubin, Fan, Barisoni, Janowczyk &amp; Zee. &ldquo;Novel Scalar&#8209;on&#8209;matrix Regression for Unbalanced Feature Matrices.&rdquo; <em>Statistics in Biosciences</em> 18:192&ndash;213, 2026.</p>
+    <p>He, Zhou, Jiang, Wen &amp; Li. &ldquo;False discovery control for penalized variable selections with high&#8209;dimensional covariates.&rdquo; <em>Stat Appl Genet Mol Biol</em> 17(6), 2018.</p>
+  </footer>
+
+</div>
+<script src="assets/theme.js"></script>
+<script src="assets/scatter.js"></script>
+</body>
+</html>

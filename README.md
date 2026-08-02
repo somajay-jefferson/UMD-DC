@@ -1,5 +1,8 @@
 # CLUSSO / TEPIG
 
+**Documentation:** https://somajay-jefferson.github.io/UMD-DC/ — the methods
+drawn end to end, with a worked example computed from the code in this repo.
+
 Statistical methods for regression on subjects whose data consists of many
 object-level measurements grouped into latent clusters (e.g. per-subject
 tubule-level histology features aggregated into a scalar outcome such as
@@ -16,6 +19,7 @@ implementation it was ported from.
 ## Directory structure
 
 ```
+docs/       GitHub Pages site (served from master /docs)
 src/
   core/     Core CLUSSO: alternating structured lasso on (cluster, feature) matrices
   tepig/    TEPIG extension: tensor model on (cluster, feature, slide) data

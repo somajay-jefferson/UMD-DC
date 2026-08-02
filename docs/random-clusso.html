@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Random CLUSSO</title>
+<meta name="description" content="Random CLUSSO: CLUSSO with the random lasso, for correlated image features. Notes and open questions.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%94%AC</text></svg>">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Random CLUSSO">
+<meta property="og:description" content="Random CLUSSO: CLUSSO with the random lasso, for correlated image features. Notes and open questions.">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="theme-toggle" id="themetoggle" type="button" aria-label="Toggle colour theme">Dark</button>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Algorithm one, variant</p>
+    <h1>Random CLUSSO</h1>
+    <p class="standfirst">CLUSSO with the random lasso, for image features that are correlated with each other. Not yet worked through.</p>
+    <nav class="sitenav">
+      <a href="index.html">Overview</a>
+      <a href="clusso.html">CLUSSO</a>
+      <a href="random-clusso.html" aria-current="page">Random CLUSSO</a>
+      <a href="ps-fdr.html">PS-Fdr</a>
+      <a href="fdr-clusso.html">FDR-CLUSSO</a>
+    </nav>
+  </header>
+
+  <section>
+    <div class="status">
+      <span class="flag">To do</span>
+      <span>This page is a placeholder. What follows is what a read of the repository
+      turned up, not a worked understanding of the method &mdash; the implementation
+      has not been studied yet.</span>
+    </div>
+
+    <h2>What it appears to be</h2>
+    <h3>CLUSSO for correlated features</h3>
+
+    <div class="prose">
+      <p>
+        Random CLUSSO belongs to a <strong>separate manuscript</strong> by the same
+        first author. The README inside <code>Supplemental_Code.zip</code> titles it
+        <em class="term">Analysis of Correlated Image Features using
+        Scalar&#8209;on&#8209;matrix</em>, and describes a setting where the feature matrices
+        have differing numbers of rows <em class="term">and</em> the image features
+        are correlated with one another.
+      </p>
+      <p>
+        The motivation is stated plainly in the CLUSSO paper's own discussion: the
+        lasso tends to select only one of a group of features that are correlated
+        with each other and with the outcome. It proposes the
+        <strong>random lasso</strong> of Wang, Nan, Rosset &amp; Zhu (2011) as a
+        replacement inside the CLUSSO objective. Random CLUSSO appears to be exactly
+        that substitution.
+      </p>
+      <p>
+        The data generation gains a correlation parameter, <code>rho</code>, between
+        informative predictors, and leans on the <code>MixMatrix</code> package to
+        draw correlated tubules from a matrix&#8209;variate distribution.
+      </p>
+    </div>
+
+    <h2 style="margin-top:56px;">Why it matters here</h2>
+    <h3>It already contains a bootstrap</h3>
+
+    <div class="prose">
+      <p>
+        <code>Random_CLUSSO_non_mainfunctions.R</code> defines
+        <code>bootstrap.estimates()</code>, and a single call does
+        <strong>three nested resamples</strong>: it bootstraps subjects, bootstraps
+        tubules within each resampled subject, and subsamples the feature columns
+        &mdash; uniformly on the first pass, then with probability proportional to an
+        importance measure on the second. That two&#8209;stage structure is the random
+        lasso.
+      </p>
+    </div>
+
+    <div class="note">
+      <span><strong>This is not merely a sibling method.</strong>
+      <a href="ps-fdr.html">PS&#8209;Fdr</a>'s outer machinery is itself a bootstrap
+      wrapped in a permutation loop. Composing it with Random CLUSSO would nest a
+      bootstrap inside a bootstrap inside a permutation &mdash; a compute problem,
+      and a harder conceptual one about what the resulting selection frequency is
+      actually measuring. See <a href="fdr-clusso.html">FDR&#8209;CLUSSO</a>.</span>
+    </div>
+
+    <h2 style="margin-top:56px;">Still to do</h2>
+    <h3>Before this page says anything real</h3>
+
+    <ol class="todolist">
+      <li>Read the R implementation properly &mdash; the two&#8209;stage importance
+      weighting, how <code>thresh</code> enters, and how the final coefficients are
+      assembled from the bootstrap replicates.</li>
+      <li>Establish whether the <code>Random_CLUSSO_*.R</code> files at the repository
+      root differ from the versions zipped in <code>Supplemental_Code.zip</code>, and
+      which is current.</li>
+      <li>Write the pipeline description with the same treatment the
+      <a href="clusso.html">CLUSSO page</a> gets, ideally with a worked example
+      computed from the code rather than described.</li>
+      <li>Decide whether Random CLUSSO or vanilla CLUSSO is the better base for the
+      false discovery work, given that one of them already spends its
+      bootstrap budget.</li>
+    </ol>
+
+    <div class="note" style="margin-top:34px;">
+      <span><strong>Incidental find, recorded so it is not lost.</strong> That same
+      file defines <code>slasso.mse</code>, <code>CV.make.folds</code> and
+      <code>lambda.CV.mse</code> &mdash; the three functions the missing
+      <code>src/core/SLasso_MSE.py</code> is supposed to provide. This copy carries an
+      extra <code>thresh</code> argument relative to the one in
+      <code>clussocode.zip</code>.</span>
+    </div>
+  </section>
+
+  <footer>
+    <p>Rubin, Fan, Barisoni, Janowczyk &amp; Zee. &ldquo;Novel Scalar&#8209;on&#8209;matrix Regression for Unbalanced Feature Matrices.&rdquo; <em>Statistics in Biosciences</em> 18:192&ndash;213, 2026.</p>
+    <p>He, Zhou, Jiang, Wen &amp; Li. &ldquo;False discovery control for penalized variable selections with high&#8209;dimensional covariates.&rdquo; <em>Stat Appl Genet Mol Biol</em> 17(6), 2018.</p>
+  </footer>
+
+</div>
+<script src="assets/theme.js"></script>
+</body>
+</html>

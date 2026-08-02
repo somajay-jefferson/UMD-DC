@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PS-Fdr</title>
+<meta name="description" content="PS-Fdr: bootstrap stability selection, a permutation-calibrated null and a step-down cutoff that controls false discoveries for penalized variable selection.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%94%AC</text></svg>">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PS-Fdr">
+<meta property="og:description" content="PS-Fdr: bootstrap stability selection, a permutation-calibrated null and a step-down cutoff that controls false discoveries for penalized variable selection.">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="theme-toggle" id="themetoggle" type="button" aria-label="Toggle colour theme">Dark</button>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Algorithm two</p>
+    <h1>PS&#8209;Fdr</h1>
+    <p class="standfirst">A false discovery rate guarantee for penalized selection, built without p&#8209;values or a limiting distribution.</p>
+    <nav class="sitenav">
+      <a href="index.html">Overview</a>
+      <a href="clusso.html">CLUSSO</a>
+      <a href="random-clusso.html">Random CLUSSO</a>
+      <a href="ps-fdr.html" aria-current="page">PS-Fdr</a>
+      <a href="fdr-clusso.html">FDR-CLUSSO</a>
+    </nav>
+  </header>
+
+<!-- ================= PS-Fdr ================= -->
+  <section>
+    <h2>Algorithm two</h2>
+    <h3>PS&#8209;Fdr</h3>
+
+    <div class="prose">
+      <p>
+        Cross&#8209;validated lasso does not control false discoveries. He et al.
+        demonstrate this brutally: 340 patients, 23,052 genes, 50 of which
+        truly matter &mdash; and across 10,000 repetitions the false discovery
+        proportion clusters around <strong>0.90</strong>. Nine in ten
+        &ldquo;findings&rdquo; are noise.
+      </p>
+      <p>
+        The fix cannot use p&#8209;values, because penalized estimators have no
+        tractable limiting distribution, and it cannot use naive permutation,
+        because under a global null the noise variables face less competition
+        for the <math><msub><mi>L</mi><mn>1</mn></msub></math> budget than they
+        do in real data &mdash; so the false discovery count comes out too low.
+        What follows is the workaround.
+      </p>
+    </div>
+
+    <div class="eq plain">
+      <math display="block">
+        <mrow>
+          <mtext>FDP</mtext><mo>=</mo>
+          <mfrac><msub><mi>N</mi><mn>0</mn></msub><msub><mi>N</mi><mo>+</mo></msub></mfrac>
+          <mspace width="1.6em"></mspace>
+          <mtext>FDR</mtext><mo>=</mo><mi>E</mi><mo>(</mo><mtext>FDP</mtext><mo>)</mo>
+          <mspace width="1.6em"></mspace>
+          <mover accent="true"><mtext>Fdr</mtext><mo>^</mo></mover><mo>=</mo>
+          <mfrac><msub><mover accent="true"><mi>e</mi><mo>^</mo></mover><mn>0</mn></msub><msub><mi>N</mi><mo>+</mo></msub></mfrac>
+        </mrow>
+      </math>
+      <p class="eq-note">Falsely selected over total selected; its expectation; and the estimator the algorithm actually computes.</p>
+    </div>
+
+    <ol class="pipeline">
+
+      <li class="stage">
+        <div class="stage-num">1</div>
+        <div class="stage-body">
+          <h4>Stability selection <span class="tag real">real data</span></h4>
+          <p>Rather than trusting one CV&#8209;tuned fit, ask how <em class="term">reliably</em> each variable gets picked across resamples.</p>
+
+          <div class="algo">
+            <div class="ln"><span class="kw">for</span> <math><mrow><mi>b</mi><mo>=</mo><mn>1</mn><mo>,</mo><mo>&#x2026;</mo><mo>,</mo><mi>B</mi></mrow></math> <span class="cmt">B = 50</span></div>
+            <div class="ln i1">resample <math><mi>n</mi></math> rows with replacement</div>
+            <div class="ln i1">
+              fit lasso <math><mo>&#x27F6;</mo></math>
+              <math><mrow>
+                <msup><mi>S</mi><mrow><mo>(</mo><mi>b</mi><mo>)</mo></mrow></msup>
+                <mo>=</mo><mo>{</mo><mi>j</mi><mo>:</mo>
+                <msubsup><mover accent="true"><mi>&#x3B2;</mi><mo>^</mo></mover><mi>j</mi><mrow><mo>(</mo><mi>b</mi><mo>)</mo></mrow></msubsup>
+                <mo>&#x2260;</mo><mn>0</mn><mo>}</mo>
+              </mrow></math>
+              <span class="site" id="site-a">call site A</span>
+            </div>
+          </div>
+
+          <div class="eq">
+            <math display="block">
+              <mrow>
+                <msub><mi>&#x3A0;</mi><mi>j</mi></msub><mo>=</mo>
+                <mfrac><mn>1</mn><mi>B</mi></mfrac>
+                <munderover><mo>&#x2211;</mo><mrow><mi>b</mi><mo>=</mo><mn>1</mn></mrow><mi>B</mi></munderover>
+                <mi>&#x1D7D9;</mi><mo>(</mo><mi>j</mi><mo>&#x2208;</mo>
+                <msup><mi>S</mi><mrow><mo>(</mo><mi>b</mi><mo>)</mo></mrow></msup>
+                <mo>)</mo>
+                <mspace width="1.6em"></mspace>
+                <msub><mi>&#x3A0;</mi><mrow><mo>(</mo><mn>1</mn><mo>)</mo></mrow></msub>
+                <mo>&#x2264;</mo><mo>&#x22EF;</mo><mo>&#x2264;</mo>
+                <msub><mi>&#x3A0;</mi><mrow><mo>(</mo><mi>p</mi><mo>)</mo></mrow></msub>
+              </mrow>
+            </math>
+            <p class="eq-note">Selection frequency, then sorted into order statistics.</p>
+          </div>
+        </div>
+      </li>
+
+      <li class="stage">
+        <div class="stage-num">2</div>
+        <div class="stage-body">
+          <h4>Permutation null <span class="tag null">calibration</span></h4>
+          <p>Shuffle the outcome to sever every association, then run the whole of step 1 again. Nested loops &mdash; this is where the compute lives.</p>
+
+          <div class="algo">
+            <div class="ln"><span class="kw">for</span> <math><mrow><mi>m</mi><mo>=</mo><mn>1</mn><mo>,</mo><mo>&#x2026;</mo><mo>,</mo><mi>M</mi></mrow></math> <span class="cmt">M = 100</span></div>
+            <div class="ln i1">permute <math><mi>y</mi></math> <span class="cmt">kills all y&ndash;X association</span></div>
+            <div class="ln i1"><span class="kw">for</span> <math><mrow><mi>b</mi><mo>=</mo><mn>1</mn><mo>,</mo><mo>&#x2026;</mo><mo>,</mo><mi>B</mi></mrow></math></div>
+            <div class="ln i2">resample, fit lasso <span class="site" id="site-b">call site B</span></div>
+            <div class="ln i2"><span class="rule-line">fix the number selected to the median from step 1 &mdash; do not re&#8209;run CV</span></div>
+          </div>
+
+          <div class="eq">
+            <math display="block">
+              <mrow>
+                <msub><mover accent="true"><mi>&#x3A0;</mi><mo>&#x2015;</mo></mover><mrow><mo>(</mo><mi>j</mi><mo>)</mo></mrow></msub>
+                <mo>=</mo>
+                <mfrac><mn>1</mn><mi>M</mi></mfrac>
+                <munderover><mo>&#x2211;</mo><mrow><mi>m</mi><mo>=</mo><mn>1</mn></mrow><mi>M</mi></munderover>
+                <msubsup><mover accent="true"><mi>&#x3A0;</mi><mo>~</mo></mover><mrow><mo>(</mo><mi>j</mi><mo>)</mo></mrow><mrow><mo>(</mo><mi>m</mi><mo>)</mo></mrow></msubsup>
+              </mrow>
+            </math>
+            <p class="eq-note">Averaged over <em>ranks</em>, not over variable identities &mdash; the subscript is parenthesised.</p>
+          </div>
+
+          <div class="note">
+            <span><strong>That fixed count is the whole trick.</strong> Letting CV choose freely on permuted data is exactly what makes the expected false discovery count collapse and the procedure over&#8209;select.</span>
+          </div>
+        </div>
+      </li>
+
+      <li class="stage">
+        <div class="stage-num">3</div>
+        <div class="stage-body">
+          <h4>Normalize</h4>
+          <p>Borrowed from Significance Analysis of Microarrays. Puts the real and null arms on a comparable footing and spreads informative variables away from uninformative ones.</p>
+
+          <div class="eq">
+            <math display="block">
+              <mrow>
+                <mi>D</mi><mo>(</mo><mi>u</mi><mo>)</mo><mo>=</mo>
+                <mfrac>
+                  <mi>u</mi>
+                  <mrow>
+                    <msqrt><mrow><mi>u</mi><mo>(</mo><mn>1</mn><mo>&#x2212;</mo><mi>u</mi><mo>)</mo></mrow></msqrt>
+                    <mo>+</mo><mi>&#x3BD;</mi>
+                  </mrow>
+                </mfrac>
+                <mspace width="1.8em"></mspace>
+                <mi>&#x3BD;</mi><mo>=</mo><mfrac><mn>1</mn><mi>B</mi></mfrac>
+              </mrow>
+            </math>
+          </div>
+
+          <div class="eq">
+            <math display="block">
+              <mrow>
+                <msub><mi>Z</mi><mrow><mo>(</mo><mi>j</mi><mo>)</mo></mrow></msub>
+                <mo>=</mo>
+                <mi>D</mi><mo>(</mo><msub><mi>&#x3A0;</mi><mrow><mo>(</mo><mi>j</mi><mo>)</mo></mrow></msub><mo>)</mo>
+                <mspace width="2.4em"></mspace>
+                <msub><mover accent="true"><mi>Z</mi><mo>&#x2015;</mo></mover><mrow><mo>(</mo><mi>j</mi><mo>)</mo></mrow></msub>
+                <mo>=</mo>
+                <mi>D</mi><mo>(</mo><msub><mover accent="true"><mi>&#x3A0;</mi><mo>&#x2015;</mo></mover><mrow><mo>(</mo><mi>j</mi><mo>)</mo></mrow></msub><mo>)</mo>
+              </mrow>
+            </math>
+            <p class="eq-note">Real arm on the left, null arm on the right.</p>
+          </div>
+        </div>
+      </li>
+
+      <li class="stage">
+        <div class="stage-num">4</div>
+        <div class="stage-body">
+          <h4>Step down and cut</h4>
+          <p>Walk the ordered statistics until the real arm separates from the null arm by a margin, then count how many null values would have cleared the same bar.</p>
+
+          <div class="eq">
+            <math display="block">
+              <mrow>
+                <mi>Z</mi><mo>(</mo><mi>&#x394;</mi><mo>)</mo><mo>=</mo>
+                <mo movablelimits="false">min</mo>
+                <mo>{</mo>
+                <msub><mi>Z</mi><mrow><mo>(</mo><mi>j</mi><mo>)</mo></mrow></msub>
+                <mo>:</mo>
+                <msub><mi>Z</mi><mrow><mo>(</mo><mi>j</mi><mo>)</mo></mrow></msub>
+                <mo>&#x2265;</mo>
+                <msub><mover accent="true"><mi>Z</mi><mo>&#x2015;</mo></mover><mrow><mo>(</mo><mi>j</mi><mo>)</mo></mrow></msub>
+                <mo>+</mo><mi>&#x394;</mi>
+                <mo>}</mo>
+              </mrow>
+            </math>
+          </div>
+
+          <div class="eq">
+            <math display="block">
+              <mrow>
+                <msub><mi>N</mi><mo>+</mo></msub><mo>(</mo><mi>&#x394;</mi><mo>)</mo>
+                <mo>=</mo>
+                <munderover><mo>&#x2211;</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>p</mi></munderover>
+                <mi>&#x1D7D9;</mi><mo>(</mo>
+                <msub><mi>Z</mi><mrow><mo>(</mo><mi>j</mi><mo>)</mo></mrow></msub>
+                <mo>&#x2265;</mo><mi>Z</mi><mo>(</mo><mi>&#x394;</mi><mo>)</mo><mo>)</mo>
+              </mrow>
+            </math>
+            <p class="eq-note">How many real variables clear the cutoff &mdash; the denominator.</p>
+          </div>
+
+          <div class="eq">
+            <math display="block">
+              <mrow>
+                <msub><mover accent="true"><mi>e</mi><mo>^</mo></mover><mn>0</mn></msub><mo>(</mo><mi>&#x394;</mi><mo>)</mo>
+                <mo>=</mo>
+                <mfrac><mn>1</mn><mi>M</mi></mfrac>
+                <munderover><mo>&#x2211;</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>p</mi></munderover>
+                <munderover><mo>&#x2211;</mo><mrow><mi>m</mi><mo>=</mo><mn>1</mn></mrow><mi>M</mi></munderover>
+                <mi>&#x1D7D9;</mi><mo>(</mo>
+                <msubsup><mover accent="true"><mi>Z</mi><mo>~</mo></mover><mrow><mo>(</mo><mi>j</mi><mo>)</mo></mrow><mrow><mo>(</mo><mi>m</mi><mo>)</mo></mrow></msubsup>
+                <mo>&#x2265;</mo><mi>Z</mi><mo>(</mo><mi>&#x394;</mi><mo>)</mo><mo>)</mo>
+              </mrow>
+            </math>
+            <p class="eq-note">How many null variables would have cleared it &mdash; the numerator.</p>
+          </div>
+
+          <div class="eq">
+            <math display="block">
+              <mrow>
+                <msub><mover accent="true"><mi>S</mi><mo>^</mo></mover><mi>q</mi></msub>
+                <mo>=</mo>
+                <mo>{</mo><mi>j</mi><mo>:</mo>
+                <mover accent="true"><mtext>Fdr</mtext><mo>^</mo></mover>
+                <mo>(</mo><msub><mi>&#x394;</mi><mrow><mo>(</mo><mi>j</mi><mo>)</mo></mrow></msub><mo>)</mo>
+                <mo>&#x2264;</mo><mi>q</mi>
+                <mo>}</mo>
+              </mrow>
+            </math>
+            <p class="eq-note">At <math><mrow><mi>q</mi><mo>=</mo><mn>0.1</mn></mrow></math>: of 10 selected, at most about 1 is expected to be a false positive.</p>
+          </div>
+        </div>
+      </li>
+
+    </ol>
+  </section>
+
+  <footer>
+    <p>Rubin, Fan, Barisoni, Janowczyk &amp; Zee. &ldquo;Novel Scalar&#8209;on&#8209;matrix Regression for Unbalanced Feature Matrices.&rdquo; <em>Statistics in Biosciences</em> 18:192&ndash;213, 2026.</p>
+    <p>He, Zhou, Jiang, Wen &amp; Li. &ldquo;False discovery control for penalized variable selections with high&#8209;dimensional covariates.&rdquo; <em>Stat Appl Genet Mol Biol</em> 17(6), 2018.</p>
+  </footer>
+
+</div>
+<script src="assets/theme.js"></script>
+</body>
+</html>
