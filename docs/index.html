@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CLUSSO &times; PS-Fdr</title>
+<meta name="description" content="Scalar-on-matrix regression for unbalanced tubule feature matrices, false discovery control for penalized selection, and the open question of composing the two.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%94%AC</text></svg>">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CLUSSO &times; PS-Fdr">
+<meta property="og:description" content="Scalar-on-matrix regression for unbalanced tubule feature matrices, false discovery control for penalized selection, and the open question of composing the two.">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="theme-toggle" id="themetoggle" type="button" aria-label="Toggle colour theme">Dark</button>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">UMD DC &middot; method notes</p>
+    <h1>Unbalanced matrices,<br>and what you may believe</h1>
+    <p class="standfirst">Two algorithms drawn end to end, and the open question of whether one can be wrapped around the other.</p>
+    <nav class="sitenav">
+      <a href="index.html" aria-current="page">Overview</a>
+      <a href="clusso.html">CLUSSO</a>
+      <a href="random-clusso.html">Random CLUSSO</a>
+      <a href="ps-fdr.html">PS-Fdr</a>
+      <a href="fdr-clusso.html">FDR-CLUSSO</a>
+    </nav>
+  </header>
+
+  <section>
+    <div class="prose">
+      <p>
+        Digital pathology turns one kidney biopsy into a matrix: a row per tubule
+        segmented from the slide, a column per image feature. The row count varies
+        wildly between patients, which breaks every scalar&#8209;on&#8209;matrix regression
+        method that expects a balanced design. <strong>CLUSSO</strong> is the method
+        that handles it.
+      </p>
+      <p>
+        Separately, cross&#8209;validated penalized selection is known to over&#8209;select
+        badly &mdash; in one benchmark roughly nine of every ten reported discoveries
+        were noise. <strong>PS&#8209;Fdr</strong> is a procedure that puts a false
+        discovery rate guarantee on penalized selection without needing p&#8209;values.
+      </p>
+      <p>
+        These notes work through both algorithms in full, then ask whether the second
+        can be wrapped around the first &mdash; an extension the CLUSSO paper's own
+        discussion proposes but leaves unbuilt.
+      </p>
+    </div>
+
+    <div class="cards">
+      <a class="card" href="clusso.html">
+        <span class="ct">Method &middot; written up</span>
+        <h3>CLUSSO</h3>
+        <p>Pool every tubule, cluster them, average within patient and cluster, then
+        fit an alternating structured lasso. Includes a twelve&#8209;patient example run
+        end to end through the real implementation.</p>
+      </a>
+      <a class="card" href="ps-fdr.html">
+        <span class="ct">Method &middot; written up</span>
+        <h3>PS&#8209;Fdr</h3>
+        <p>Bootstrap stability selection, a permutation&#8209;calibrated null, a
+        SAM&#8209;style normalization and a step&#8209;down cutoff that bounds the fraction of
+        selected variables expected to be false.</p>
+      </a>
+      <a class="card todo" href="fdr-clusso.html">
+        <span class="ct">Open problem</span>
+        <h3>FDR&#8209;CLUSSO</h3>
+        <p>Substituting CLUSSO for the lasso inside PS&#8209;Fdr. The interface lines up
+        on a single line; three obstacles do not. Where it breaks, ranked, and what
+        still has to be decided.</p>
+      </a>
+      <a class="card todo" href="random-clusso.html">
+        <span class="ct">To do</span>
+        <h3>Random CLUSSO</h3>
+        <p>CLUSSO with the random lasso, for correlated image features. A separate
+        manuscript and a separate codebase &mdash; not yet worked through here.</p>
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    <p>Rubin, Fan, Barisoni, Janowczyk &amp; Zee. &ldquo;Novel Scalar&#8209;on&#8209;matrix Regression for Unbalanced Feature Matrices.&rdquo; <em>Statistics in Biosciences</em> 18:192&ndash;213, 2026.</p>
+    <p>He, Zhou, Jiang, Wen &amp; Li. &ldquo;False discovery control for penalized variable selections with high&#8209;dimensional covariates.&rdquo; <em>Stat Appl Genet Mol Biol</em> 17(6), 2018.</p>
+  </footer>
+
+</div>
+<script src="assets/theme.js"></script>
+</body>
+</html>

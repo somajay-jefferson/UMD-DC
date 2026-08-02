@@ -15,11 +15,22 @@ not just predict well.
 
 **Why existing methods don't work:**
 - Vectorizing `X_i` loses row/column structure and blows up the parameter count.
-- Existing scalar-on-matrix regression (trace regression [Zhou & Li], structured
-  lasso [Zhao & Leng]) all require a **balanced design** — every subject's matrix
-  must have the same number of rows. Real tubule counts per subject vary (in
-  their data: median ~900–930 tubules/subject, IQR roughly 570–1400) so this
-  doesn't hold.
+- Existing scalar-on-matrix methods all require a **balanced design** — every
+  subject's matrix must have the same number of rows. Real tubule counts vary (in
+  their data: median 929 and 900 tubules/subject for NEPTUNE and CureGN, IQRs
+  (570, 1377) and (583, 1404)), so this fails.
+- The paper rejects the two main families for *different* reasons, worth keeping
+  separate: **trace regression** (Zhou & Li — regress `y_i` on `tr(X_i Bᵀ)`) is
+  rejected because it "estimate[s] coefficients for each individual matrix element
+  rather than at the row or column level," which is the wrong granularity for
+  saying "feature *j* is a biomarker." **Structured lasso** (Zhao & Leng —
+  regress `y_i` on `αᵀ X_i β`) has exactly the right row/column granularity and is
+  the model CLUSSO adopts; its only disqualifying flaw is the balanced-design
+  assumption, which is what CLUSSO repairs.
+- A second, subtler structural problem: rows are **unordered**. There is "no
+  consistent and meaningful ordering of tubules, or the rows of `X_i`, across
+  subjects," so even with equal row counts, `α_k` would be meaningless. Clustering
+  fixes the ordering as well as the count.
 - Naively averaging every tubule's features into one vector per subject (the
   "naïve" baseline throughout the paper) throws away within-subject heterogeneity
   — e.g. atrophic vs. non-atrophic tubules have different tubular basement
@@ -34,12 +45,30 @@ correctly labeled into `G = 2` latent subgroups. Then define:
 - `w_i^k`: true proportion of subject `i`'s tubules in subgroup `k`.
 - `X**_i = diag(w_i^1, w_i^2) · X*_i` — the weighted, balanced 2×q design matrix.
 
+**Distributional assumptions (easy to miss, and they matter).** The paper assumes
+`vec(X**_i) ∼ N(0, Σ)` with the **diagonal of `Σ` equal to 1**, and
+`ε_i ∼ N(0, σ²)` — then adds "the assumptions on `X**_i` can be met through
+standardization." So the design is assumed **mean-zero and unit-variance**, i.e. a
+full z-score, not merely centred. This is not cosmetic: the error bound below
+inherits Zhao & Leng's structured restricted-eigenvalue condition, which is stated
+for a normalized design. In the code this standardization happens *inside* each
+lasso sub-solve (`_glmnet_lasso` in `Mainfunction_albet.py`, matching glmnet's
+`standardize=TRUE`) and is then undone by dividing the coefficients back by the
+column scales — so `β̂` is reported in original units.
+
 Model: `y_i = (α*)ᵀ X**_i β* + ε_i`, fit by adapting Zhao & Leng's structured lasso:
 
 ```
 (α̂*_F, β̂*_F) = argmin_{α*,β*} (1/n) Σ (y_i − α*ᵀ X**_i β*)² + λ_n ‖β*‖_1
-  subject to: ‖α*‖_1 = 1, sign(β*_(1)) = 1   (identifiability constraints)
+  subject to: ‖α*‖_1 = 1, sign(β*_(1)) = 1
 ```
+
+The constraints exist because `α*` and `β*` enter **multiplicatively**, so
+`(cα*, β*/c)` gives an identical fit for any `c ≠ 0`. Fixing `‖α*‖_1 = 1` picks one
+representative from that family, and `sign(β*_(1)) = 1` — where `β*_(1)` is the
+**largest component of `β*` in magnitude** — pins the remaining sign flip. Note
+what these do *not* fix: the sign of any individual coefficient is still
+unidentifiable, which is why the paper reports only magnitudes.
 
 `α*` (row/cluster-level effect) is **not** penalized — both clusters are always
 used. `β*` (column/feature-level effect) **is** L1-penalized — this is where
@@ -66,18 +95,28 @@ tubules per subject is observed, not the full population. CLUSSO's fix:
 5. Fit the same structured-lasso objective as the oracle, but on `X̂**_i`
    (Eq. 6) — this is the CLUSSO estimator `(α̂*_C, β̂*_C)`.
 
-**Key theoretical result (Section 3.2):** under *perfect* clustering
-(`𝕋̂_k = 𝕋_k`), CLUSSO is shown via the Weak Law of Large Numbers + continuous
-mapping theorem to converge in distribution to the Full Information Structured
-Lasso as the per-subject tubule counts →∞. So CLUSSO is asymptotically justified
-as an approximation to the (unobservable) oracle, with the approximation quality
-governed by clustering accuracy and per-subject sample size.
+**Key theoretical result (Section 3.2):** under two assumptions — *perfect*
+clustering (`𝕋̂_k = 𝕋_k`) and tubule feature vectors i.i.d. within a subgroup for
+each subject — CLUSSO is shown via the Weak Law of Large Numbers + continuous
+mapping theorem to converge **in distribution to the Full Information estimator**
+`(α̂*_F, β̂*_F)` (not to the true parameters) as the per-subject tubule counts →∞.
+So CLUSSO is asymptotically justified as an approximation to the (unobservable)
+oracle, with approximation quality governed by clustering accuracy and
+per-subject sample size.
+
+Note the hidden cost of clustering *jointly* across the whole cohort: subject
+`i`'s design matrix then depends on every other subject's tubules through the
+shared mixture parameters. The paper's i.i.d. argument is made for the oracle
+`X**_i` with true labels; it does not transfer cleanly to `X̂**_i` once labels come
+from one shared fit.
 
 This is exactly the alternating-optimization machinery in this repo's
 `Mainfunction_albet.py`: fix `α`, solve lasso for `β`; fix `β`, solve OLS for
-`α`; repeat to convergence. `coefficient.py` is the standalone lasso-path/BIC
-fitter used for the naïve baseline; `K_prdu.py`/`mat_vec_prd.py` are the tensor
-helpers for that alternation.
+`α`; repeat to convergence. `K_prdu.py`/`mat_vec_prd.py` are the tensor helpers
+for that alternation. `coefficient.py` is a faithful port of the R
+`coefficient.r` (glmnet-equivalent lasso path with BIC selection) but is
+**not imported anywhere in the Python codebase** — the naïve baseline calls
+sklearn's `LassoCV` directly.
 
 ## 4. Simulation study (Section 4) — design
 
@@ -103,10 +142,16 @@ helpers for that alternation.
 ## 5. Simulation results — what actually happens
 
 - **TPR:** Full Information > CLUSSO ≳ naïve, for all settings. All non-decreasing in `n`.
-- **FPR:** this is where CLUSSO wins clearly. Naïve's FPR **increases** with `n`
-  (converges toward OLS as λ shrinks — it just keeps adding predictors).
-  CLUSSO's FPR generally **decreases** with `n`. At high sparsity (`s_β*=0.8`),
-  CLUSSO needs a smaller `n` than naïve to beat it on FPR.
+- **FPR:** CLUSSO's main advantage, but *not* uniformly. Naïve's FPR
+  **increases** with `n` (converging toward OLS as λ shrinks — it keeps adding
+  predictors), while CLUSSO's generally **decreases** with `n`. Crucially though,
+  the two move in opposite directions in `q`: as the number of features grows,
+  **naïve's FPR decreases while CLUSSO's increases**, so the curves cross and at
+  large `q` with small `n` naïve can be the better of the two. CLUSSO's edge is
+  strongest at high sparsity (`s_β*=0.8`) and smaller `q`, where it needs a
+  smaller `n` than naïve to win on FPR. The paper's own summary is careful about
+  this: the advantage holds "particularly for higher sparsity levels and smaller
+  numbers of features `q`."
 - **Bias:** CLUSSO < naïve, both > Full Information, across all settings.
 - **MSE:** CLUSSO ≈ naïve (comparable), both > Full Information oracle.
 - **Robustness:** CLUSSO's FPR advantage over naïve *persists* as `σ_R²`
@@ -174,6 +219,12 @@ The paper's own discussion lists these extensions:
 - No built-in false discovery control: λ is chosen purely by CV-minimized MSE,
   which (per the companion FDR paper) is known to not control the false
   discovery rate of the resulting selected-feature set.
-- Subjects with zero tubules in some cluster are silently dropped from the
-  clustering-accuracy calculation and can cause resampling loops in the
-  simulation code (`no_clust` retry logic in `CLUSSO_Functions_Project1_6_16_23.py`).
+- A subject with zero tubules in either cluster has `X̂*_i` **undefined** and drops
+  out of the analysis entirely. In simulation this is handled by discarding the
+  replicate and regenerating (`no_clust` retry logic in
+  `CLUSSO_Functions_Project1_6_16_23.py`) — a luxury unavailable on real data,
+  where those subjects are simply lost.
+- The `λ → sparsity` map has no coefficient path. Each λ needs a fresh fit, and
+  because the objective is non-convex the map is not guaranteed monotone —
+  verified empirically on a toy cohort, where one of three datasets saw the
+  selected set *grow* as the penalty increased.

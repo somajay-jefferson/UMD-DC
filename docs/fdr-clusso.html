@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FDR-CLUSSO</title>
+<meta name="description" content="Substituting CLUSSO for the lasso inside PS-Fdr: where the interface lines up, where it breaks, and what has to be decided.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%94%AC</text></svg>">
+<meta property="og:type" content="article">
+<meta property="og:title" content="FDR-CLUSSO">
+<meta property="og:description" content="Substituting CLUSSO for the lasso inside PS-Fdr: where the interface lines up, where it breaks, and what has to be decided.">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="theme-toggle" id="themetoggle" type="button" aria-label="Toggle colour theme">Dark</button>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">The composition</p>
+    <h1>FDR&#8209;CLUSSO</h1>
+    <p class="standfirst">Substituting CLUSSO for the lasso inside PS&#8209;Fdr: one line, twice &mdash; and everything that line drags with it.</p>
+    <nav class="sitenav">
+      <a href="index.html">Overview</a>
+      <a href="clusso.html">CLUSSO</a>
+      <a href="random-clusso.html">Random CLUSSO</a>
+      <a href="ps-fdr.html">PS-Fdr</a>
+      <a href="fdr-clusso.html" aria-current="page">FDR-CLUSSO</a>
+    </nav>
+  </header>
+
+  <div class="status">
+    <span class="flag">Open problem</span>
+    <span>The composition below is an idea under evaluation, not a result. The
+    interface genuinely lines up; three obstacles genuinely do not, and the design
+    questions at the bottom are unanswered.</span>
+  </div>
+
+<!-- ================= COMPOSITION ================= -->
+  <section>
+    <h2>The substitution</h2>
+    <h3>One line, twice</h3>
+
+    <div class="prose">
+      <p>
+        Call sites <a href="ps-fdr.html#site-a">A</a> and <a href="ps-fdr.html#site-b">B</a> are the entire interface. PS&#8209;Fdr never touches its
+        estimator any other way &mdash; it just needs a selected set back. CLUSSO
+        produces exactly that. This is why the instinct is right, and why the
+        authors of both papers gestured at it.
+      </p>
+      <p>
+        But watch what has to be inserted <em class="term">inside</em> the
+        resampling loop.
+      </p>
+    </div>
+
+    <div class="compose" id="substitution">
+
+      <div class="col-a">
+        <div class="col-head">Lasso &mdash; as published</div>
+        <div class="flow">
+          <div class="node">resample <math><mi>n</mi></math> rows<span class="cap">rows of a fixed matrix X</span></div>
+          <div class="arrow">&#9660;</div>
+          <div class="node ghost">nothing here</div>
+          <div class="arrow">&#9660;</div>
+          <div class="node">fit lasso<span class="cap">convex &mdash; one unique solution</span></div>
+          <div class="arrow">&#9660;</div>
+          <div class="node terminal">
+            <math><mrow>
+              <msup><mi>S</mi><mrow><mo>(</mo><mi>b</mi><mo>)</mo></mrow></msup>
+              <mo>=</mo><mo>{</mo><mi>j</mi><mo>:</mo>
+              <msub><mover accent="true"><mi>&#x3B2;</mi><mo>^</mo></mover><mi>j</mi></msub>
+              <mo>&#x2260;</mo><mn>0</mn><mo>}</mo>
+            </mrow></math>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-b">
+        <div class="col-head">CLUSSO &mdash; proposed</div>
+        <div class="flow">
+          <div class="node">resample <math><mi>n</mi></math> subjects<span class="cap">each carries ~900 tubules</span></div>
+          <div class="arrow">&#9660;</div>
+          <div class="node inserted">re&#8209;pool &#8594; re&#8209;cluster &#8594; re&#8209;average<span class="cap">no counterpart in the FDR paper</span></div>
+          <div class="arrow">&#9660;</div>
+          <div class="node">fit CLUSSO<span class="cap">non&#8209;convex &mdash; seed&#8209;dependent</span></div>
+          <div class="arrow">&#9660;</div>
+          <div class="node terminal">
+            <math><mrow>
+              <msup><mi>S</mi><mrow><mo>(</mo><mi>b</mi><mo>)</mo></mrow></msup>
+              <mo>=</mo><mo>{</mo><mi>j</mi><mo>:</mo>
+              <msub><mover accent="true"><mi>&#x3B2;</mi><mo>^</mo></mover><mi>j</mi></msub>
+              <mo>&#x2260;</mo><mn>0</mn><mo>}</mo>
+            </mrow></math>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="split">
+      <div class="panel good">
+        <h4>Holds up</h4>
+        <ul>
+          <li><strong>Permuting <math><mi>y</mi></math> is a valid null.</strong> The clustering step is unsupervised, so shuffling the outcome decouples precisely what it should and leaves the design construction intact.</li>
+          <li><strong>Sign non&#8209;identifiability does not bite.</strong> Only the product <math><mrow><mi>&#x3B2;</mi><mo>&#x2297;</mo><mi>&#x3B1;</mi></mrow></math> is identified, but PS&#8209;Fdr reads the <em>support</em> of <math><mi>&#x3B2;</mi></math>, and the support is identifiable.</li>
+          <li><strong>No limiting distribution required.</strong> Which is fortunate, since CLUSSO has only a proven error bound, never a derived distribution.</li>
+        </ul>
+      </div>
+      <div class="panel bad">
+        <h4>Does not</h4>
+        <ul>
+          <li>The design matrix is <em>manufactured inside</em> the loop rather than supplied from outside it.</li>
+          <li>Two fits on identical data can return different selected sets.</li>
+          <li>The nested loops demand <math><mrow><mi>B</mi><mo>+</mo><mi>M</mi><mi>B</mi><mo>&#x2248;</mo><mn>5050</mn></mrow></math> fits, each potentially dragging a mixture model over 225,000 points.</li>
+          <li>&ldquo;Fix the number selected&rdquo; assumes a coefficient path that CLUSSO does not have.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+<!-- ================= OBSTACLES ================= -->
+  <section>
+    <h2>Ranked by how much they hurt</h2>
+    <h3>Where it breaks</h3>
+
+    <ul class="obstacles">
+
+      <li class="obstacle">
+        <div class="rank">01</div>
+        <div>
+          <h4>The selection frequency stops meaning one thing</h4>
+          <p>
+            CLUSSO&rsquo;s objective is bilinear in <math><mi>&#x3B1;</mi></math> and
+            <math><mi>&#x3B2;</mi></math>, hence non&#8209;convex. The paper concedes the
+            algorithm reaches a stationary point rather than a global minimum,
+            which is why it runs five random restarts and keeps the best
+            objective. So the fitted <math><mover accent="true"><mi>&#x3B2;</mi><mo>^</mo></mover></math>
+            is a function of data, <math><mi>&#x3BB;</mi></math>,
+            <em class="term">and seed</em>.
+          </p>
+          <p>
+            That means <math><msub><mi>&#x3A0;</mi><mi>j</mi></msub></math> confounds
+            two sources of variation: bootstrap resampling variability, which
+            stability selection exists to measure, and optimizer noise, which is
+            nothing. Meinshausen and B&uuml;hlmann&rsquo;s framework assumes the
+            selection map is fixed given the resample. Under CLUSSO it is not,
+            and the optimizer noise appears in both the real and null arms
+            without any guarantee it cancels.
+          </p>
+          <div class="where"><b>Where:</b> the &ldquo;non&#8209;convex, seed&#8209;dependent&rdquo; node in the right&#8209;hand column above.</div>
+        </div>
+      </li>
+
+      <li class="obstacle">
+        <div class="rank">02</div>
+        <div>
+          <h4>The design matrix is estimated, not observed</h4>
+          <p>
+            In the FDR paper, <math><mi>X</mi></math> is fixed data sitting outside
+            the loop and only the resampling varies. In CLUSSO, the design matrix
+            is the <em class="term">output</em> of a clustering step &mdash; it is
+            part of the estimator. So the bootstrap forces a choice the original
+            paper never confronts.
+          </p>
+          <p>
+            Re&#8209;clustering each resample is honest, since it propagates
+            clustering uncertainty into the selection frequency, and CLUSSO&rsquo;s
+            error is dominated by clustering accuracy. But it introduces label
+            switching across bootstraps and costs enormously. Freezing the
+            clustering is cheap and matches the fixed&#8209;<math><mi>X</mi></math>
+            assumption, but then the FDR control is conditional on one clustering
+            solution and understates variability.
+          </p>
+          <p>
+            Sharper still: because clustering is fitted <em>jointly</em> across the
+            whole cohort, subject <math><mi>i</mi></math>&rsquo;s design row depends
+            on every other subject&rsquo;s tubules. Resampling subjects is therefore
+            not resampling independent units.
+          </p>
+          <div class="where"><b>Where:</b> the dashed amber box that has no counterpart on the left.</div>
+        </div>
+      </li>
+
+      <li class="obstacle">
+        <div class="rank">03</div>
+        <div>
+          <h4>The compute does not close</h4>
+          <p>
+            PS&#8209;Fdr needs <math><mrow><mi>B</mi><mo>+</mo><mi>M</mi><mo>&#xD7;</mo><mi>B</mi></mrow></math>
+            fits &mdash; about 5,050 at the paper&rsquo;s defaults. With frozen
+            clustering each fit is an alternating solve on a
+            <math><mrow><mn>2</mn><mo>&#xD7;</mo><mn>57</mn><mo>&#xD7;</mo><mn>250</mn></mrow></math>
+            tensor: seconds. With re&#8209;clustering inside the loop, each one needs
+            a Gaussian mixture over roughly 225,000 tubules in 57 dimensions:
+            minutes.
+          </p>
+          <p>
+            Which is to say the decision in obstacle 02 is not merely
+            philosophical. It is the difference between an afternoon and
+            something on the order of two weeks of serial compute.
+          </p>
+          <div class="where"><b>Where:</b> the amber box, multiplied by both nested loops in <a href="ps-fdr.html">PS&#8209;Fdr step 2</a>.</div>
+        </div>
+      </li>
+
+      <li class="obstacle">
+        <div class="rank">04</div>
+        <div>
+          <h4>No path to walk</h4>
+          <p>
+            Fixing the number of selected variables on permuted samples is
+            PS&#8209;Fdr&rsquo;s central defence against underestimating the false
+            discovery count. With a lasso you simply walk the coefficient path to
+            a target size. CLUSSO has no path at all &mdash; every
+            <math><mi>&#x3BB;</mi></math> demands its own fit, with no warm-start
+            structure to walk along. And the map from
+            <math><mi>&#x3BB;</mi></math> to support size is not even guaranteed
+            monotone: sweeping 60 penalty values across three toy datasets, one
+            of the three saw the selected set <em class="term">grow</em> as the
+            penalty was raised, because different
+            <math><mi>&#x3BB;</mi></math> land the alternating optimizer on
+            different stationary points. Usually monotone, not reliably so &mdash;
+            which is precisely the wrong property for a device that must hit an
+            exact target size on every one of thousands of permuted samples.
+          </p>
+          <div class="where"><b>Where:</b> the underlined constraint in <a href="ps-fdr.html#site-b">PS&#8209;Fdr step 2</a>.</div>
+        </div>
+      </li>
+
+    </ul>
+  </section>
+
+<!-- ================= OPEN ================= -->
+  <section>
+    <h2>Still open</h2>
+    <h3>What has to be decided</h3>
+
+    <div class="prose">
+      <p>
+        Framed as &ldquo;plug CLUSSO in where the lasso goes,&rdquo; this is an
+        application note, and a referee will observe that estimator&#8209;agnosticism
+        was already claimed. Framed as
+        <strong>extending false discovery control to estimators whose design
+        matrix is itself estimated by an unsupervised pre&#8209;step, and whose
+        objective is non&#8209;convex</strong>, obstacles 01 and 02 stop being
+        problems and become the contribution.
+      </p>
+    </div>
+
+    <ul class="qlist">
+      <li class="q">
+        <h4>Inside the loop, or outside it?</h4>
+        <p>Re&#8209;cluster every bootstrap, freeze once, or implement both and let the gap between them be the finding.</p>
+      </li>
+      <li class="q">
+        <h4>What to do about optimizer noise</h4>
+        <p>Fix the initialization for determinism, keep the restart convention, or measure how much of the selection frequency it actually accounts for before deciding.</p>
+      </li>
+      <li class="q">
+        <h4>Which regime is the target</h4>
+        <p>On the real data <math><mrow><mi>q</mi><mo>=</mo><mn>57</mn></mrow></math> and CLUSSO already selects a single feature &mdash; controlling FDR on a singleton demonstrates little. The leverage is in the simulation settings where <math><mi>q</mi></math> reaches 150 to 200 and CLUSSO&rsquo;s false positive rate sits between 20 and 30 percent.</p>
+      </li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Rubin, Fan, Barisoni, Janowczyk &amp; Zee. &ldquo;Novel Scalar&#8209;on&#8209;matrix Regression for Unbalanced Feature Matrices.&rdquo; <em>Statistics in Biosciences</em> 18:192&ndash;213, 2026.</p>
+    <p>He, Zhou, Jiang, Wen &amp; Li. &ldquo;False discovery control for penalized variable selections with high&#8209;dimensional covariates.&rdquo; <em>Stat Appl Genet Mol Biol</em> 17(6), 2018.</p>
+  </footer>
+
+</div>
+<script src="assets/theme.js"></script>
+</body>
+</html>

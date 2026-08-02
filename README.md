@@ -1,5 +1,8 @@
 # CLUSSO / TEPIG
 
+**Documentation:** https://somajay-jefferson.github.io/UMD-DC/ — the methods
+drawn end to end, with a worked example computed from the code in this repo.
+
 Statistical methods for regression on subjects whose data consists of many
 object-level measurements grouped into latent clusters (e.g. per-subject
 tubule-level histology features aggregated into a scalar outcome such as
@@ -16,6 +19,7 @@ implementation it was ported from.
 ## Directory structure
 
 ```
+docs/       GitHub Pages site (served from master /docs)
 src/
   core/     Core CLUSSO: alternating structured lasso on (cluster, feature) matrices
   tepig/    TEPIG extension: tensor model on (cluster, feature, slide) data
@@ -32,7 +36,7 @@ clussocode.Rproj        RStudio project file for the R sources
 | `Mainfunction_albet.py` | Alternating optimizer: fixes `alpha`, solves sparse `beta` via lasso; fixes `beta`, solves `alpha` via OLS; repeats to convergence. `_glmnet_lasso` reimplements R `glmnet`'s centering/scaling so results match the R version exactly. |
 | `mat_vec_prd.py` | Tensor x vector products used in each alternation step. |
 | `K_prdu.py` | Kronecker product helper, used for the convergence check `‖β⊗α − β0⊗α0‖`. |
-| `coefficient.py` | Standalone glmnet-equivalent lasso path fitter with BIC lambda selection (used by the naive/average baseline). |
+| `coefficient.py` | Standalone glmnet-equivalent lasso path fitter with BIC lambda selection. A faithful port of the R `coefficient.r`, but currently **unused** — nothing in the Python codebase imports it, and the naive baseline calls sklearn's `LassoCV` directly. |
 | `CLUSSO_Functions_Project1_6_16_23.py` | Simulation machinery: synthetic data generation + GMM clustering, TPR/FPR/L1-bias/MSE scoring, and `CLUSSO_performance` which benchmarks CLUSSO vs. naive averaging vs. the "full information" oracle. |
 | `CLUSSO_Simulations_Project1_6_16_23.py` | Batch driver over a large parameter grid (noise, sparsity, `n`, `q`); one job per grid row, 1000 reps each, writes CSV results. |
 | `CLUSSO_Data_Example.py` | End-to-end worked example: synthetic data -> GMM clustering -> CLUSSO fit vs. naive baseline -> printed coefficients and MSE. |
@@ -63,13 +67,23 @@ required, not just a suggestion.
   Flex-Threshold/Structured-OLS `Mainfunction_albet` variants exist only in R;
   there is no TEPIG (tensor) equivalent.
 
-## Known gap
+## Cross-validation module
 
-`CLUSSO_Data_Example.py` and `CLUSSO_Functions_Project1_6_16_23.py` both
-`import SLasso_MSE`, but `SLasso_MSE.py` does not exist anywhere in this
-repo — only `SLasso_MSE.R` is present (inside `clussocode.zip`). Those two
-files will not run until `SLasso_MSE.py` is ported from the R version and
-added to `src/core/`.
+`SLasso_MSE.py` provides the three functions the rest of the codebase imports
+for choosing `lambda`:
+
+| function | role |
+|---|---|
+| `slasso_mse` | Fit on training subjects, score on held-out subjects. Centres the test outcomes and centres each test matrix by the test fold's own subject-wise mean. |
+| `CV_make_folds` | Split subjects into five folds; the first four take `floor(n/5)` each and the fifth takes the remainder. |
+| `lambda_CV_mse` | Five-fold CV MSE for one `lambda`; call once per grid value and take the `argmin`. |
+
+Ported from `SLasso_MSE.R` in `clussocode.zip`. One deliberate deviation: fewer
+than five subjects raises a `ValueError` rather than silently returning `NaN`
+from an empty test fold as the R version does. Note also that
+`Supplemental_Code.zip` carries a *different* copy of these three functions with
+an extra `thresh` argument, used by Random CLUSSO — the version here matches the
+call sites in `src/`.
 
 ## Running
 
