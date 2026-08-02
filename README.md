@@ -67,13 +67,23 @@ required, not just a suggestion.
   Flex-Threshold/Structured-OLS `Mainfunction_albet` variants exist only in R;
   there is no TEPIG (tensor) equivalent.
 
-## Known gap
+## Cross-validation module
 
-`CLUSSO_Data_Example.py` and `CLUSSO_Functions_Project1_6_16_23.py` both
-`import SLasso_MSE`, but `SLasso_MSE.py` does not exist anywhere in this
-repo — only `SLasso_MSE.R` is present (inside `clussocode.zip`). Those two
-files will not run until `SLasso_MSE.py` is ported from the R version and
-added to `src/core/`.
+`SLasso_MSE.py` provides the three functions the rest of the codebase imports
+for choosing `lambda`:
+
+| function | role |
+|---|---|
+| `slasso_mse` | Fit on training subjects, score on held-out subjects. Centres the test outcomes and centres each test matrix by the test fold's own subject-wise mean. |
+| `CV_make_folds` | Split subjects into five folds; the first four take `floor(n/5)` each and the fifth takes the remainder. |
+| `lambda_CV_mse` | Five-fold CV MSE for one `lambda`; call once per grid value and take the `argmin`. |
+
+Ported from `SLasso_MSE.R` in `clussocode.zip`. One deliberate deviation: fewer
+than five subjects raises a `ValueError` rather than silently returning `NaN`
+from an empty test fold as the R version does. Note also that
+`Supplemental_Code.zip` carries a *different* copy of these three functions with
+an extra `thresh` argument, used by Random CLUSSO — the version here matches the
+call sites in `src/`.
 
 ## Running
 
