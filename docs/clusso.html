@@ -21,7 +21,7 @@
   <header class="masthead">
     <p class="eyebrow">Algorithm one</p>
     <h1>CLUSSO</h1>
-    <p class="standfirst">Scalar&#8209;on&#8209;matrix regression when every patient hands you a different number of rows.</p>
+    <p class="standfirst">Scalar&#8209;on&#8209;matrix regression for the case where each patient contributes a different number of rows.</p>
     <nav class="sitenav">
       <a href="index.html">Overview</a>
       <a href="clusso.html" aria-current="page">CLUSSO</a>
@@ -38,20 +38,10 @@
 
     <div class="prose">
       <p>
-        Each patient arrives as a matrix, not a vector: one row per tubule
-        segmented from their biopsy slide, one column per image feature. The
-        row count varies wildly between patients &mdash; a median near 929
-        tubules, interquartile range roughly 570 to 1,377. The outcome being
-        predicted is a single number, eGFR, a measure of kidney function.
+        Each patient&rsquo;s data forms a matrix rather than a vector. Every row is one tubule segmented from their biopsy slide, and every column is one image feature. The number of rows differs a great deal between patients: the median was 929 tubules, with an interquartile range of 570 to 1,377. The value being predicted is a single number, eGFR, which measures kidney function.
       </p>
       <p>
-        That shape breaks every existing scalar&#8209;on&#8209;matrix method, which
-        requires the same matrix dimensions for everyone. Two structural
-        problems, actually: the matrices are <em class="term">unbalanced</em>,
-        and their rows are <em class="term">unordered</em> &mdash; tubule 7 in
-        one patient has nothing to do with tubule 7 in another. Clustering
-        fixes both at once, and preserves heterogeneity that plain averaging
-        would destroy.
+        This shape breaks every existing scalar&#8209;on&#8209;matrix method, because those methods require identical matrix dimensions for every subject. There are really two problems here. First, the matrices are <em class="term">unbalanced</em>: they have different numbers of rows. Second, the rows are <em class="term">unordered</em>, so tubule 7 in one patient has nothing to do with tubule 7 in another. Clustering solves both problems at once. It also preserves variation between tubules that plain averaging would erase.
       </p>
     </div>
 
@@ -82,7 +72,7 @@
         <div class="stage-num">1</div>
         <div class="stage-body">
           <h4>Pool</h4>
-          <p>Every tubule from every patient goes into one matrix. Not per&#8209;patient &mdash; the clustering has to be global so that &ldquo;cluster 1&rdquo; means the same thing for everyone.</p>
+          <p>Every tubule from every patient goes into one matrix. The clustering is not done per patient. It has to be global, so that &ldquo;cluster 1&rdquo; means the same thing for every subject.</p>
           <div class="eq">
             <math display="block">
               <mrow>
@@ -102,7 +92,7 @@
         <div class="stage-num">2</div>
         <div class="stage-body">
           <h4>Cluster</h4>
-          <p>Gaussian mixture model with <math><mrow><mi>G</mi><mo>=</mo><mn>2</mn></mrow></math>. Every tubule gets a label &mdash; nominally atrophic versus non&#8209;atrophic, though the paper only formally assumes a two&#8209;component latent mixture.</p>
+          <p>A Gaussian mixture model with <math><mrow><mi>G</mi><mo>=</mo><mn>2</mn></mrow></math> assigns every tubule a label. The labels correspond roughly to atrophic versus non&#8209;atrophic tubules, although the paper only formally assumes a two&#8209;component latent mixture.</p>
           <div class="eq">
             <math display="block">
               <mrow>
@@ -113,7 +103,7 @@
                 <mo>{</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>}</mo>
               </mrow>
             </math>
-            <p class="eq-note">Unsupervised. This step never sees the outcome.</p>
+            <p class="eq-note">This step is unsupervised. It never sees the outcome.</p>
           </div>
         </div>
       </li>
@@ -122,7 +112,7 @@
         <div class="stage-num">3</div>
         <div class="stage-body">
           <h4>Average and reweight</h4>
-          <p>Collapse within patient and within cluster. The weights are each patient&rsquo;s share of tubules per cluster &mdash; which matters because the <em class="term">proportion</em> of atrophic tubules is itself the known prognostic signal.</p>
+          <p>Collapse the tubules within each patient and within each cluster. The weights are each patient&rsquo;s share of tubules in that cluster. This matters because the <em class="term">proportion</em> of atrophic tubules is itself a known prognostic signal.</p>
 
           <div class="eq">
             <math display="block">
@@ -160,7 +150,7 @@
                 <mi>&#x1D7D9;</mi><mo>(</mo><msubsup><mi>T</mi><mi>j</mi><mi>i</mi></msubsup><mo>&#x2208;</mo><msub><mover accent="true"><mi>&#x1D54B;</mi><mo>^</mo></mover><mi>k</mi></msub><mo>)</mo>
               </mrow>
             </math>
-            <p class="eq-note">The observed share of that patient&rsquo;s tubules landing in cluster <math><mi>k</mi></math>.</p>
+            <p class="eq-note">The observed share of that patient&rsquo;s tubules assigned to cluster <math><mi>k</mi></math>.</p>
           </div>
 
           <div class="eq">
@@ -190,11 +180,11 @@
                 <msup><mi>&#x211D;</mi><mrow><mn>2</mn><mo>&#xD7;</mo><mi>q</mi></mrow></msup>
               </mrow>
             </math>
-            <p class="eq-note">Balanced at last &mdash; two rows for every patient, regardless of tubule count.</p>
+            <p class="eq-note">The design is balanced at last: two rows for every patient, whatever their tubule count.</p>
           </div>
 
           <div class="note">
-            <span><strong>This is the payoff.</strong> Averaging across <em>all</em> tubules would flatten a genuinely bimodal distribution &mdash; atrophic tubules have thickened basement membranes &mdash; producing a number that describes neither population.</span>
+            <span><strong>Why this matters.</strong> Atrophic tubules have thickened basement membranes, so the distribution across all tubules is genuinely bimodal. Averaging over <em>all</em> of them flattens that distribution and returns a number that describes neither population.</span>
           </div>
         </div>
       </li>
@@ -203,7 +193,7 @@
         <div class="stage-num">4</div>
         <div class="stage-body">
           <h4>Structured lasso</h4>
-          <p>Two coefficient vectors instead of one: <math><mi>&#x3B1;</mi></math> for rows (clusters), <math><mi>&#x3B2;</mi></math> for columns (features). Solved by alternating, because the objective is bilinear and therefore non&#8209;convex.</p>
+          <p>This model uses two coefficient vectors instead of one. <math><mi>&#x3B1;</mi></math> applies to the rows, which are clusters, and <math><mi>&#x3B2;</mi></math> applies to the columns, which are features. The fit alternates between the two, because the objective is bilinear and therefore not convex.</p>
 
           <div class="eq">
             <math display="block">
@@ -240,7 +230,7 @@
                 <mrow><msub><mrow></mrow><mn>1</mn></msub></mrow>
               </mrow>
             </math>
-            <p class="eq-note">Subject to <math><mrow><mo>&#x2016;</mo><mi>&#x3B1;</mi><mo>&#x2016;</mo><msub><mrow></mrow><mn>1</mn></msub><mo>=</mo><mn>1</mn></mrow></math> and a fixed sign on the largest component of <math><mi>&#x3B2;</mi></math>, for identifiability.</p>
+            <p class="eq-note">Subject to <math><mrow><mo>&#x2016;</mo><mi>&#x3B1;</mi><mo>&#x2016;</mo><msub><mrow></mrow><mn>1</mn></msub><mo>=</mo><mn>1</mn></mrow></math> and a fixed sign on the largest component of <math><mi>&#x3B2;</mi></math>. Both constraints exist for identifiability.</p>
           </div>
 
           <div class="algo">
@@ -276,7 +266,7 @@
           </div>
 
           <div class="note">
-            <span><strong>Only <math><mi>&#x3B2;</mi></math> is penalized.</strong> The paper deliberately departs from Zhao &amp; Leng here &mdash; both clusters must stay in the model, so <math><mi>&#x3B1;</mi></math> is left unregularized. The selected set is always about features, never clusters.</span>
+            <span><strong>Only <math><mi>&#x3B2;</mi></math> is penalized.</strong> The paper departs from Zhao &amp; Leng deliberately here. Both clusters must stay in the model, so <math><mi>&#x3B1;</mi></math> is left unregularized. Selection therefore always applies to features, never to clusters.</span>
           </div>
         </div>
       </li>
@@ -295,30 +285,23 @@
           <mo>}</mo>
         </mrow>
       </math>
-      <p class="eq-note">The selected feature set &mdash; the only thing <a href="ps-fdr.html">PS&#8209;Fdr</a> will need.</p>
+      <p class="eq-note">The selected feature set. This is the only quantity <a href="ps-fdr.html">PS&#8209;Fdr</a> needs.</p>
     </div>
   </section>
 
 <!-- ================= WORKED EXAMPLE ================= -->
   <section>
-    <h2>Twelve patients, three features, start to finish</h2>
+    <h2>Twelve patients, three features, every stage shown</h2>
     <h3>A worked example</h3>
 
     <div class="prose">
       <p>
-        Everything below was produced by running the repository&rsquo;s own
-        estimator &mdash; <code>Mainfunction_albet.py</code> and its glmnet&#8209;matching
-        lasso &mdash; on a cohort small enough to print in full. Two tubule
-        populations, normal at roughly <strong>(2, 10)</strong> and atrophic at
-        <strong>(6, 2)</strong>, with measurement noise
+        Everything below was produced by running this repository&rsquo;s own estimator, <code>Mainfunction_albet.py</code>, on a cohort small enough to print in full. There are two tubule populations. Normal tubules sit near <strong>(2, 10)</strong> and atrophic ones near <strong>(6, 2)</strong>. Measurement noise of
         <math><mrow><msub><mi>&#x3C3;</mi><mi>R</mi></msub><mo>=</mo><mn>0.3</mn></mrow></math>
-        added to every tubule.
+        was added to every tubule.
       </p>
       <p>
-        The third feature is the interesting one. Call it nuclei per tubule: it
-        varies from patient to patient but is <em class="term">identical in both
-        tubule populations</em> and has nothing to do with the outcome. It is a
-        pure nuisance, planted so we can watch whether the lasso kills it.
+        The third feature is the one to watch. Call it nuclei per tubule. It varies from patient to patient, but it takes an <em class="term">identical value in both tubule populations</em> and has no effect on the outcome. It is a pure nuisance variable, included deliberately so we can check whether the lasso removes it.
       </p>
     </div>
 
@@ -334,11 +317,11 @@
           <mi>&#x3C3;</mi><mo>=</mo><mn>0.5</mn>
         </mrow>
       </math>
-      <p class="eq-note">The truth we are trying to recover. Atrophic tubules count three times as much; feature 3 has no effect at all.</p>
+      <p class="eq-note">The truth being recovered. Atrophic tubules count three times as much, and feature 3 has no effect at all.</p>
     </div>
 
     <!-- ---------- STAGE 0 ---------- -->
-    <div class="exhead"><span class="exnum">0</span> The raw matrices &mdash; 3 of 12 patients shown</div>
+    <div class="exhead"><span class="exnum">0</span> The raw matrices (3 of 12 patients shown)</div>
 
     <div class="legend">
       <span><i class="swatch norm"></i> normal tubule</span>
@@ -415,10 +398,7 @@
     <div class="prose">
       <p>
         Every tubule from all twelve patients goes into one
-        <math><mrow><mn>73</mn><mo>&#xD7;</mo><mn>3</mn></mrow></math> matrix.
-        Plotted on the two informative features, the mixture is not subtle
-        &mdash; which is the point of a toy. The mixture model recovered the
-        true labels perfectly.
+        <math><mrow><mn>73</mn><mo>&#xD7;</mo><mn>3</mn></mrow></math> matrix. Plotted against the two informative features, the two groups separate obviously, which is deliberate in an example this small. The mixture model recovered the true labels perfectly.
       </p>
     </div>
 
@@ -472,28 +452,15 @@
     </div>
 
     <div class="note">
-      <span><strong>Follow one row across.</strong> Patient A&rsquo;s four normal
-      tubules average to <code>(1.90, 10.03, 4.91)</code>. Multiply by
-      w&#8321; = 0.80 and you get row 1, <code>(1.52, 8.03, 3.93)</code>. That is
-      the only place the weights are ever used &mdash; once, here, and then they
-      are absorbed into the numbers. Every figure here is displayed to two decimals while the arithmetic runs at full precision &mdash; so 0.80 &times; 10.03 reads 8.02 by hand, where the row shows 8.03 from the unrounded 10.0334.</span>
+      <span><strong>Follow one row across.</strong> Patient A&rsquo;s four normal tubules average to <code>(1.90, 10.03, 4.91)</code>. Multiplying by w&#8321; = 0.80 gives row 1, <code>(1.52, 8.03, 3.93)</code>. That is the only place the weights are used. They are applied once, here, and then absorbed into the numbers. Note that every figure is shown to two decimals while the arithmetic runs at full precision. So 0.80 &times; 10.03 gives 8.02 by hand, where the row shows 8.03 computed from the unrounded 10.0334.</span>
     </div>
 
     <div class="note" style="margin-top:12px;">
-      <span><strong>Now read the third number in the two cluster-mean columns.</strong>
-      4.91 against 4.92. 6.66 against 6.66. 5.07 against 5.07. The nuisance
-      feature is the same in both populations for every single patient &mdash; it
-      carries no cluster structure whatsoever, which is exactly why it deserves to
-      be dropped. Compare that to features 1 and 2, which separate cleanly around
-      1.9 against 5.9 and 10.0 against 2.0.</span>
+      <span><strong>Now compare the third number in the two cluster-mean columns:</strong> 4.91 against 4.92, 6.66 against 6.66, 5.07 against 5.07. The nuisance feature takes the same value in both populations for every patient. It carries no cluster structure at all, which is exactly why it should be dropped. Features 1 and 2 behave differently, separating cleanly at about 1.9 against 5.9 and 10.0 against 2.0.</span>
     </div>
 
     <div class="note" style="margin-top:12px;">
-      <span><strong>The last two design columns are one column.</strong> row&#8321; + row&#8322;
-      equals the naive average for every patient, to machine precision &mdash;
-      largest discrepancy across all 12 patients and 3 features is
-      <code>1.78e&#8209;15</code>. The rows partition the naive vector; that is the
-      identity, not a coincidence.</span>
+      <span><strong>The last two design columns hold the same values.</strong> row&#8321; + row&#8322; equals the naive average for every patient, to machine precision. The largest discrepancy across all 12 patients and 3 features is <code>1.78e&#8209;15</code>. The two rows partition the naive vector. This is an algebraic identity, not a coincidence.</span>
     </div>
 
     <div class="eq" style="margin-top:20px;">
@@ -510,35 +477,27 @@
         </mrow>
       </math>
       <p class="eq-note">
-        The last column, <math><mi>y</mi></math>, is the outcome being predicted &mdash;
-        this toy&rsquo;s stand-in for eGFR. It is the target, not part of the design.
-        For patient A: row&#8321; + 3&middot;row&#8322; = (5.12, 9.28, 6.88), dotted with
+        The last column, <math><mi>y</mi></math>, is the outcome being predicted, standing in for eGFR. It is the target, not part of the design. For patient A, row&#8321; + 3&middot;row&#8322; = (5.12, 9.28, 6.88). Taking the dot product with
         <math><mrow><msup><mi>&#x3B2;</mi><mo>&#x2217;</mo></msup><mo>=</mo><mo>(</mo><mn>2</mn><mo>,</mo><mo>&#x2212;</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></mrow></math>
-        gives 0.96, and the observed 0.20 is that plus a noise draw of &minus;0.76.
-        Feature 3 contributes nothing, because
+        gives 0.96. The observed value of 0.20 is that figure plus a noise draw of &minus;0.76. Feature 3 contributes nothing, because
         <math><mrow><msubsup><mi>&#x3B2;</mi><mn>3</mn><mo>&#x2217;</mo></msubsup><mo>=</mo><mn>0</mn></mrow></math>.
       </p>
     </div>
 
     <div class="note" style="margin-top:16px;">
-      <span><strong>Sort that column by w&#8322; and it climbs almost monotonically</strong>
-      &mdash; 0.20 at 20% atrophic, 24.20 at 83%. Not luck: with
+      <span><strong>Sorting that column by w&#8322; shows it climbing almost monotonically,</strong> from 0.20 at 20% atrophic to 24.20 at 83%. This is not chance. With
       <math><mrow><msup><mi>&#x3B1;</mi><mo>&#x2217;</mo></msup><mo>=</mo><mo>(</mo><mn>1</mn><mo>,</mo><mn>3</mn><mo>)</mo></mrow></math>
-      the atrophic row counts triple, which is the simulated form of &ldquo;percentage
-      of tubules with atrophy predicts worse kidney function.&rdquo;</span>
+      the atrophic row counts three times as much. That is the simulated version of the finding that the percentage of tubules with atrophy predicts worse kidney function.</span>
     </div>
 
     <!-- ---------- STANDARDIZATION ---------- -->
-    <div class="exhead"><span class="exnum">&#8901;</span> Inside the lasso &mdash; standardizing before the penalty</div>
+    <div class="exhead"><span class="exnum">&#8901;</span> Inside the lasso: standardizing before the penalty</div>
 
     <div class="prose">
       <p>
         Before any penalty is applied, <math><mrow><mi>Z</mi><mo>=</mo><msup><mi>&#x3B1;</mi><mo>&#x22A4;</mo></msup><msup><mover accent="true"><mi>X</mi><mo>^</mo></mover><mrow><mo>&#x2217;</mo><mo>&#x2217;</mo></mrow></msup></mrow></math>
-        gets column&#8209;wise z&#8209;scored across the twelve patients. The raw columns
-        differ in spread by more than a factor of two, and an
-        <math><msub><mi>L</mi><mn>1</mn></msub></math> penalty is not
-        scale&#8209;invariant &mdash; without this, lambda would silently punish the
-        narrow column hardest.
+        is z&#8209;scored column by column across the twelve patients. The raw columns differ in spread by more than a factor of two, and an
+        <math><msub><mi>L</mi><mn>1</mn></msub></math> penalty is not scale&#8209;invariant. Without this step, lambda would penalize the narrowest column most heavily, purely because of its units.
       </p>
     </div>
 
@@ -564,14 +523,14 @@
     </div>
 
     <!-- ---------- STAGE 4 ---------- -->
-    <div class="exhead"><span class="exnum">4</span> Alternate until it stops moving</div>
+    <div class="exhead"><span class="exnum">4</span> Alternate until the estimates converge</div>
 
     <div class="prose">
       <p>
-        Starting from <math><mrow><mi>&#x3B1;</mi><mo>=</mo><mo>(</mo><mn>0.5</mn><mo>,</mo><mn>0.5</mn><mo>)</mo></mrow></math>
+        The fit starts from <math><mrow><mi>&#x3B1;</mi><mo>=</mo><mo>(</mo><mn>0.5</mn><mo>,</mo><mn>0.5</mn><mo>)</mo></mrow></math>
         and <math><mrow><mi>&#x3B2;</mi><mo>=</mo><mo>(</mo><mn>0.3</mn><mo>,</mo><mo>&#x2212;</mo><mn>0.3</mn><mo>,</mo><mn>0.3</mn><mo>)</mo></mrow></math>
         at <math><mrow><mi>&#x3BB;</mi><mo>=</mo><mn>0.35</mn></mrow></math>.
-        Three passes is all it takes here.
+        Three passes are enough here.
       </p>
     </div>
 
@@ -589,14 +548,11 @@
     </div>
 
     <div class="note">
-      <span><strong>The nuisance feature is zeroed on the very first pass</strong>
-      and never comes back. That is the lasso doing its job &mdash; and it is the
-      single thing <a href="ps-fdr.html">PS&#8209;Fdr</a> will read off, over and over, from thousands of
-      resamples.</span>
+      <span><strong>The nuisance feature is set to zero on the first pass</strong> and never returns. That is the lasso doing its job. It is also the single quantity <a href="ps-fdr.html">PS&#8209;Fdr</a> reads off, repeatedly, from thousands of resamples.</span>
     </div>
 
     <!-- ---------- OUTPUT ---------- -->
-    <div class="exhead"><span class="exnum">&#10003;</span> What came out</div>
+    <div class="exhead"><span class="exnum">&#10003;</span> Results</div>
 
     <div class="split">
       <div class="panel good">
@@ -625,14 +581,11 @@
     </div>
 
     <!-- ---------- HONESTY ---------- -->
-    <div class="exhead"><span class="exnum">?</span> Is that one run, or is it real?</div>
+    <div class="exhead"><span class="exnum">?</span> Does this hold across repeated runs?</div>
 
     <div class="prose">
       <p>
-        One draw proves nothing, so I re&#8209;ran the whole pipeline &mdash; fresh
-        tubules, fresh nuisance values, fresh outcome noise, fresh clustering
-        &mdash; a few hundred times. The direction holds, but the honest picture
-        is a <em class="term">trade&#8209;off</em>, not a clean win.
+        A single draw proves nothing. The whole pipeline was therefore re&#8209;run a few hundred times, with fresh tubules, fresh nuisance values, fresh outcome noise and fresh clustering each time. The direction of the result holds. But the honest summary is a <em class="term">trade&#8209;off</em>, not a clean win.
       </p>
     </div>
 
@@ -655,31 +608,17 @@
 
     <div class="prose" style="margin-top:22px;">
       <p>
-        Read the middle column downward and lambda is revealed for what it is: a
-        dial. Turn it up and false discoveries fall away; turn it up further and
-        real features start disappearing too. The naive lasso sits at 57.5% false
-        positives &mdash; matched exactly by CLUSSO at
-        <math><mrow><mi>&#x3BB;</mi><mo>=</mo><mn>0.10</mn></mrow></math>, where
-        CLUSSO is the weaker method. Only by accepting a much higher miss rate
-        does CLUSSO buy its lower false positive rate here.
+        Reading the middle column downward shows what lambda really is: a dial. Raise it and false discoveries fall away. Raise it further and real features start disappearing too. The naive lasso sits at 57.5% false positives. CLUSSO matches that figure exactly at
+        <math><mrow><mi>&#x3BB;</mi><mo>=</mo><mn>0.10</mn></mrow></math>, and at that setting CLUSSO is the weaker of the two. In this example CLUSSO buys its lower false positive rate only by accepting a much higher miss rate.
       </p>
       <p>
-        That is <em class="term">not</em> the paper&rsquo;s finding, and the gap
-        is worth naming: twelve patients and three features is orders of
-        magnitude smaller than the 300 to 2,000 subjects and 10 to 200 features
-        the simulation study uses, and CLUSSO&rsquo;s advantage is reported to
-        grow with the number of features. A toy this size demonstrates the
-        <em class="term">mechanism</em>, not the comparative performance.
+        That is <em class="term">not</em> what the paper reports, and the gap is worth naming. Twelve patients and three features is far smaller than the simulation study, which uses 300 to 2,000 subjects and 10 to 200 features. CLUSSO&rsquo;s advantage is also reported to grow as the number of features increases. An example this small demonstrates the <em class="term">mechanism</em>, not the comparative performance.
       </p>
       <p>
-        But look at what the dial implies. Somebody has to choose a point on that
-        curve, and cross&#8209;validation chooses it by minimizing prediction error
-        &mdash; a criterion with no relationship whatsoever to how many of the
-        selected features are real. Nothing in the table lets you say
-        <em class="term">&ldquo;give me a set that is at most 10% false.&rdquo;</em>
+        Still, consider what the dial implies. Someone has to choose a point on that curve. Cross&#8209;validation chooses it by minimizing prediction error, which is a criterion with no connection to how many of the selected features are real. Nothing in the table lets you ask for <em class="term">a set that is at most 10% false.</em>
       </p>
       <p>
-        That sentence is the entire reason <a href="ps-fdr.html">the second algorithm</a> exists.
+        Filling that gap is what <a href="ps-fdr.html">the second algorithm</a> exists to do.
       </p>
     </div>
   </section>
