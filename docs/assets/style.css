@@ -591,6 +591,75 @@
   .scatter-cap .swatch.atro { background: var(--mulberry); }
   .scatter-cap .acc { color: var(--slate); font-weight: 600; }
 
+  /* ---------- figure frame and legend swatches ---------- */
+  .chartbox {
+    background: var(--surface); border: 1px solid var(--line);
+    padding: 18px 18px 14px; margin-top: 18px;
+  }
+
+  .scatter-cap .swatch.real  { background: var(--slate);       border-color: var(--slate); }
+  .scatter-cap .swatch.noise { background: var(--line-strong); border-color: var(--line-strong); }
+  .scatter-cap .swatch.nul {
+    background: transparent; border: none;
+    border-top: 2px dashed var(--mulberry); height: 0; align-self: center;
+  }
+  .scatter-cap .swatch.nline {
+    background: var(--mulberry); border-color: var(--mulberry);
+    opacity: .28; height: 3px; align-self: center;
+  }
+  .scatter-cap .swatch.selring {
+    background: var(--slate); border: 2px solid var(--mulberry);
+    width: 14px; height: 14px; border-radius: 50%;
+  }
+
+  /* ---------- per-step figures ---------- */
+  .fig { width: 100%; height: auto; display: block; max-width: 620px; margin: 0 auto; }
+  .fig .ax    { stroke: var(--line-strong); stroke-width: 1.2; }
+  .fig .tick  { stroke: var(--line-strong); stroke-width: 1; }
+  .fig .grid  { stroke: var(--line); stroke-width: 1; }
+  .fig .tl    { fill: var(--muted); font-family: var(--sans); font-size: 11px; }
+  .fig .bl    { fill: var(--muted); font-family: var(--sans); font-size: 8.5px; }
+  .fig .bl.on { fill: var(--mulberry); font-weight: 700; }
+  .fig .axl   { fill: var(--muted); font-family: var(--sans); font-size: 11.5px; letter-spacing: .04em; }
+
+  /* step 1 */
+  .fig .cell       { fill: var(--line-strong); }
+  .fig .cell.real  { fill: var(--slate); }
+  .fig .bar        { fill: var(--line-strong); }
+  .fig .bar.real   { fill: var(--slate); }
+
+  /* step 2 */
+  .fig .nline { fill: none; stroke: var(--mulberry); stroke-width: 1; opacity: .09; }
+  .fig .nmean { fill: none; stroke: var(--mulberry); stroke-width: 2; stroke-dasharray: 5 3; }
+  .fig .rline { fill: none; stroke: var(--slate); stroke-width: 2; }
+  .fig .rdot       { fill: var(--paper); stroke: var(--line-strong); stroke-width: 1.5; }
+  .fig .rdot.real  { fill: var(--slate); stroke: var(--slate); }
+
+  /* step 3 */
+  .fig .tie       { fill: none; stroke: var(--line-strong); stroke-width: 1; opacity: .75; }
+  .fig .tie.real  { stroke: var(--slate); stroke-width: 1.8; opacity: 1; }
+  .fig .tdot      { fill: var(--line-strong); }
+  .fig .tdot.real { fill: var(--slate); }
+
+  /* step 4a */
+  .fig .diag    { stroke: var(--line-strong); stroke-width: 1; stroke-dasharray: 3 3; }
+  .fig .diagl   { fill: var(--muted); font-family: var(--sans); font-size: 11px; }
+  .fig .cutline { stroke: var(--mulberry); stroke-width: 1.4; stroke-dasharray: 5 3; }
+  .fig .cutl    { fill: var(--mulberry); font-family: var(--sans); font-size: 11px; font-weight: 700; }
+  .fig .spt      { fill: var(--line-strong); }
+  .fig .spt.real { fill: var(--slate); }
+  .fig .spt.sel  { stroke: var(--mulberry); stroke-width: 2.2; }
+
+  /* step 4b */
+  .fig .qline { stroke: var(--mulberry); stroke-width: 1.4; stroke-dasharray: 5 3; }
+  .fig .ql    { fill: var(--mulberry); font-family: var(--sans); font-size: 11px; font-weight: 700; }
+  .fig .fline { fill: none; stroke: var(--line-strong); stroke-width: 1.6; }
+  .fig .fpt      { fill: var(--amber); }
+  .fig .fpt.ok   { fill: var(--mulberry); }
+  .fig .gap   { stroke: var(--line-strong); stroke-width: 1; stroke-dasharray: 2 4; }
+  .fig .ptl      { fill: var(--muted); font-family: var(--sans); font-size: 10.5px; }
+  .fig .ptl.on   { fill: var(--mulberry); font-weight: 700; }
+
   /* ---------- design tensor table ---------- */
   table.design {
     width: 100%; border-collapse: collapse;
@@ -641,6 +710,11 @@
   table.design .n3 {
     color: var(--amber); font-weight: 700;
   }
+  table.design tr.here td {
+    background: var(--mulberry-soft); font-weight: 700;
+  }
+  table.design tr.here td:first-child { color: var(--mulberry); }
+  table.design tr.here .dim { color: var(--ink); }
 
   .gk { text-transform: none !important; }
   table.alpha th math, table.design th math, .exhead math { text-transform: none; }

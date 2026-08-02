@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PS-Fdr</title>
-<meta name="description" content="PS-Fdr: bootstrap stability selection, a permutation-calibrated null and a step-down cutoff that controls false discoveries for penalized variable selection.">
+<meta name="description" content="PS-Fdr drawn end to end: bootstrap stability selection, a permutation-calibrated null, SAM normalization and a step-down cutoff, with a thirty-feature worked example computed by the real code.">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%94%AC</text></svg>">
 <meta property="og:type" content="article">
 <meta property="og:title" content="PS-Fdr">
-<meta property="og:description" content="PS-Fdr: bootstrap stability selection, a permutation-calibrated null and a step-down cutoff that controls false discoveries for penalized variable selection.">
+<meta property="og:description" content="PS-Fdr drawn end to end: bootstrap stability selection, a permutation-calibrated null, SAM normalization and a step-down cutoff, with a thirty-feature worked example computed by the real code.">
 <meta name="twitter:card" content="summary">
 <link rel="stylesheet" href="assets/style.css">
 </head>
@@ -258,6 +258,379 @@
     </ol>
   </section>
 
+<!-- ================= WORKED EXAMPLE ================= -->
+  <section>
+    <h2>Seventy subjects, thirty features, every stage shown</h2>
+    <h3>A worked example</h3>
+
+    <div class="prose">
+      <p>
+        Everything below was produced by running this repository&rsquo;s own implementation, <code>ps_fdr.py</code>, on a problem small enough to print. There are seventy subjects and thirty features, and five of the features carry signal. Their coefficients descend from 1.6 to 0.4, so the last one is deliberately faint. Neighbouring features are correlated at 0.35, and the outcome noise is
+        <math><mrow><mi>&#x3C3;</mi><mo>=</mo><mn>1.5</mn></mrow></math>, which leaves the signal accounting for 78% of the variance in
+        <math><mi>y</mi></math>.
+      </p>
+      <p>
+        The design matrix is handed to the algorithm from outside, fixed, exactly as the published method assumes. That assumption is the one <a href="fdr-clusso.html">the composition</a> has to give up.
+      </p>
+    </div>
+
+    <div class="eq" style="margin-top:20px;">
+      <math display="block">
+        <mrow>
+          <msup><mi>&#x3B2;</mi><mo>&#x2217;</mo></msup><mo>=</mo>
+          <mo>(</mo><mn>1.6</mn><mo>,</mo><mn>1.2</mn><mo>,</mo><mn>0.9</mn><mo>,</mo><mn>0.6</mn><mo>,</mo><mn>0.4</mn><mo>,</mo><mn>0</mn><mo>,</mo><mo>&#x2026;</mo><mo>,</mo><mn>0</mn><mo>)</mo>
+          <mspace width="2.0em"></mspace>
+          <mi>n</mi><mo>=</mo><mn>70</mn>
+          <mspace width="1.4em"></mspace>
+          <mi>p</mi><mo>=</mo><mn>30</mn>
+          <mspace width="1.4em"></mspace>
+          <mi>B</mi><mo>=</mo><mn>50</mn>
+          <mspace width="1.4em"></mspace>
+          <mi>M</mi><mo>=</mo><mn>100</mn>
+        </mrow>
+      </math>
+      <p class="eq-note">Features 1 to 5 are real, the other twenty-five are noise. Nothing downstream of this line is told which is which.</p>
+    </div>
+
+    <!-- ---------- STAGE 0 ---------- -->
+    <div class="exhead"><span class="exnum">0</span> The baseline: one cross&#8209;validated lasso</div>
+
+    <div class="prose">
+      <p>
+        Before any of the machinery, here is what the standard approach returns on this cohort. A single lasso, tuned by ten&#8209;fold cross&#8209;validation on the full data, keeping every variable with a non&#8209;zero coefficient.
+      </p>
+    </div>
+
+    <div class="scroll-x">
+      <table class="alpha">
+        <thead>
+          <tr><th>CV&#8209;tuned lasso</th><th>value</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>selected</td><td>{1, 2, 3, 4, 5, 7, 10, 13, 14, 18, 19, 22, 23, 30}</td></tr>
+          <tr><td>real features found</td><td>5 of 5 &mdash; power <b>1.000</b></td></tr>
+          <tr><td>noise features taken along</td><td><b class="fp">9</b></td></tr>
+          <tr class="spread"><td>false discovery proportion</td><td class="fp">0.643</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <span><strong>Nothing is wrong with that fit.</strong> It finds every real feature, and it was tuned to do the one thing cross&#8209;validation optimizes, which is predict. It simply answers a different question from the one being asked. Two thirds of what it reports as a finding is noise, and the fit itself gives no way of knowing which two thirds. At the paper&rsquo;s scale &mdash; 340 patients, 23,052 genes &mdash; the same figure is about 0.90.</span>
+    </div>
+
+    <!-- ---------- STAGE 1 ---------- -->
+    <div class="exhead"><span class="exnum">1</span> Resample fifty times and count</div>
+
+    <div class="prose">
+      <p>
+        Draw seventy subjects with replacement, fit a CV&#8209;tuned lasso, write down which features survived, and repeat fifty times. The bar for each feature is the fraction of those fifty fits that kept it.
+      </p>
+    </div>
+
+    <div class="chartbox">
+      <svg id="fig-boot" class="fig" viewBox="0 0 620 344" role="img"
+           aria-label="Fifty rows, one per bootstrap resample, marked where a feature was selected, with the column totals as bars beneath"></svg>
+      <div class="scatter-cap">
+        <span><i class="swatch real"></i> real feature</span>
+        <span><i class="swatch noise"></i> noise feature</span>
+        <span>every row is one resample &middot; every mark is a feature that survived it</span>
+      </div>
+    </div>
+
+    <div class="note">
+      <span><strong>This grid is the whole of step 1.</strong> Fifty fits, thirty features, and one mark wherever a fit kept a feature. Nothing else about those fits is retained &mdash; not the coefficients, not the fitted lambda, not the prediction error. The bars are the column totals divided by fifty, and they are the only thing the rest of the procedure reads.</span>
+    </div>
+
+    <div class="note" style="margin-top:12px;">
+      <span><strong>The ordering is already most of the answer.</strong> Features 1 to 4 were selected in all fifty resamples. But feature 5, the faint real one, sits at 0.90 &mdash; and so does feature 30, which is pure noise. Every other noise feature trails below. Stability alone ranks well and cuts nowhere; the rest of the algorithm exists to place the cut.</span>
+    </div>
+
+    <div class="note" style="margin-top:12px;">
+      <span><strong>The support sizes are also recorded here.</strong> Across the fifty resamples the CV&#8209;tuned lasso kept as few as 8 features and as many as all 30, with a median of <b>18</b>. That median is carried into the next step and never re&#8209;derived.</span>
+    </div>
+
+    <!-- ---------- STAGE 2-3 ---------- -->
+    <div class="exhead"><span class="exnum">2&#8202;&ndash;&#8202;3</span> Build the null, then put both arms on one scale</div>
+
+    <div class="prose">
+      <p>
+        Shuffle <math><mi>y</mi></math>, run all fifty resamples again, and do that a hundred times over &mdash; five thousand further fits. On every one of them the support size is pinned at 18. The permuted frequencies are then sorted within each permutation and averaged <em class="term">position by position</em>, so the null describes what the <math><mi>j</mi></math>&#8209;th largest selection frequency looks like when nothing is real.
+      </p>
+      <p>
+        Both arms then pass through
+        <math><mrow><mi>D</mi><mo>(</mo><mi>u</mi><mo>)</mo></mrow></math> with
+        <math><mrow><mi>&#x3BD;</mi><mo>=</mo><mn>1</mn><mo>/</mo><mn>50</mn><mo>=</mo><mn>0.02</mn></mrow></math>.
+        It is a strictly increasing map, so it reorders nothing; it stretches the top of the scale apart. A feature selected in every single resample has
+        <math><mrow><mi>u</mi><mo>=</mo><mn>1</mn></mrow></math>, where the square root vanishes and
+        <math><mrow><mi>D</mi><mo>=</mo><mn>1</mn><mo>/</mo><mi>&#x3BD;</mi><mo>=</mo><mn>50</mn></mrow></math>.
+      </p>
+    </div>
+
+    <div class="chartbox">
+      <svg id="fig-null" class="fig" viewBox="0 0 620 300" role="img"
+           aria-label="One hundred permuted selection-frequency curves by rank, their mean, and the real curve overlaid"></svg>
+      <div class="scatter-cap">
+        <span><i class="swatch nline"></i> one permutation</span>
+        <span><i class="swatch nul"></i> their mean</span>
+        <span><i class="swatch real"></i> the real data</span>
+      </div>
+    </div>
+
+    <div class="note">
+      <span><strong>Each faint line is one shuffled dataset put through the whole of step 1.</strong> They are sorted, so a line reads &ldquo;the most selected feature, the second most, and so on&rdquo; &mdash; not any particular feature. The real curve leaves the band at the left and rejoins it around rank 14. Where it sits inside the band, a feature is doing nothing that shuffled data would not do by chance.</span>
+    </div>
+
+    <div class="chartbox">
+      <svg id="fig-norm" class="fig" viewBox="0 0 620 226" role="img"
+           aria-label="Each feature's selection frequency joined to its normalized value on a log scale"></svg>
+      <div class="scatter-cap">
+        <span><i class="swatch real"></i> real feature</span>
+        <span><i class="swatch noise"></i> noise feature</span>
+        <span>the same thirty features, before and after D</span>
+      </div>
+    </div>
+
+    <div class="note">
+      <span><strong>Follow the strands downward.</strong> On the raw scale the four saturated features sit a hand&rsquo;s width from feature 5 and from noise feature 30. After <math><mi>D</mi></math> they are an order of magnitude away, while the crowd below 0.7 stays bunched. The null arm goes through the identical map, so nothing here is a thumb on the scale; the transform simply refuses to treat 0.90 and 1.00 as neighbours.</span>
+    </div>
+
+    <div class="scroll-x">
+      <table class="design">
+        <thead>
+          <tr class="grp">
+            <th></th><th></th>
+            <th colspan="2">selection frequency</th>
+            <th colspan="2">after normalization</th>
+            <th></th>
+          </tr>
+          <tr>
+            <th>rank</th><th>feature</th>
+            <th class="gk">&#928;<sub>(j)</sub> &mdash; real</th><th class="gk">&#928;&#772;<sub>(j)</sub> &mdash; null</th>
+            <th class="gk">Z<sub>(j)</sub></th><th class="gk">Z&#772;<sub>(j)</sub></th>
+            <th>gap</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>30</td><td class="v1"><b>4</b></td><td>1.00</td><td class="dim">0.936</td><td>50.00</td><td class="dim">3.54</td><td class="v1">+46.46</td></tr>
+          <tr><td>29</td><td class="v1"><b>3</b></td><td>1.00</td><td class="dim">0.891</td><td>50.00</td><td class="dim">2.69</td><td class="v1">+47.31</td></tr>
+          <tr><td>28</td><td class="v1"><b>2</b></td><td>1.00</td><td class="dim">0.849</td><td>50.00</td><td class="dim">2.25</td><td class="v1">+47.75</td></tr>
+          <tr><td>27</td><td class="v1"><b>1</b></td><td>1.00</td><td class="dim">0.816</td><td>50.00</td><td class="dim">2.00</td><td class="v1">+48.00</td></tr>
+          <tr><td>26</td><td class="dim">30</td><td>0.90</td><td class="dim">0.788</td><td>2.81</td><td class="dim">1.84</td><td>+0.98</td></tr>
+          <tr><td>25</td><td class="v1"><b>5</b></td><td>0.90</td><td class="dim">0.762</td><td>2.81</td><td class="dim">1.71</td><td>+1.10</td></tr>
+          <tr><td>24</td><td class="dim">7</td><td>0.86</td><td class="dim">0.737</td><td>2.34</td><td class="dim">1.60</td><td>+0.74</td></tr>
+          <tr><td>23</td><td class="dim">10</td><td>0.80</td><td class="dim">0.712</td><td>1.90</td><td class="dim">1.51</td><td>+0.40</td></tr>
+          <tr><td>22</td><td class="dim">22</td><td>0.76</td><td class="dim">0.691</td><td>1.70</td><td class="dim">1.43</td><td>+0.27</td></tr>
+          <tr><td>21</td><td class="dim">14</td><td>0.74</td><td class="dim">0.668</td><td>1.61</td><td class="dim">1.36</td><td>+0.25</td></tr>
+          <tr><td>20</td><td class="dim">19</td><td>0.70</td><td class="dim">0.648</td><td>1.46</td><td class="dim">1.30</td><td>+0.16</td></tr>
+          <tr><td>19</td><td class="dim">18</td><td>0.68</td><td class="dim">0.632</td><td>1.40</td><td class="dim">1.26</td><td>+0.14</td></tr>
+          <tr><td>18</td><td class="dim">8</td><td>0.66</td><td class="dim">0.616</td><td>1.34</td><td class="dim">1.22</td><td>+0.12</td></tr>
+          <tr><td>17</td><td class="dim">13</td><td>0.60</td><td class="dim">0.598</td><td>1.18</td><td class="dim">1.17</td><td>+0.00</td></tr>
+          <tr><td>16</td><td class="dim">23</td><td>0.56</td><td class="dim">0.583</td><td>1.08</td><td class="dim">1.14</td><td class="fp">&#8722;0.05</td></tr>
+          <tr><td class="dim">15 and below</td><td class="dim">15 features</td><td class="dim">0.54 &#8594; 0.32</td><td class="dim">0.571 &#8594; 0.328</td><td class="dim">1.04 &#8594; 0.66</td><td class="dim">1.11 &#8594; 0.67</td><td class="dim">every gap negative</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <span><strong>Read the null column downward.</strong> Even with no signal whatever, the top&#8209;ranked feature is selected in 94% of resamples. That is what forcing 18 selections out of 30 does, and it is the number a raw selection frequency has to beat before it means anything. Beating 0.94 by standing at 1.00 is a real gap; standing at 0.60 against a null of 0.60 is not.</span>
+    </div>
+
+    <div class="note" style="margin-top:12px;">
+      <span><strong>Ties get ranks anyway.</strong> Features 1 to 4 all sit at exactly 1.00, so which of them occupies rank 27 and which rank 30 is arbitrary. Their null counterparts are not tied, which is why one column reads 1.00 four times over while the gap beside it runs from 46.46 to 48.00. The step&#8209;down rule takes a minimum over these, so the arbitrariness does not reach the answer.</span>
+    </div>
+
+    <!-- ---------- STAGE 4 ---------- -->
+    <div class="exhead"><span class="exnum">4</span> Raise the margin until the estimate clears the target</div>
+
+    <div class="prose">
+      <p>
+        Each value of <math><mi>&#x394;</mi></math> demands a wider margin over the null, which fixes a cutoff, which fixes a selected set. The numerator counts how many of the three thousand permuted statistics &mdash; thirty ranks by a hundred permutations &mdash; would have cleared that same cutoff, divided by the hundred permutations.
+      </p>
+    </div>
+
+    <div class="chartbox">
+      <svg id="fig-cut" class="fig" viewBox="0 0 620 320" role="img"
+           aria-label="Each rank's real statistic plotted against its permutation null, with the chosen cutoff marked"></svg>
+      <div class="scatter-cap">
+        <span><i class="swatch real"></i> real feature</span>
+        <span><i class="swatch noise"></i> noise feature</span>
+        <span><i class="swatch selring"></i> selected at q = 0.1</span>
+      </div>
+    </div>
+
+    <div class="note">
+      <span><strong>This is the comparison the rule actually makes.</strong> One point per rank: what the real data produced against what the permutations produced at that same rank. The dashed diagonal is where the two agree. The bottom of the range sits <em class="term">below</em> it &mdash; those features are selected less often in the real data than shuffled data manages by chance. Points drift above the line through the middle, and only four break away, which is why the cutoff lands where it does rather than somewhere in the crowd.</span>
+    </div>
+
+    <div class="scroll-x">
+      <table class="design">
+        <thead>
+          <tr>
+            <th class="gk">&#916;</th><th class="gk">Z(&#916;)</th><th class="gk">N<sub>+</sub></th><th class="gk">&#234;<sub>0</sub></th><th class="gk">F&#770;dr</th><th>selected set</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>0.00</td><td>1.18</td><td>14</td><td class="dim">14.23</td><td class="fp">1.016</td><td class="dim">1, 2, 3, 4, 5, 7, 8, 10, 13, 14, 18, 19, 22, 30</td></tr>
+          <tr><td>0.12</td><td>1.34</td><td>13</td><td class="dim">10.30</td><td class="fp">0.792</td><td class="dim">1, 2, 3, 4, 5, 7, 8, 10, 14, 18, 19, 22, 30</td></tr>
+          <tr><td>0.14</td><td>1.40</td><td>12</td><td class="dim">9.18</td><td class="fp">0.765</td><td class="dim">1, 2, 3, 4, 5, 7, 10, 14, 18, 19, 22, 30</td></tr>
+          <tr><td>0.16</td><td>1.46</td><td>11</td><td class="dim">8.36</td><td class="fp">0.760</td><td class="dim">1, 2, 3, 4, 5, 7, 10, 14, 19, 22, 30</td></tr>
+          <tr><td>0.25</td><td>1.61</td><td>10</td><td class="dim">6.50</td><td class="fp">0.650</td><td class="dim">1, 2, 3, 4, 5, 7, 10, 14, 22, 30</td></tr>
+          <tr><td>0.27</td><td>1.70</td><td>9</td><td class="dim">5.75</td><td class="fp">0.639</td><td class="dim">1, 2, 3, 4, 5, 7, 10, 22, 30</td></tr>
+          <tr><td>0.40</td><td>1.90</td><td>8</td><td class="dim">4.38</td><td class="fp">0.547</td><td class="dim">1, 2, 3, 4, 5, 7, 10, 30</td></tr>
+          <tr><td>0.74</td><td>2.34</td><td>7</td><td class="dim">2.58</td><td class="fp">0.369</td><td class="dim">1, 2, 3, 4, 5, 7, 30</td></tr>
+          <tr><td>0.98</td><td>2.81</td><td>6</td><td class="dim">1.75</td><td class="fp">0.292</td><td class="dim">1, 2, 3, 4, 5, 30</td></tr>
+          <tr class="here"><td>46.46</td><td>50.00</td><td>4</td><td>0.17</td><td>0.043</td><td>1, 2, 3, 4</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="chartbox">
+      <svg id="fig-fdr" class="fig" viewBox="0 0 620 290" role="img"
+           aria-label="Estimated false discovery rate against the number of features selected, with the target level marked"></svg>
+      <div class="scatter-cap">
+        <span>every row of the table above, plotted</span>
+        <span><i class="swatch nul"></i> the target level</span>
+      </div>
+    </div>
+
+    <div class="note">
+      <span><strong>The first row estimates 14.23 false discoveries out of 14 selections.</strong> An <math><mover accent="true"><mtext>Fdr</mtext><mo>^</mo></mover></math> above one is not a bug: the estimator assumes every variable could be null, following Benjamini and Hochberg&rsquo;s convention, so it is an upper bound rather than an estimate. That row is also almost exactly the CV&#8209;tuned lasso&rsquo;s answer &mdash; fourteen features, two thirds of them noise.</span>
+    </div>
+
+    <div class="note" style="margin-top:12px;">
+      <span><strong>There is no row with five selections,</strong> and that is where the real feature is lost. Feature 5 and noise feature 30 are tied at 0.90, so no cutoff exists that admits one without the other. Taking both means
+      <math><mover accent="true"><mtext>Fdr</mtext><mo>^</mo></mover></math> = 0.292, which fails at
+      <math><mrow><mi>q</mi><mo>=</mo><mn>0.1</mn></mrow></math>. The procedure declines, and stops at four.</span>
+    </div>
+
+    <!-- ---------- OUTPUT ---------- -->
+    <div class="exhead"><span class="exnum">&#10003;</span> Results</div>
+
+    <div class="split">
+      <div class="panel good">
+        <h4>PS&#8209;Fdr at q = 0.1</h4>
+        <table class="alpha compact">
+          <tbody>
+            <tr><td>selected</td><td><b>{1, 2, 3, 4}</b></td></tr>
+            <tr><td><math><mover accent="true"><mtext>Fdr</mtext><mo>^</mo></mover></math></td><td>0.043</td></tr>
+            <tr><td>false discoveries</td><td><b class="zero">0</b></td></tr>
+            <tr><td>realized FDP</td><td class="zero">0.000</td></tr>
+            <tr><td>power</td><td>0.800 &mdash; misses feature 5</td></tr>
+            <tr><td colspan="2" class="dim" style="padding-top:14px;">Same set at q = 0.05 and at q = 0.2. The tie at 0.90 blocks the next step in either direction.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="panel bad">
+        <h4>CV&#8209;tuned lasso</h4>
+        <table class="alpha compact">
+          <tbody>
+            <tr><td>selected</td><td><b>14 features</b></td></tr>
+            <tr><td><math><mover accent="true"><mtext>Fdr</mtext><mo>^</mo></mover></math></td><td class="dim">not available</td></tr>
+            <tr><td>false discoveries</td><td><b class="fp">9</b></td></tr>
+            <tr><td>realized FDP</td><td class="fp">0.643</td></tr>
+            <tr><td>power</td><td>1.000</td></tr>
+            <tr><td colspan="2" class="dim" style="padding-top:14px;">The extra real feature costs nine noise features, and the fit cannot say which nine.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ---------- THE FIXED COUNT ---------- -->
+    <div class="exhead"><span class="exnum">&#8901;</span> What the fixed count is worth</div>
+
+    <div class="prose">
+      <p>
+        Step 2 pins the permuted support size at 18 rather than letting cross&#8209;validation choose it, and the claim attached to that line is that the alternative under&#8209;counts false discoveries. Here is the same cohort with that one line changed and everything else held fixed &mdash; same data, same real arm, same hundred permutations.
+      </p>
+    </div>
+
+    <div class="scroll-x">
+      <table class="alpha">
+        <thead>
+          <tr><th>at q = 0.1</th><th>count pinned at 18</th><th>count re&#8209;chosen by CV</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>null frequency, top rank</td><td>0.936</td><td class="fp">0.801</td></tr>
+          <tr><td><math><msub><mover accent="true"><mi>e</mi><mo>^</mo></mover><mn>0</mn></msub></math> at six selections</td><td>1.75</td><td class="fp">0.55</td></tr>
+          <tr><td><math><mover accent="true"><mtext>Fdr</mtext><mo>^</mo></mover></math> at six selections</td><td>0.292</td><td class="fp">0.092</td></tr>
+          <tr><td>selected</td><td><b>{1, 2, 3, 4}</b></td><td><b>{1, 2, 3, 4, 5, 30}</b></td></tr>
+          <tr><td>power</td><td>0.800</td><td>1.000</td></tr>
+          <tr class="spread"><td>realized FDP against a promised 0.10</td><td class="zero">0.000</td><td class="fp">0.167</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <span><strong>The invalid variant looks better and is worse.</strong> Free to re&#8209;tune on permuted data, cross&#8209;validation settles on smaller supports, the null frequencies fall, and every estimate of the false discovery count shrinks with them. Six features clear a bar that reads 0.092 &mdash; comfortably inside the target &mdash; and one of the six is noise, so the realized proportion is 0.167. It found the fifth real feature, which the published version misses. It also broke the only promise the procedure exists to make.</span>
+    </div>
+
+    <div class="prose" style="margin-top:26px;">
+      <p>
+        One cohort could be one unlucky draw, so both rules were run against each other on 40 fresh cohorts under identical settings.
+      </p>
+    </div>
+
+    <div class="scroll-x">
+      <table class="alpha sweep">
+        <thead>
+          <tr><th>40 cohorts, matched</th><th>mean FDP</th><th>power</th><th>mean selected</th><th>runs within target</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>count pinned, q = 0.05</td><td>0.000</td><td>0.425</td><td>2.12</td><td>100.0%</td></tr>
+          <tr class="here"><td>count pinned, q = 0.10</td><td>0.004</td><td>0.690</td><td>3.48</td><td>97.5%</td></tr>
+          <tr><td>count pinned, q = 0.20</td><td>0.055</td><td>0.805</td><td>4.30</td><td>92.5%</td></tr>
+          <tr><td>re&#8209;chosen by CV, q = 0.05</td><td class="fp">0.094</td><td>0.800</td><td>4.58</td><td class="fp">67.5%</td></tr>
+          <tr><td>re&#8209;chosen by CV, q = 0.10</td><td class="fp">0.178</td><td>0.875</td><td>5.70</td><td class="fp">42.5%</td></tr>
+          <tr><td>re&#8209;chosen by CV, q = 0.20</td><td class="fp">0.290</td><td>0.900</td><td>7.28</td><td class="fp">47.5%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <span><strong>Roughly double the level asked for, at every level.</strong> Ask the invalid variant for 10% and it delivers 17.8%, holding its promise on fewer than half the cohorts. The published rule delivers 0.4% and holds on 39 of 40. The trade is legible in the power column &mdash; 0.875 against 0.690 &mdash; and that is exactly the trade the paper refuses: a procedure that beats the alternative on power while failing the guarantee it is named after is not a better procedure, it is a differently&#8209;tuned lasso with a number attached to it.</span>
+    </div>
+
+    <div class="eq-note" style="margin-top:12px;">
+      Both arms here use M = 30 rather than 100, and 40 cohorts rather than 200, so that the free&#8209;CV variant &mdash; which re&#8209;runs a full cross&#8209;validation on every permuted resample instead of walking a path &mdash; finished in minutes rather than hours. Read the two halves against each other rather than against the 200&#8209;cohort table below: the pinned arm&rsquo;s power lands in the same place at either setting, 0.690 here against 0.699 there, while 40 cohorts is few enough that the last column moves by several points on resampling alone.
+    </div>
+
+    <!-- ---------- HONESTY ---------- -->
+    <div class="exhead"><span class="exnum">?</span> Does this hold across repeated runs?</div>
+
+    <div class="prose">
+      <p>
+        A single cohort proves nothing. The whole pipeline was therefore re&#8209;run on 200 fresh cohorts, with a new design matrix, new outcome noise, new bootstraps and new permutations each time. That is a little over a million lasso fits. The column to watch is not the mean false discovery proportion but the last one: the share of individual cohorts on which the realized proportion actually came in at or under the level that was asked for.
+      </p>
+    </div>
+
+    <div class="scroll-x">
+      <table class="alpha sweep">
+        <thead>
+          <tr><th>procedure</th><th>mean FDP</th><th>power</th><th>mean selected</th><th>runs within target</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>PS&#8209;Fdr, q = 0.05</td><td>0.005</td><td>0.469</td><td>2.37</td><td>97.5%</td></tr>
+          <tr class="here"><td>PS&#8209;Fdr, q = 0.10</td><td>0.026</td><td>0.699</td><td>3.62</td><td>89.0%</td></tr>
+          <tr><td>PS&#8209;Fdr, q = 0.20</td><td>0.069</td><td>0.790</td><td>4.34</td><td>88.0%</td></tr>
+          <tr class="spread"><td>CV&#8209;tuned lasso</td><td class="fp">0.488</td><td>0.962</td><td>10.81</td><td class="fp">5.0% at 0.10</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="prose" style="margin-top:22px;">
+      <p>
+        The guarantee holds, and it holds with room to spare. Asked for 10%, the procedure delivers 2.6% on average. That gap is not luck: the estimator assumes every variable could be null, so
+        <math><mover accent="true"><mtext>Fdr</mtext><mo>^</mo></mover></math> is an upper bound and the procedure stops earlier than it strictly needs to. The cost is in the power column. At
+        <math><mrow><mi>q</mi><mo>=</mo><mn>0.05</mn></mrow></math> fewer than half the real features survive; the two weakest are usually gone.
+      </p>
+      <p>
+        Set against that, the CV&#8209;tuned lasso finds 96% of the real features and reports about eleven, of which roughly five are noise. It clears a 10% false discovery proportion on one cohort in twenty. Neither column makes one procedure better than the other. They answer different questions, and only one of them lets you state the question in advance.
+      </p>
+    </div>
+
+  </section>
+
   <footer>
     <p>Rubin, Fan, Barisoni, Janowczyk &amp; Zee. &ldquo;Novel Scalar&#8209;on&#8209;matrix Regression for Unbalanced Feature Matrices.&rdquo; <em>Statistics in Biosciences</em> 18:192&ndash;213, 2026.</p>
     <p>He, Zhou, Jiang, Wen &amp; Li. &ldquo;False discovery control for penalized variable selections with high&#8209;dimensional covariates.&rdquo; <em>Stat Appl Genet Mol Biol</em> 17(6), 2018.</p>
@@ -265,5 +638,6 @@
 
 </div>
 <script src="assets/theme.js"></script>
+<script src="assets/psfdr-figs.js"></script>
 </body>
 </html>

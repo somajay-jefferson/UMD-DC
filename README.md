@@ -23,6 +23,7 @@ docs/       GitHub Pages site (served from master /docs)
 src/
   core/     Core CLUSSO: alternating structured lasso on (cluster, feature) matrices
   tepig/    TEPIG extension: tensor model on (cluster, feature, slide) data
+  fdr/      PS-Fdr: false discovery control for penalized selection (He et al. 2018)
 Random_CLUSSO_*.R      "Random CLUSSO" variant applied to real biopsy data (R only)
 clussocode.zip          Clean R reference implementation, mirrors src/core/ 1:1
 Supplemental_Code.zip   Adjacent R codebase for Random CLUSSO real-data analysis
@@ -54,6 +55,18 @@ the output directory relative to their own path (`sys.path` includes
 `../core`; outputs are written to `../../outputs`), so they must be run from
 inside `src/tepig/` with `src/core/` as a sibling — the layout above is
 required, not just a suggestion.
+
+### `src/fdr/` — PS-Fdr
+
+| File | Purpose |
+|---|---|
+| `ps_fdr.py` | PS-Fdr from He et al. 2018: bootstrap stability selection (`stability_selection`), a permutation null whose support size is pinned to the real arm's median (`lasso_support_fixed_k`), the SAM normalization `D(u)` (`sam_normalize`), and the step-down cutoff and `Fdr` estimate (`ps_fdr`). `null_mode='cv'` reproduces the variant the paper argues is invalid — CV re-tuned on permuted data — so the difference can be measured rather than asserted. |
+| `PS_Fdr_Data_Example.py` | End-to-end worked example on 70 subjects and 30 features, 5 of them real: the CV-lasso baseline, every intermediate quantity of the four steps, and (with `--reps`) the same pipeline repeated over many cohorts. `--json` dumps the numbers the documentation page renders. |
+
+Standalone: nothing in `src/fdr/` imports `src/core/`, because PS-Fdr as
+published takes a fixed design matrix, and CLUSSO manufactures its design
+matrix inside the estimator. Composing the two is an open problem, written up
+at https://somajay-jefferson.github.io/UMD-DC/fdr-clusso.html.
 
 ### R implementation
 
@@ -93,6 +106,9 @@ cd src/core && python CLUSSO_Data_Example.py
 
 # Batch CLUSSO simulation grid (1-indexed job selects one grid row)
 cd src/core && python CLUSSO_Simulations_Project1_6_16_23.py <job_index>
+
+# PS-Fdr worked example (add --reps 200 for the repeated-cohort study)
+cd src/fdr && python PS_Fdr_Data_Example.py
 
 # TEPIG synthetic simulation study
 cd src/tepig && python simulation_synthetic.py --n 300 --q 10 --sparsity 0.8
