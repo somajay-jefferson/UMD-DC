@@ -36,7 +36,7 @@ clussocode.Rproj        RStudio project file for the R sources
 | `Mainfunction_albet.py` | Alternating optimizer: fixes `alpha`, solves sparse `beta` via lasso; fixes `beta`, solves `alpha` via OLS; repeats to convergence. `_glmnet_lasso` reimplements R `glmnet`'s centering/scaling so results match the R version exactly. |
 | `mat_vec_prd.py` | Tensor x vector products used in each alternation step. |
 | `K_prdu.py` | Kronecker product helper, used for the convergence check `‖β⊗α − β0⊗α0‖`. |
-| `coefficient.py` | Standalone glmnet-equivalent lasso path fitter with BIC lambda selection (used by the naive/average baseline). |
+| `coefficient.py` | Standalone glmnet-equivalent lasso path fitter with BIC lambda selection. A faithful port of the R `coefficient.r`, but currently **unused** — nothing in the Python codebase imports it, and the naive baseline calls sklearn's `LassoCV` directly. |
 | `CLUSSO_Functions_Project1_6_16_23.py` | Simulation machinery: synthetic data generation + GMM clustering, TPR/FPR/L1-bias/MSE scoring, and `CLUSSO_performance` which benchmarks CLUSSO vs. naive averaging vs. the "full information" oracle. |
 | `CLUSSO_Simulations_Project1_6_16_23.py` | Batch driver over a large parameter grid (noise, sparsity, `n`, `q`); one job per grid row, 1000 reps each, writes CSV results. |
 | `CLUSSO_Data_Example.py` | End-to-end worked example: synthetic data -> GMM clustering -> CLUSSO fit vs. naive baseline -> printed coefficients and MSE. |
