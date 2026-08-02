@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.Rproj.user/
+.Rhistory
+.RData
+outputs/
+.claude/settings.local.json
