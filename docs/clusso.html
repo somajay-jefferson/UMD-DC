@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CLUSSO</title>
-<meta name="description" content="CLUSSO drawn end to end: pooling, clustering, cluster-weighted averaging and the alternating structured lasso, with a twelve-patient worked example computed by the real code.">
+<meta name="description" content="CLUSSO drawn end to end: pooling, clustering, cluster-weighted averaging and the alternating structured lasso, with a twelve-subject worked example computed by the real code.">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%94%AC</text></svg>">
 <meta property="og:type" content="article">
 <meta property="og:title" content="CLUSSO">
-<meta property="og:description" content="CLUSSO drawn end to end: pooling, clustering, cluster-weighted averaging and the alternating structured lasso, with a twelve-patient worked example computed by the real code.">
+<meta property="og:description" content="CLUSSO drawn end to end: pooling, clustering, cluster-weighted averaging and the alternating structured lasso, with a twelve-subject worked example computed by the real code.">
 <meta name="twitter:card" content="summary">
 <link rel="stylesheet" href="assets/style.css">
 </head>
@@ -21,7 +21,7 @@
   <header class="masthead">
     <p class="eyebrow">Algorithm one</p>
     <h1>CLUSSO</h1>
-    <p class="standfirst">Scalar&#8209;on&#8209;matrix regression for the case where each patient contributes a different number of rows.</p>
+    <p class="standfirst">Regression on a matrix-valued predictor whose first mode is unbalanced: each subject contributes a different number of rows.</p>
     <nav class="sitenav">
       <a href="index.html">Overview</a>
       <a href="clusso.html" aria-current="page">CLUSSO</a>
@@ -38,11 +38,15 @@
 
     <div class="prose">
       <p>
-        Each patient&rsquo;s data forms a matrix rather than a vector. Every row is one tubule segmented from their biopsy slide, and every column is one image feature. The number of rows differs a great deal between patients: the median was 929 tubules, with an interquartile range of 570 to 1,377. The value being predicted is a single number, eGFR, which measures kidney function.
+        Subject <math><mi>i</mi></math> contributes a matrix-valued predictor <math><msub><mi>X</mi><mi>i</mi></msub></math> of size <math><mrow><msub><mi>p</mi><mi>i</mi></msub><mo>&#xD7;</mo><mi>q</mi></mrow></math>. The two modes behave differently, and that asymmetry is the whole problem. The first mode is <strong>unbalanced</strong>: subject <math><mi>i</mi></math> supplies <math><msub><mi>p</mi><mi>i</mi></msub></math> objects, and that count varies freely from one subject to the next. The second mode is <strong>balanced</strong>: the same <math><mi>q</mi></math> features are measured on every object, for every subject. The outcome <math><msub><mi>y</mi><mi>i</mi></msub></math> is a single continuous scalar.
       </p>
       <p>
-        This shape breaks every existing scalar&#8209;on&#8209;matrix method, because those methods require identical matrix dimensions for every subject. There are really two problems here. First, the matrices are <em class="term">unbalanced</em>: they have different numbers of rows. Second, the rows are <em class="term">unordered</em>, so tubule 7 in one patient has nothing to do with tubule 7 in another. Clustering solves both problems at once. It also preserves variation between tubules that plain averaging would erase.
+        This shape breaks every existing scalar&#8209;on&#8209;matrix method, because those methods require identical matrix dimensions for every subject. There are really two problems here. First, the matrices are <em class="term">unbalanced</em>: they have different numbers of rows. Second, the rows are <em class="term">unordered</em>, so object 7 in one subject has nothing to do with object 7 in another. Clustering solves both problems at once. It also preserves variation between objects that plain averaging would erase.
       </p>
+    </div>
+
+    <div class="note" style="margin:0 0 26px;">
+      <span><strong>This structure is common in biomedical data.</strong> Anywhere a subject yields a variable number of measured units, each described by the same fixed panel: cells per sample with the same genes assayed on each, events per sample in flow cytometry with the same markers, segmented objects per image with the same morphology features, lesions per patient with the same radiomic descriptors. The method below never inspects what an object is.</span>
     </div>
 
     <div class="eq plain">
@@ -63,7 +67,7 @@
           <mo>}</mo>
         </mrow>
       </math>
-      <p class="eq-note">Rows vary in number and carry no shared ordering. Columns are the same 57 features for everyone.</p>
+      <p class="eq-note">The row count varies by subject and the rows carry no shared ordering. The columns are the same <math><mi>q</mi></math> features for everyone.</p>
     </div>
 
     <ol class="pipeline">
@@ -72,7 +76,7 @@
         <div class="stage-num">1</div>
         <div class="stage-body">
           <h4>Pool</h4>
-          <p>Every tubule from every patient goes into one matrix. The clustering is not done per patient. It has to be global, so that &ldquo;cluster 1&rdquo; means the same thing for every subject.</p>
+          <p>Every object from every subject goes into one matrix. The clustering is not done per subject. It has to be global, so that &ldquo;cluster 1&rdquo; means the same thing for every subject.</p>
           <div class="eq">
             <math display="block">
               <mrow>
@@ -83,7 +87,7 @@
                 </mrow></msup>
               </mrow>
             </math>
-            <p class="eq-note">Roughly 225,000 &times; 57 for the NEPTUNE cohort.</p>
+            <p class="eq-note">For a cohort of 250 subjects averaging 900 objects each, measured on 57 features, that is roughly 225,000 &times; 57.</p>
           </div>
         </div>
       </li>
@@ -92,7 +96,7 @@
         <div class="stage-num">2</div>
         <div class="stage-body">
           <h4>Cluster</h4>
-          <p>A Gaussian mixture model with <math><mrow><mi>G</mi><mo>=</mo><mn>2</mn></mrow></math> assigns every tubule a label. The labels correspond roughly to atrophic versus non&#8209;atrophic tubules, although the paper only formally assumes a two&#8209;component latent mixture.</p>
+          <p>A Gaussian mixture model with <math><mrow><mi>G</mi><mo>=</mo><mn>2</mn></mrow></math> assigns every object a label. The only formal assumption is that objects are drawn from a two&#8209;component latent mixture; the components need not correspond to any pre-labelled grouping.</p>
           <div class="eq">
             <math display="block">
               <mrow>
@@ -112,7 +116,7 @@
         <div class="stage-num">3</div>
         <div class="stage-body">
           <h4>Average and reweight</h4>
-          <p>Collapse the tubules within each patient and within each cluster. The weights are each patient&rsquo;s share of tubules in that cluster. This matters because the <em class="term">proportion</em> of atrophic tubules is itself a known prognostic signal.</p>
+          <p>Collapse the objects within each subject and within each cluster. The weights are each subject&rsquo;s share of objects in that cluster. This matters because the <em class="term">composition</em> of a subject &mdash; what fraction of their objects falls in each population &mdash; is often itself the quantity that carries signal.</p>
 
           <div class="eq">
             <math display="block">
@@ -137,7 +141,7 @@
                 </mfrac>
               </mrow>
             </math>
-            <p class="eq-note">Row <math><mi>k</mi></math> of the cluster&#8209;averaged matrix: the mean of patient <math><mi>i</mi></math>&rsquo;s tubules assigned to cluster <math><mi>k</mi></math>.</p>
+            <p class="eq-note">Row <math><mi>k</mi></math> of the cluster&#8209;averaged matrix: the mean of subject <math><mi>i</mi></math>&rsquo;s objects assigned to cluster <math><mi>k</mi></math>.</p>
           </div>
 
           <div class="eq">
@@ -150,7 +154,7 @@
                 <mi>&#x1D7D9;</mi><mo>(</mo><msubsup><mi>T</mi><mi>j</mi><mi>i</mi></msubsup><mo>&#x2208;</mo><msub><mover accent="true"><mi>&#x1D54B;</mi><mo>^</mo></mover><mi>k</mi></msub><mo>)</mo>
               </mrow>
             </math>
-            <p class="eq-note">The observed share of that patient&rsquo;s tubules assigned to cluster <math><mi>k</mi></math>.</p>
+            <p class="eq-note">The observed share of that subject&rsquo;s objects assigned to cluster <math><mi>k</mi></math>.</p>
           </div>
 
           <div class="eq">
@@ -180,11 +184,11 @@
                 <msup><mi>&#x211D;</mi><mrow><mn>2</mn><mo>&#xD7;</mo><mi>q</mi></mrow></msup>
               </mrow>
             </math>
-            <p class="eq-note">The design is balanced at last: two rows for every patient, whatever their tubule count.</p>
+            <p class="eq-note">The design is balanced at last: two rows for every subject, whatever their object count.</p>
           </div>
 
           <div class="note">
-            <span><strong>Why this matters.</strong> Atrophic tubules have thickened basement membranes, so the distribution across all tubules is genuinely bimodal. Averaging over <em>all</em> of them flattens that distribution and returns a number that describes neither population.</span>
+            <span><strong>Why this matters.</strong> When the two populations differ on a feature, the distribution of that feature across all objects is bimodal. Averaging over <em>all</em> of them flattens the distribution and returns a number that describes neither population.</span>
           </div>
         </div>
       </li>
@@ -291,17 +295,17 @@
 
 <!-- ================= WORKED EXAMPLE ================= -->
   <section>
-    <h2>Twelve patients, three features, every stage shown</h2>
+    <h2>Twelve subjects, three features, every stage shown</h2>
     <h3>A worked example</h3>
 
     <div class="prose">
       <p>
-        Everything below was produced by running this repository&rsquo;s own estimator, <code>Mainfunction_albet.py</code>, on a cohort small enough to print in full. There are two tubule populations. Normal tubules sit near <strong>(2, 10)</strong> and atrophic ones near <strong>(6, 2)</strong>. Measurement noise of
+        Everything below was produced by running this repository&rsquo;s own estimator, <code>Mainfunction_albet.py</code>, on a cohort small enough to print in full. Objects are drawn from two latent populations. Population 1 centres near <strong>(2, 10)</strong> on the two informative features and population 2 near <strong>(6, 2)</strong>. Measurement noise of
         <math><mrow><msub><mi>&#x3C3;</mi><mi>R</mi></msub><mo>=</mo><mn>0.3</mn></mrow></math>
-        was added to every tubule.
+        was added to every object.
       </p>
       <p>
-        The third feature is the one to watch. Call it nuclei per tubule. It varies from patient to patient, but it takes an <em class="term">identical value in both tubule populations</em> and has no effect on the outcome. It is a pure nuisance variable, included deliberately so we can check whether the lasso removes it.
+        The third feature is the one to watch. It varies from subject to subject, but it takes an <em class="term">identical value in both populations</em> and has no effect on the outcome. It is a pure nuisance variable, included deliberately so we can check whether the lasso removes it.
       </p>
     </div>
 
@@ -317,24 +321,24 @@
           <mi>&#x3C3;</mi><mo>=</mo><mn>0.5</mn>
         </mrow>
       </math>
-      <p class="eq-note">The truth being recovered. Atrophic tubules count three times as much, and feature 3 has no effect at all.</p>
+      <p class="eq-note">The truth being recovered. Population 2 counts three times as much as population 1, and feature 3 has no effect at all.</p>
     </div>
 
     <!-- ---------- STAGE 0 ---------- -->
-    <div class="exhead"><span class="exnum">0</span> The raw matrices (3 of 12 patients shown)</div>
+    <div class="exhead"><span class="exnum">0</span> The raw matrices (3 of 12 subjects shown)</div>
 
     <div class="legend">
-      <span><i class="swatch norm"></i> normal tubule</span>
-      <span><i class="swatch atro"></i> atrophic tubule</span>
-      <span>columns: TBM thickness &middot; lumen area &middot; nuclei (nuisance)</span>
+      <span><i class="swatch norm"></i> population 1</span>
+      <span><i class="swatch atro"></i> population 2</span>
+      <span>columns: feature 1 &middot; feature 2 &middot; feature 3 (nuisance)</span>
     </div>
 
     <div class="ex-grid">
 
       <div class="patient">
-        <div class="patient-head"><b>Patient A</b><span>5 tubules &middot; 20% atrophic</span></div>
+        <div class="patient-head"><b>Subject A</b><span>5 objects &middot; 20% population 2</span></div>
         <table class="tub">
-          <thead><tr><th>tubule</th><th>TBM</th><th>lumen</th><th>nuclei</th></tr></thead>
+          <thead><tr><th>object</th><th>feat 1</th><th>feat 2</th><th>feat 3</th></tr></thead>
           <tbody>
             <tr class="atro"><td>1</td><td>6.00</td><td>2.09</td><td>4.92</td></tr>
             <tr class="norm"><td>2</td><td>1.73</td><td>9.86</td><td>4.70</td></tr>
@@ -352,9 +356,9 @@
       </div>
 
       <div class="patient">
-        <div class="patient-head"><b>Patient B</b><span>4 tubules &middot; 50% atrophic</span></div>
+        <div class="patient-head"><b>Subject B</b><span>4 objects &middot; 50% population 2</span></div>
         <table class="tub">
-          <thead><tr><th>tubule</th><th>TBM</th><th>lumen</th><th>nuclei</th></tr></thead>
+          <thead><tr><th>object</th><th>feat 1</th><th>feat 2</th><th>feat 3</th></tr></thead>
           <tbody>
             <tr class="atro"><td>1</td><td>6.21</td><td>1.60</td><td>6.86</td></tr>
             <tr class="atro"><td>2</td><td>5.43</td><td>1.61</td><td>6.45</td></tr>
@@ -371,9 +375,9 @@
       </div>
 
       <div class="patient">
-        <div class="patient-head"><b>Patient C</b><span>5 tubules &middot; 80% atrophic</span></div>
+        <div class="patient-head"><b>Subject C</b><span>5 objects &middot; 80% population 2</span></div>
         <table class="tub">
-          <thead><tr><th>tubule</th><th>TBM</th><th>lumen</th><th>nuclei</th></tr></thead>
+          <thead><tr><th>object</th><th>feat 1</th><th>feat 2</th><th>feat 3</th></tr></thead>
           <tbody>
             <tr class="atro"><td>1</td><td>5.84</td><td>1.99</td><td>4.03</td></tr>
             <tr class="atro"><td>2</td><td>5.54</td><td>1.86</td><td>3.71</td></tr>
@@ -393,21 +397,21 @@
     </div>
 
     <!-- ---------- STAGE 1 + 2 ---------- -->
-    <div class="exhead"><span class="exnum">1&#8202;&ndash;&#8202;2</span> Pool all 73 tubules, then cluster them</div>
+    <div class="exhead"><span class="exnum">1&#8202;&ndash;&#8202;2</span> Pool all 73 objects, then cluster them</div>
 
     <div class="prose">
       <p>
-        Every tubule from all twelve patients goes into one
+        Every object from all twelve subjects goes into one
         <math><mrow><mn>73</mn><mo>&#xD7;</mo><mn>3</mn></mrow></math> matrix. Plotted against the two informative features, the two groups separate obviously, which is deliberate in an example this small. The mixture model recovered the true labels perfectly.
       </p>
     </div>
 
     <div class="scatterbox">
       <svg id="scatter" viewBox="0 0 460 300" role="img"
-           aria-label="Scatter of 73 pooled tubules showing two well-separated clusters"></svg>
+           aria-label="Scatter of 73 pooled objects showing two well-separated clusters"></svg>
       <div class="scatter-cap">
-        <span><i class="swatch norm"></i> assigned cluster 1 &mdash; 34 tubules</span>
-        <span><i class="swatch atro"></i> assigned cluster 2 &mdash; 39 tubules</span>
+        <span><i class="swatch norm"></i> assigned cluster 1 &mdash; 34 objects</span>
+        <span><i class="swatch atro"></i> assigned cluster 2 &mdash; 39 objects</span>
         <span class="acc">clustering accuracy 100%</span>
       </div>
     </div>
@@ -427,8 +431,8 @@
             <th></th>
           </tr>
           <tr>
-            <th>patient</th><th>w&#8321;</th><th>w&#8322;</th>
-            <th>c&#8321; &mdash; normal</th><th>c&#8322; &mdash; atrophic</th>
+            <th>subject</th><th>w&#8321;</th><th>w&#8322;</th>
+            <th>c&#8321; &mdash; pop 1</th><th>c&#8322; &mdash; pop 2</th>
             <th>row 1 = w&#8321; &middot; c&#8321;</th><th>row 2 = w&#8322; &middot; c&#8322;</th>
             <th>row&#8321; + row&#8322;<br><span class="sub2">= naive average</span></th>
             <th>y</th>
@@ -452,15 +456,15 @@
     </div>
 
     <div class="note">
-      <span><strong>Follow one row across.</strong> Patient A&rsquo;s four normal tubules average to <code>(1.90, 10.03, 4.91)</code>. Multiplying by w&#8321; = 0.80 gives row 1, <code>(1.52, 8.03, 3.93)</code>. That is the only place the weights are used. They are applied once, here, and then absorbed into the numbers. Note that every figure is shown to two decimals while the arithmetic runs at full precision. So 0.80 &times; 10.03 gives 8.02 by hand, where the row shows 8.03 computed from the unrounded 10.0334.</span>
+      <span><strong>Follow one row across.</strong> Subject A&rsquo;s four population-1 objects average to <code>(1.90, 10.03, 4.91)</code>. Multiplying by w&#8321; = 0.80 gives row 1, <code>(1.52, 8.03, 3.93)</code>. That is the only place the weights are used. They are applied once, here, and then absorbed into the numbers. Note that every figure is shown to two decimals while the arithmetic runs at full precision. So 0.80 &times; 10.03 gives 8.02 by hand, where the row shows 8.03 computed from the unrounded 10.0334.</span>
     </div>
 
     <div class="note" style="margin-top:12px;">
-      <span><strong>Now compare the third number in the two cluster-mean columns:</strong> 4.91 against 4.92, 6.66 against 6.66, 5.07 against 5.07. The nuisance feature takes the same value in both populations for every patient. It carries no cluster structure at all, which is exactly why it should be dropped. Features 1 and 2 behave differently, separating cleanly at about 1.9 against 5.9 and 10.0 against 2.0.</span>
+      <span><strong>Now compare the third number in the two cluster-mean columns:</strong> 4.91 against 4.92, 6.66 against 6.66, 5.07 against 5.07. The nuisance feature takes the same value in both populations for every subject. It carries no cluster structure at all, which is exactly why it should be dropped. Features 1 and 2 behave differently, separating cleanly at about 1.9 against 5.9 and 10.0 against 2.0.</span>
     </div>
 
     <div class="note" style="margin-top:12px;">
-      <span><strong>The last two design columns hold the same values.</strong> row&#8321; + row&#8322; equals the naive average for every patient, to machine precision. The largest discrepancy across all 12 patients and 3 features is <code>1.78e&#8209;15</code>. The two rows partition the naive vector. This is an algebraic identity, not a coincidence.</span>
+      <span><strong>The last two design columns hold the same values.</strong> row&#8321; + row&#8322; equals the naive average for every subject, to machine precision. The largest discrepancy across all 12 subjects and 3 features is <code>1.78e&#8209;15</code>. The two rows partition the naive vector. This is an algebraic identity, not a coincidence.</span>
     </div>
 
     <div class="eq" style="margin-top:20px;">
@@ -477,7 +481,7 @@
         </mrow>
       </math>
       <p class="eq-note">
-        The last column, <math><mi>y</mi></math>, is the outcome being predicted, standing in for eGFR. It is the target, not part of the design. For patient A, row&#8321; + 3&middot;row&#8322; = (5.12, 9.28, 6.88). Taking the dot product with
+        The last column, <math><mi>y</mi></math>, is the continuous scalar outcome being predicted. It is the target, not part of the design. For subject A, row&#8321; + 3&middot;row&#8322; = (5.12, 9.28, 6.88). Taking the dot product with
         <math><mrow><msup><mi>&#x3B2;</mi><mo>&#x2217;</mo></msup><mo>=</mo><mo>(</mo><mn>2</mn><mo>,</mo><mo>&#x2212;</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>)</mo></mrow></math>
         gives 0.96. The observed value of 0.20 is that figure plus a noise draw of &minus;0.76. Feature 3 contributes nothing, because
         <math><mrow><msubsup><mi>&#x3B2;</mi><mn>3</mn><mo>&#x2217;</mo></msubsup><mo>=</mo><mn>0</mn></mrow></math>.
@@ -485,9 +489,9 @@
     </div>
 
     <div class="note" style="margin-top:16px;">
-      <span><strong>Sorting that column by w&#8322; shows it climbing almost monotonically,</strong> from 0.20 at 20% atrophic to 24.20 at 83%. This is not chance. With
+      <span><strong>Sorting that column by w&#8322; shows it climbing almost monotonically,</strong> from 0.20 at 20% population 2 to 24.20 at 83%. This is not chance. With
       <math><mrow><msup><mi>&#x3B1;</mi><mo>&#x2217;</mo></msup><mo>=</mo><mo>(</mo><mn>1</mn><mo>,</mo><mn>3</mn><mo>)</mo></mrow></math>
-      the atrophic row counts three times as much. That is the simulated version of the finding that the percentage of tubules with atrophy predicts worse kidney function.</span>
+      the population-2 row counts three times as much. Composition drives the outcome: the larger a subject&rsquo;s share of population-2 objects, the larger their response.</span>
     </div>
 
     <!-- ---------- STANDARDIZATION ---------- -->
@@ -496,7 +500,7 @@
     <div class="prose">
       <p>
         Before any penalty is applied, <math><mrow><mi>Z</mi><mo>=</mo><msup><mi>&#x3B1;</mi><mo>&#x22A4;</mo></msup><msup><mover accent="true"><mi>X</mi><mo>^</mo></mover><mrow><mo>&#x2217;</mo><mo>&#x2217;</mo></mrow></msup></mrow></math>
-        is z&#8209;scored column by column across the twelve patients. The raw columns differ in spread by more than a factor of two, and an
+        is z&#8209;scored column by column across the twelve subjects. The raw columns differ in spread by more than a factor of two, and an
         <math><msub><mi>L</mi><mn>1</mn></msub></math> penalty is not scale&#8209;invariant. Without this step, lambda would penalize the narrowest column most heavily, purely because of its units.
       </p>
     </div>
@@ -507,15 +511,15 @@
           <tr><th>column of Z</th><th>mean</th><th>SD, raw</th><th>SD, standardized</th></tr>
         </thead>
         <tbody>
-          <tr><td>1 &mdash; TBM</td><td>2.009</td><td>0.443</td><td>1.000</td></tr>
-          <tr><td>2 &mdash; lumen</td><td>2.885</td><td>0.925</td><td>1.000</td></tr>
-          <tr><td>3 &mdash; nuclei</td><td>2.768</td><td>1.088</td><td>1.000</td></tr>
+          <tr><td>feature 1</td><td>2.009</td><td>0.443</td><td>1.000</td></tr>
+          <tr><td>feature 2</td><td>2.885</td><td>0.925</td><td>1.000</td></tr>
+          <tr><td>feature 3</td><td>2.768</td><td>1.088</td><td>1.000</td></tr>
         </tbody>
       </table>
     </div>
 
     <div class="eq-note" style="margin-top:12px;">
-      Patient A&rsquo;s row of Z goes from <code>(1.360, 4.222, 2.457)</code> raw
+      Subject A&rsquo;s row of Z goes from <code>(1.360, 4.222, 2.457)</code> raw
       to <code>(&#8722;1.467, 1.445, &#8722;0.286)</code> standardized. The coefficients
       are divided back by these scales on the way out, so
       <math><mover accent="true"><mi>&#x3B2;</mi><mo>^</mo></mover></math> is
@@ -585,7 +589,7 @@
 
     <div class="prose">
       <p>
-        A single draw proves nothing. The whole pipeline was therefore re&#8209;run a few hundred times, with fresh tubules, fresh nuisance values, fresh outcome noise and fresh clustering each time. The direction of the result holds. But the honest summary is a <em class="term">trade&#8209;off</em>, not a clean win.
+        A single draw proves nothing. The whole pipeline was therefore re&#8209;run a few hundred times, with fresh objects, fresh nuisance values, fresh outcome noise and fresh clustering each time. The direction of the result holds. But the honest summary is a <em class="term">trade&#8209;off</em>, not a clean win.
       </p>
     </div>
 
@@ -612,7 +616,7 @@
         <math><mrow><mi>&#x3BB;</mi><mo>=</mo><mn>0.10</mn></mrow></math>, and at that setting CLUSSO is the weaker of the two. In this example CLUSSO buys its lower false positive rate only by accepting a much higher miss rate.
       </p>
       <p>
-        That is <em class="term">not</em> what the paper reports, and the gap is worth naming. Twelve patients and three features is far smaller than the simulation study, which uses 300 to 2,000 subjects and 10 to 200 features. CLUSSO&rsquo;s advantage is also reported to grow as the number of features increases. An example this small demonstrates the <em class="term">mechanism</em>, not the comparative performance.
+        That is <em class="term">not</em> what the paper reports, and the gap is worth naming. Twelve subjects and three features is far smaller than the simulation study, which uses 300 to 2,000 subjects and 10 to 200 features. CLUSSO&rsquo;s advantage is also reported to grow as the number of features increases. An example this small demonstrates the <em class="term">mechanism</em>, not the comparative performance.
       </p>
       <p>
         Still, consider what the dial implies. Someone has to choose a point on that curve. Cross&#8209;validation chooses it by minimizing prediction error, which is a criterion with no connection to how many of the selected features are real. Nothing in the table lets you ask for <em class="term">a set that is at most 10% false.</em>
@@ -622,41 +626,6 @@
       </p>
     </div>
   </section>
-
-  <script>
-  (function () {
-    var pts = [[6.0,2.09],[1.73,9.86],[2.02,10.4],[1.81,10.15],[2.03,9.72],[6.21,1.6],[5.43,1.61],[1.93,9.62],[2.05,9.94],[5.84,1.99],[5.54,1.86],[5.76,2.32],[5.99,2.27],[1.97,10.03],[5.63,2.02],[5.54,2.26],[1.81,10.6],[1.64,10.02],[1.94,10.2],[2.2,10.43],[6.06,1.86],[5.64,1.83],[6.27,2.34],[5.76,2.19],[5.86,1.97],[6.21,1.9],[1.92,10.46],[1.91,10.11],[5.94,1.67],[1.87,10.35],[1.99,10.2],[2.32,10.0],[5.61,2.1],[5.39,1.91],[6.05,2.67],[5.81,2.06],[5.95,1.94],[6.16,1.69],[6.01,1.68],[1.74,10.29],[2.03,9.82],[1.4,9.66],[5.36,2.25],[6.23,1.75],[6.04,1.54],[2.43,9.98],[1.95,9.71],[5.84,1.98],[5.81,1.62],[1.95,10.29],[1.79,9.9],[2.0,9.89],[1.59,9.76],[1.8,9.68],[6.42,1.56],[5.81,1.47],[5.99,2.02],[6.14,1.84],[5.67,1.64],[1.85,10.09],[5.87,1.85],[5.91,1.95],[6.35,2.2],[1.83,9.59],[2.29,9.96],[2.23,10.25],[1.86,10.45],[2.26,10.15],[2.56,10.45],[5.49,2.25],[6.0,2.25],[5.37,2.08],[1.93,10.01]];
-    var lab = [2,1,1,1,1,2,2,1,1,2,2,2,2,1,2,2,1,1,1,1,2,2,2,2,2,2,1,1,2,1,1,1,2,2,2,2,2,2,2,1,1,1,2,2,2,1,1,2,2,1,1,1,1,1,2,2,2,2,2,1,2,2,2,1,1,1,1,1,1,2,2,2,1];
-    var svg = document.getElementById('scatter');
-    if (!svg) return;
-    var W = 460, H = 300, L = 52, R = 16, T = 16, B = 44;
-    var xs = pts.map(function (p) { return p[0]; });
-    var ys = pts.map(function (p) { return p[1]; });
-    var x0 = 1, x1 = 7, y0 = 1, y1 = 11;
-    function px(v) { return L + (v - x0) / (x1 - x0) * (W - L - R); }
-    function py(v) { return (H - B) - (v - y0) / (y1 - y0) * (H - B - T); }
-    var out = [];
-    // frame
-    out.push('<line class="ax" x1="' + L + '" y1="' + (H - B) + '" x2="' + (W - R) + '" y2="' + (H - B) + '"/>');
-    out.push('<line class="ax" x1="' + L + '" y1="' + T + '" x2="' + L + '" y2="' + (H - B) + '"/>');
-    // ticks
-    [2, 4, 6].forEach(function (t) {
-      out.push('<line class="tick" x1="' + px(t) + '" y1="' + (H - B) + '" x2="' + px(t) + '" y2="' + (H - B + 5) + '"/>');
-      out.push('<text class="tl" x="' + px(t) + '" y="' + (H - B + 18) + '" text-anchor="middle">' + t + '</text>');
-    });
-    [2, 6, 10].forEach(function (t) {
-      out.push('<line class="tick" x1="' + (L - 5) + '" y1="' + py(t) + '" x2="' + L + '" y2="' + py(t) + '"/>');
-      out.push('<text class="tl" x="' + (L - 10) + '" y="' + (py(t) + 4) + '" text-anchor="end">' + t + '</text>');
-    });
-    out.push('<text class="axl" x="' + ((L + W - R) / 2) + '" y="' + (H - 6) + '" text-anchor="middle">TBM thickness</text>');
-    out.push('<text class="axl" transform="translate(14,' + ((T + H - B) / 2) + ') rotate(-90)" text-anchor="middle">lumen area</text>');
-    for (var i = 0; i < pts.length; i++) {
-      out.push('<circle class="pt' + lab[i] + '" cx="' + px(pts[i][0]).toFixed(1) +
-               '" cy="' + py(pts[i][1]).toFixed(1) + '" r="4.2"/>');
-    }
-    svg.innerHTML = out.join('');
-  })();
-  </script>
 
   <footer>
     <p>Rubin, Fan, Barisoni, Janowczyk &amp; Zee. &ldquo;Novel Scalar&#8209;on&#8209;matrix Regression for Unbalanced Feature Matrices.&rdquo; <em>Statistics in Biosciences</em> 18:192&ndash;213, 2026.</p>

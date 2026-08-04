@@ -22,8 +22,8 @@
       out.push('<line class="tick" x1="' + (L - 5) + '" y1="' + py(t) + '" x2="' + L + '" y2="' + py(t) + '"/>');
       out.push('<text class="tl" x="' + (L - 10) + '" y="' + (py(t) + 4) + '" text-anchor="end">' + t + '</text>');
     });
-    out.push('<text class="axl" x="' + ((L + W - R) / 2) + '" y="' + (H - 6) + '" text-anchor="middle">TBM thickness</text>');
-    out.push('<text class="axl" transform="translate(14,' + ((T + H - B) / 2) + ') rotate(-90)" text-anchor="middle">lumen area</text>');
+    out.push('<text class="axl" x="' + ((L + W - R) / 2) + '" y="' + (H - 6) + '" text-anchor="middle">feature 1</text>');
+    out.push('<text class="axl" transform="translate(14,' + ((T + H - B) / 2) + ') rotate(-90)" text-anchor="middle">feature 2</text>');
     for (var i = 0; i < pts.length; i++) {
       out.push('<circle class="pt' + lab[i] + '" cx="' + px(pts[i][0]).toFixed(1) +
                '" cy="' + py(pts[i][1]).toFixed(1) + '" r="4.2"/>');

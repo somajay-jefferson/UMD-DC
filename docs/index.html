@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CLUSSO &times; PS-Fdr</title>
-<meta name="description" content="Scalar-on-matrix regression for unbalanced tubule feature matrices, false discovery control for penalized selection, and the open question of composing the two.">
+<meta name="description" content="Scalar-on-matrix regression for predictors with an unbalanced mode, false discovery control for penalized selection, and the open question of composing the two.">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%94%AC</text></svg>">
 <meta property="og:type" content="article">
 <meta property="og:title" content="CLUSSO &times; PS-Fdr">
-<meta property="og:description" content="Scalar-on-matrix regression for unbalanced tubule feature matrices, false discovery control for penalized selection, and the open question of composing the two.">
+<meta property="og:description" content="Scalar-on-matrix regression for predictors with an unbalanced mode, false discovery control for penalized selection, and the open question of composing the two.">
 <meta name="twitter:card" content="summary">
 <link rel="stylesheet" href="assets/style.css">
 </head>
@@ -34,11 +34,7 @@
   <section>
     <div class="prose">
       <p>
-        Digital pathology turns one kidney biopsy into a matrix: a row per tubule
-        segmented from the slide, a column per image feature. The row count varies
-        wildly between patients, which breaks every scalar&#8209;on&#8209;matrix regression
-        method that expects a balanced design. <strong>CLUSSO</strong> is the method
-        that handles it.
+        Some data arrives as a matrix per subject rather than a vector. Each row is one measured object and each column is one feature. The first mode is <strong>unbalanced</strong> &mdash; subject <math><mi>i</mi></math> supplies <math><msub><mi>p</mi><mi>i</mi></msub></math> objects and that count varies freely &mdash; while the second is <strong>balanced</strong>, the same <math><mi>q</mi></math> features on every object. Cells per sample, events per flow-cytometry run, segmented objects per image: the shape recurs, and it breaks every scalar&#8209;on&#8209;matrix method that expects a balanced design. <strong>CLUSSO</strong> handles it, given a continuous scalar outcome.
       </p>
       <p>
         Separately, cross&#8209;validated penalized selection is known to over&#8209;select
@@ -57,9 +53,7 @@
       <a class="card" href="clusso.html">
         <span class="ct">Method &middot; written up</span>
         <h3>CLUSSO</h3>
-        <p>Pool every tubule, cluster them, average within patient and cluster, then
-        fit an alternating structured lasso. Includes a twelve&#8209;patient example run
-        end to end through the real implementation.</p>
+        <p>Pool every object, cluster them, average within subject and cluster, then fit an alternating structured lasso. Includes a twelve&#8209;subject example run end to end through the real implementation.</p>
       </a>
       <a class="card" href="ps-fdr.html">
         <span class="ct">Method &middot; written up</span>

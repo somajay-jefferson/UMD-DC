@@ -81,7 +81,7 @@
       <div class="col-b">
         <div class="col-head">CLUSSO &mdash; proposed</div>
         <div class="flow">
-          <div class="node">resample <math><mi>n</mi></math> subjects<span class="cap">each carries ~900 tubules</span></div>
+          <div class="node">resample <math><mi>n</mi></math> subjects<span class="cap">each carries ~900 objects</span></div>
           <div class="arrow">&#9660;</div>
           <div class="node inserted">re&#8209;pool &#8594; re&#8209;cluster &#8594; re&#8209;average<span class="cap">no counterpart in the FDR paper</span></div>
           <div class="arrow">&#9660;</div>
@@ -176,8 +176,7 @@
           </p>
           <p>
             Sharper still: because clustering is fitted <em>jointly</em> across the
-            whole cohort, subject <math><mi>i</mi></math>&rsquo;s design row depends
-            on every other subject&rsquo;s tubules. Resampling subjects is therefore
+            whole cohort, subject <math><mi>i</mi></math>&rsquo;s design row depends on every other subject&rsquo;s objects. Resampling subjects is therefore
             not resampling independent units.
           </p>
           <div class="where"><b>Where:</b> the dashed amber box that has no counterpart on the left.</div>
@@ -194,8 +193,7 @@
             clustering each fit is an alternating solve on a
             <math><mrow><mn>2</mn><mo>&#xD7;</mo><mn>57</mn><mo>&#xD7;</mo><mn>250</mn></mrow></math>
             tensor: seconds. With re&#8209;clustering inside the loop, each one needs
-            a Gaussian mixture over roughly 225,000 tubules in 57 dimensions:
-            minutes.
+            a Gaussian mixture over roughly 225,000 objects in 57 dimensions: minutes.
           </p>
           <p>
             Which is to say the decision in obstacle 02 is not merely

@@ -61,8 +61,7 @@
       </p>
       <p>
         The data generation gains a correlation parameter, <code>rho</code>, between
-        informative predictors, and leans on the <code>MixMatrix</code> package to
-        draw correlated tubules from a matrix&#8209;variate distribution.
+        informative predictors, and leans on the <code>MixMatrix</code> package to draw correlated objects from a matrix&#8209;variate distribution.
       </p>
     </div>
 
@@ -73,8 +72,7 @@
       <p>
         <code>Random_CLUSSO_non_mainfunctions.R</code> defines
         <code>bootstrap.estimates()</code>, and a single call does
-        <strong>three nested resamples</strong>: it bootstraps subjects, bootstraps
-        tubules within each resampled subject, and subsamples the feature columns
+        <strong>three nested resamples</strong>: it bootstraps subjects, bootstraps objects within each resampled subject, and subsamples the feature columns
         &mdash; uniformly on the first pass, then with probability proportional to an
         importance measure on the second. That two&#8209;stage structure is the random
         lasso.
