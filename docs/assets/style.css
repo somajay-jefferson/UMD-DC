@@ -681,6 +681,13 @@
   table.design .dim { color: var(--muted); }
   table.design .y   { font-weight: 700; }
 
+  /* the symbol under a worded column heading */
+  table.design th .hint {
+    display: inline-block; margin-top: 2px;
+    font-weight: 400; text-transform: none;
+    letter-spacing: 0; opacity: .65;
+  }
+
   /* notation glossary: prose in the second column, so let it wrap */
   table.design.gloss { white-space: normal; font-size: 13.5px; margin: 4px 0 8px; }
   table.design.gloss td:first-child {

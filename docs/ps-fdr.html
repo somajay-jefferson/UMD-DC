@@ -66,6 +66,25 @@
       </p>
     </div>
 
+    <div class="scroll-x">
+      <table class="design gloss">
+        <thead>
+          <tr><th>the words</th><th>what they mean here</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>a <b>feature</b></td><td>one column of the data &mdash; one thing you measured about every subject, which may or may not actually matter</td></tr>
+          <tr><td>the <b>support</b></td><td>which features a fit kept. The lasso sets most coefficients to exactly zero; the ones left over are the support</td></tr>
+          <tr><td>to <b>resample</b></td><td>draw a new dataset the same size as the original by picking subjects at random, with repeats allowed. Same data, jiggled</td></tr>
+          <tr><td><b>selection frequency</b></td><td>out of 50 resamples, how many kept this feature. A feature kept every time scores 1.00</td></tr>
+          <tr><td>to <b>shuffle</b></td><td>scramble the outcome column so no feature has any real link to it any more. Also called permuting</td></tr>
+          <tr><td>the <b>null</b></td><td>the shuffled data, and every number computed from it. It is the &ldquo;what if nothing were real&rdquo; comparison</td></tr>
+          <tr><td>a <b>cutoff</b></td><td>a line drawn through the ranked features. Everything above it gets reported, everything below is dropped</td></tr>
+          <tr><td>to <b>sweep</b></td><td>try a whole range of values for a setting and look at what each one gives you, rather than picking one up front</td></tr>
+          <tr><td><b>false discovery</b></td><td>a feature you reported that was actually noise. The point of all this is to bound how many of those you get</td></tr>
+        </tbody>
+      </table>
+    </div>
+
     <div class="eq plain">
       <math display="block">
         <mrow>
@@ -198,19 +217,20 @@
               </mrow>
             </math>
             <p class="eq-note">
-              <math><mrow><msub><mi>&#x3A0;</mi><mi>j</mi></msub></mrow></math> is a
-              proportion out of <math><mi>B</mi></math> draws, so its standard error is
-              <math><mrow><msqrt><mrow><mi>u</mi><mo>(</mo><mn>1</mn><mo>&#x2212;</mo><mi>u</mi><mo>)</mo><mo>/</mo><mi>B</mi></mrow></msqrt></mrow></math>
-              &mdash; largest at <math><mrow><mi>u</mi><mo>=</mo><mn>0.5</mn></mrow></math>, vanishing as
-              <math><mrow><mi>u</mi><mo>&#x2192;</mo><mn>1</mn></mrow></math>. Dividing by that is the
-              whole idea: a fixed gap in raw frequency is cheap in the middle of the range and nearly
-              impossible at the top, and <math><mi>D</mi></math> is what makes those two comparable.
-              <math><mi>&#x3BD;</mi></math> is not a fudge factor either &mdash; with
-              <math><mi>B</mi></math> resamples no frequency can be resolved finer than
-              <math><mrow><mn>1</mn><mo>/</mo><mi>B</mi></mrow></math>, so that is the floor on the
-              denominator, and it caps the statistic at
+              The square root on the bottom is how much a fraction out of
+              <math><mi>B</mi></math> wobbles. It is biggest at
+              <math><mrow><mi>u</mi><mo>=</mo><mn>0.5</mn></mrow></math> and shrinks to nothing as
+              <math><mi>u</mi></math> approaches 1, which matches the fact that 25 out of 50 is a
+              jumpy number and 50 out of 50 is a steady one. Dividing by it puts every frequency in
+              the same units, so a gap means the same thing wherever it sits.
+              <math><mi>&#x3BD;</mi></math> is there because at
+              <math><mrow><mi>u</mi><mo>=</mo><mn>1</mn></mrow></math> that square root is zero and
+              you cannot divide by zero. Setting it to
+              <math><mrow><mn>1</mn><mo>/</mo><mi>B</mi></mrow></math> says: with
+              <math><mi>B</mi></math> resamples you can never measure anything finer than one
+              resample, so do not pretend to. That also puts a ceiling on the whole thing at
               <math><mrow><mi>D</mi><mo>(</mo><mn>1</mn><mo>)</mo><mo>=</mo><mi>B</mi></mrow></math>.
-              Run more resamples and the ceiling rises with them.
+              Run more resamples and the ceiling goes up with them.
             </p>
           </div>
 
@@ -226,7 +246,7 @@
                 <mi>D</mi><mo>(</mo><msub><mover accent="true"><mi>&#x3A0;</mi><mo>&#x2015;</mo></mover><mrow><mo>(</mo><mi>j</mi><mo>)</mo></mrow></msub><mo>)</mo>
               </mrow>
             </math>
-            <p class="eq-note">Real arm on the left, null arm on the right.</p>
+            <p class="eq-note">Real data on the left, shuffled data on the right. Same formula both times.</p>
           </div>
         </div>
       </li>
@@ -235,7 +255,7 @@
         <div class="stage-num">4</div>
         <div class="stage-body">
           <h4>Step down and cut</h4>
-          <p>Walk the ordered statistics until the real arm separates from the null arm by a margin, then count how many null values would have cleared the same bar.</p>
+          <p>Raise the required margin until the real numbers pull away from the shuffled ones, then count how many shuffled values would have cleared the same bar.</p>
 
           <div class="eq">
             <math display="block">
@@ -452,50 +472,23 @@
     </div>
 
     <!-- ---------- STAGE 2-3 ---------- -->
-    <div class="exhead"><span class="exnum">2&#8202;&ndash;&#8202;3</span> Build the null, then put both arms on one scale</div>
+    <div class="exhead"><span class="exnum">2&#8202;&ndash;&#8202;3</span> Do it all again on nonsense, then put both lists in the same units</div>
 
     <div class="prose">
       <p>
-        Shuffle <math><mi>y</mi></math>, run all fifty resamples again, and do that a hundred times over &mdash; five thousand further fits. On every one of them the support size is pinned at 18. The permuted frequencies are then sorted within each permutation and averaged <em class="term">position by position</em>, so the null describes what the <math><mi>j</mi></math>&#8209;th largest selection frequency looks like when nothing is real.
+        Now run step 1 a second time, on data where nothing is real. Shuffle
+        <math><mi>y</mi></math> so no feature has any genuine link to the outcome, then do all fifty
+        resamples again. Then shuffle and do it again, a hundred times over &mdash; five thousand more
+        fits. Every one of them is forced to keep exactly 18 features, the median from step 1.
       </p>
       <p>
-        Both arms then pass through
-        <math><mrow><mi>D</mi><mo>(</mo><mi>u</mi><mo>)</mo></mrow></math> with
-        <math><mrow><mi>&#x3BD;</mi><mo>=</mo><mn>1</mn><mo>/</mo><mn>50</mn><mo>=</mo><mn>0.02</mn></mrow></math>.
-        A selection frequency here is a proportion out of fifty resamples, and the standard error of
-        such a proportion is
-        <math><mrow><msqrt><mrow><mi>u</mi><mo>(</mo><mn>1</mn><mo>&#x2212;</mo><mi>u</mi><mo>)</mo><mo>/</mo><mn>50</mn></mrow></msqrt></mrow></math>.
-        Dividing by that square root is therefore not a cosmetic stretch &mdash; it is the same
-        move as forming a <math><mi>t</mi></math>&#8209;statistic, measuring each frequency in
-        units of its own noise. The map is strictly increasing, so it reorders nothing.
+        One catch. Once <math><mi>y</mi></math> is shuffled, the feature labels mean nothing &mdash;
+        &ldquo;feature 12 got picked a lot&rdquo; is an accident of that particular shuffle. What does
+        hold up across shuffles is the <em class="term">shape</em>: how high the most&#8209;picked
+        feature gets when nothing is real, how high the second, and so on. So within each shuffle the
+        thirty numbers are sorted before anything is averaged. From here on, a row of the shuffled
+        results means a position in the ranking, not a feature.
       </p>
-      <p>
-        The reason that matters is one line of step 4. A single scalar
-        <math><mi>&#x394;</mi></math> is applied at <em class="term">every rank at once</em>, so
-        the margin has to mean the same thing at the top of the range as in the middle. On raw
-        frequencies it does not. Below, the same gap of 0.06 at four different places:
-      </p>
-    </div>
-
-    <div class="scroll-x">
-      <table class="design">
-        <thead>
-          <tr>
-            <th class="gk">&#928;<sub>(j)</sub> &mdash; real</th><th class="gk">&#928;&#772;<sub>(j)</sub> &mdash; null</th><th>raw gap</th>
-            <th class="gk">Z<sub>(j)</sub></th><th class="gk">Z&#772;<sub>(j)</sub></th><th>gap after D</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>0.50</td><td class="dim">0.44</td><td class="dim">0.06</td><td>0.96</td><td class="dim">0.85</td><td>+0.11</td></tr>
-          <tr><td>0.70</td><td class="dim">0.64</td><td class="dim">0.06</td><td>1.46</td><td class="dim">1.28</td><td>+0.18</td></tr>
-          <tr><td>0.90</td><td class="dim">0.84</td><td class="dim">0.06</td><td>2.81</td><td class="dim">2.17</td><td>+0.64</td></tr>
-          <tr><td>1.00</td><td class="dim">0.94</td><td class="dim">0.06</td><td>50.00</td><td class="dim">3.65</td><td class="v1">+46.35</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="note">
-      <span><strong>Every row has the same raw gap and none of them is the same evidence.</strong> Six points of separation where the noise is largest is nothing; six points where forty&#8209;seven of fifty resamples already agree is almost impossible. A rule that thresholds raw frequency cannot tell those apart, and after <math><mi>D</mi></math> it does not have to. The bottom row is the last one to matter &mdash; it is exactly the situation features 1 to 4 are in further down.</span>
     </div>
 
     <div class="chartbox">
@@ -509,21 +502,63 @@
     </div>
 
     <div class="note">
-      <span><strong>Each faint line is one shuffled dataset put through the whole of step 1.</strong> They are sorted, so a line reads &ldquo;the most selected feature, the second most, and so on&rdquo; &mdash; not any particular feature. The real curve leaves the band at the left and rejoins it around rank 14. Where it sits inside the band, a feature is doing nothing that shuffled data would not do by chance.</span>
+      <span><strong>Each faint line is one shuffled dataset run through the whole of step 1.</strong> They are sorted, so a line reads &ldquo;the most picked feature, the second most, and so on&rdquo; &mdash; not any particular feature. The real curve leaves the band on the left and rejoins it around rank 14. Where it sits inside the band, a feature is doing nothing that shuffled data would not do by luck.</span>
     </div>
 
-    <div class="chartbox">
-      <svg id="fig-norm" class="fig" viewBox="0 0 620 226" role="img"
-           aria-label="Each feature's selection frequency joined to its normalized value on a log scale"></svg>
-      <div class="scatter-cap">
-        <span><i class="swatch real"></i> real feature</span>
-        <span><i class="swatch noise"></i> noise feature</span>
-        <span>the same thirty features, before and after D</span>
-      </div>
+    <div class="prose">
+      <p>
+        Now you have two lists of thirty numbers. Real, and shuffled. To compare them, both go through
+        <math><mrow><mi>D</mi><mo>(</mo><mi>u</mi><mo>)</mo></mrow></math>, with
+        <math><mrow><mi>&#x3BD;</mi><mo>=</mo><mn>1</mn><mo>/</mo><mn>50</mn><mo>=</mo><mn>0.02</mn></mrow></math>.
+      </p>
+      <p>
+        Here is what that is for. These numbers are fractions out of fifty, and fractions out of fifty
+        wobble by different amounts depending on where they sit. A feature picked 25 times out of 50
+        might come back 22 or 28 if you ran the whole thing again. A feature picked all 50 times comes
+        back 49 or 50. Much steadier.
+      </p>
+      <p>
+        So a gap of 0.06 is not one thing. Down in the middle it is nothing; up at the top it is
+        enormous. <math><mi>D</mi></math> divides each number by how much it wobbles, which puts
+        everything in the same units so gaps are comparable wherever they sit. It never changes the
+        order &mdash; the most&#8209;picked feature is still the most&#8209;picked feature. You need this
+        because step 4 uses one single threshold across all thirty positions at once, and one threshold
+        cannot be fair unless the numbers mean the same thing everywhere. The same gap of 0.06, at four
+        different places:
+      </p>
+    </div>
+
+    <div class="scroll-x">
+      <table class="design">
+        <thead>
+          <tr>
+            <th class="gk">real data<br><span class="hint">&#928;<sub>(j)</sub></span></th>
+            <th class="gk">shuffled<br><span class="hint">&#928;&#772;<sub>(j)</sub></span></th>
+            <th>gap<br>before D</th>
+            <th class="gk">real data<br><span class="hint">Z<sub>(j)</sub></span></th>
+            <th class="gk">shuffled<br><span class="hint">Z&#772;<sub>(j)</sub></span></th>
+            <th>gap<br>after D</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>0.50</td><td class="dim">0.44</td><td class="dim">0.06</td><td>0.96</td><td class="dim">0.85</td><td>+0.11</td></tr>
+          <tr><td>0.70</td><td class="dim">0.64</td><td class="dim">0.06</td><td>1.46</td><td class="dim">1.28</td><td>+0.18</td></tr>
+          <tr><td>0.90</td><td class="dim">0.84</td><td class="dim">0.06</td><td>2.81</td><td class="dim">2.17</td><td>+0.64</td></tr>
+          <tr><td>1.00</td><td class="dim">0.94</td><td class="dim">0.06</td><td>50.00</td><td class="dim">3.65</td><td class="v1">+46.35</td></tr>
+        </tbody>
+      </table>
     </div>
 
     <div class="note">
-      <span><strong>Follow the strands downward.</strong> On the raw scale the four saturated features sit a hand&rsquo;s width from feature 5 and from noise feature 30. After <math><mi>D</mi></math> they are an order of magnitude away, while the crowd below 0.7 stays bunched. The null arm goes through the identical map, so nothing here is a thumb on the scale; the transform simply refuses to treat 0.90 and 1.00 as neighbours.</span>
+      <span><strong>Same gap every row. Nowhere near the same evidence.</strong> Beating the shuffled data by 0.06 down where the wobble is worst is nothing. Beating it by 0.06 when 47 of 50 resamples already agree is almost impossible. Judging on raw frequency cannot tell those apart. After <math><mi>D</mi></math> it does not have to. The bottom row is the one to hold on to &mdash; it is exactly the spot features 1 to 4 land in further down.</span>
+    </div>
+
+    <div class="prose">
+      <p>
+        With that done, here is every feature side by side: what the real data gave it, what shuffled
+        data reaches at the same position in the ranking, and both of those after
+        <math><mi>D</mi></math>.
+      </p>
     </div>
 
     <div class="scroll-x">
@@ -531,15 +566,17 @@
         <thead>
           <tr class="grp">
             <th></th><th></th>
-            <th colspan="2">selection frequency</th>
-            <th colspan="2">after normalization</th>
+            <th colspan="2">how often it was picked, out of 50</th>
+            <th colspan="2">the same two, after D</th>
             <th></th>
           </tr>
           <tr>
             <th>rank</th><th>feature</th>
-            <th class="gk">&#928;<sub>(j)</sub> &mdash; real</th><th class="gk">&#928;&#772;<sub>(j)</sub> &mdash; null</th>
-            <th class="gk">Z<sub>(j)</sub></th><th class="gk">Z&#772;<sub>(j)</sub></th>
-            <th>gap</th>
+            <th class="gk">real data<br><span class="hint">&#928;<sub>(j)</sub></span></th>
+            <th class="gk">shuffled, at this rank<br><span class="hint">&#928;&#772;<sub>(j)</sub></span></th>
+            <th class="gk">real data<br><span class="hint">Z<sub>(j)</sub></span></th>
+            <th class="gk">shuffled, at this rank<br><span class="hint">Z&#772;<sub>(j)</sub></span></th>
+            <th>how far<br>above</th>
           </tr>
         </thead>
         <tbody>
@@ -564,11 +601,33 @@
     </div>
 
     <div class="note">
-      <span><strong>Read the null column downward.</strong> Even with no signal whatever, the top&#8209;ranked feature is selected in 94% of resamples. That is what forcing 18 selections out of 30 does, and it is the number a raw selection frequency has to beat before it means anything. Beating 0.94 by standing at 1.00 is a real gap; standing at 0.60 against a null of 0.60 is not.</span>
+      <span><strong>The two halves of a row are not about the same thing, and that is on purpose.</strong> The left number belongs to a feature. The right number does not &mdash; it is what shuffled data reaches at <em>that position in the ranking</em>. So on the top row, 0.936 is not &ldquo;feature 4 under shuffling.&rdquo; It is &ldquo;the highest of the thirty, under shuffling.&rdquo; Feature 4 earned rank 30 on the real data, so 0.936 is the bar it has to beat.</span>
     </div>
 
     <div class="note" style="margin-top:12px;">
-      <span><strong>Ties get ranks anyway.</strong> Features 1 to 4 all sit at exactly 1.00, so which of them occupies rank 27 and which rank 30 is arbitrary. Their null counterparts are not tied, which is why one column reads 1.00 four times over while the gap beside it runs from 46.46 to 48.00. The step&#8209;down rule takes a minimum over these, so the arbitrariness does not reach the answer.</span>
+      <span><strong>Read the shuffled column downward and you see why any of this is needed.</strong> With no signal at all, the top&#8209;ranked feature still gets picked 94% of the time. That is just what forcing 18 picks out of 30 does. So 0.94 is the number a raw frequency has to beat before it means anything. Standing at 1.00 against 0.94 is a real gap. Standing at 0.60 against 0.60 is not.</span>
+    </div>
+
+    <div class="note" style="margin-top:12px;">
+      <span><strong>Rows 26 and 25 are where the whole thing gets decided.</strong> Feature 5 is real. Feature 30 is noise. Both were picked in exactly 45 of the 50 resamples, so both read 0.90, and no threshold anywhere can let one in without the other. Step 4 will end up refusing both, which costs a real feature. Nothing later in the algorithm can undo a tie that happened here.</span>
+    </div>
+
+    <div class="note" style="margin-top:12px;">
+      <span><strong>Ties still get ranks.</strong> Features 1 to 4 all sit at exactly 1.00, so which one gets called rank 27 and which rank 30 is arbitrary. Their shuffled counterparts are not tied, which is why the real column reads 1.00 four times over while the gap beside it drifts from 46.46 to 48.00. Step 4 takes the smallest of these, so the arbitrariness never reaches the answer.</span>
+    </div>
+
+    <div class="chartbox">
+      <svg id="fig-norm" class="fig" viewBox="0 0 620 226" role="img"
+           aria-label="Each feature's selection frequency joined to its normalized value on a log scale"></svg>
+      <div class="scatter-cap">
+        <span><i class="swatch real"></i> real feature</span>
+        <span><i class="swatch noise"></i> noise feature</span>
+        <span>the same thirty features, before and after D</span>
+      </div>
+    </div>
+
+    <div class="note">
+      <span><strong>Follow the strands downward.</strong> Before <math><mi>D</mi></math>, the four features stuck at 1.00 sit a hand&rsquo;s width from feature 5 and from noise feature 30. After it, they are miles away, while the crowd below 0.7 stays bunched together. The shuffled numbers went through the identical formula, so this is not a thumb on the scale &mdash; it is the transform refusing to treat 0.90 and 1.00 as neighbours, which they are not.</span>
     </div>
 
     <!-- ---------- STAGE 4 ---------- -->
@@ -576,7 +635,14 @@
 
     <div class="prose">
       <p>
-        Each value of <math><mi>&#x394;</mi></math> demands a wider margin over the null, which fixes a cutoff, which fixes a selected set. The numerator counts how many of the three thousand permuted statistics &mdash; thirty ranks by a hundred permutations &mdash; would have cleared that same cutoff, divided by the hundred permutations.
+        Pick a margin &mdash; how far a feature has to beat the shuffled number at its rank.
+        That decides where the cutoff lands, which decides which features get reported. Then ask
+        the question the whole method is built around: <em class="term">if that same cutoff had been
+        applied to the shuffled data, how many features would have got through?</em> You can just
+        count, because you have 3,000 shuffled numbers sitting there &mdash; thirty ranks times a
+        hundred shuffles. Divide the count by a hundred and you have the average number of junk
+        features a set that size drags along. Divide <em>that</em> by how many you picked, and you
+        have your false discovery estimate. Then try a bigger margin.
       </p>
     </div>
 
@@ -672,7 +738,7 @@
 
     <div class="prose">
       <p>
-        Step 2 pins the permuted support size at 18 rather than letting cross&#8209;validation choose it, and the claim attached to that line is that the alternative under&#8209;counts false discoveries. Here is the same cohort with that one line changed and everything else held fixed &mdash; same data, same real arm, same hundred permutations.
+        Step 2 pins the permuted support size at 18 rather than letting cross&#8209;validation choose it, and the claim attached to that line is that the alternative under&#8209;counts false discoveries. Here is the same cohort with that one line changed and everything else held fixed &mdash; same data, same real&#8209;data numbers, same hundred shuffles.
       </p>
     </div>
 
