@@ -448,6 +448,8 @@
   }
   .swatch.norm { background: var(--slate-soft); }
   .swatch.atro { background: var(--mulberry-soft); }
+  .legend .swatch.sig { background: var(--slate);    border-color: var(--slate); }
+  .legend .swatch.nse { background: var(--mulberry); border-color: var(--mulberry); }
 
   .ex-grid {
     display: grid; grid-template-columns: repeat(3, 1fr);

@@ -104,6 +104,35 @@ def main():
     print(f"sigma = {SIGMA}, AR(1) rho = {RHO}")
     print(f"signal-to-noise (var explained) = "
           f"{np.var(X @ BETA_STAR) / np.var(y):.3f}")
+
+    # The data itself, before anything is fitted to it.  Columns 1-5 carry the
+    # signal; 7 and 30 are the two noise features that later fool the
+    # CV-tuned lasso, so they are worth showing next to the real ones.
+    show_cols = [0, 1, 2, 3, 4, 6, 29]
+    n_show = 8
+    signal = X @ BETA_STAR
+    print(f"\nfirst {n_show} of {X.shape[0]} subjects "
+          f"(features {', '.join(str(c + 1) for c in show_cols)} of "
+          f"{X.shape[1]}):")
+    head = ' '.join(f"{'f' + str(c + 1):>7}" for c in show_cols)
+    print(f"{'subj':>5} {head} {'signal':>8} {'noise':>7} {'y':>8}")
+    for i in range(n_show):
+        vals = ' '.join(f"{X[i, c]:>7.2f}" for c in show_cols)
+        print(f"{i + 1:>5} {vals} {signal[i]:>8.2f} "
+              f"{y[i] - signal[i]:>7.2f} {y[i]:>8.2f}")
+    dump['cohort'] = {
+        'cols': [c + 1 for c in show_cols],
+        'rows': [{'subject': i + 1,
+                  'x': [round(float(X[i, c]), 2) for c in show_cols],
+                  'signal': round(float(signal[i]), 2),
+                  'noise': round(float(y[i] - signal[i]), 2),
+                  'y': round(float(y[i]), 2)}
+                 for i in range(n_show)],
+        'y_sd': round(float(y.std()), 2),
+        'y_min': round(float(y.min()), 2),
+        'y_max': round(float(y.max()), 2),
+    }
+
     print(f"\nCV-tuned lasso on the full data selects {one['cv']['n_sel']}: "
           f"{fmt_set(one['cv']['selected'])}")
     print(f"  FDP = {one['cv']['fdp']:.3f}   power = {one['cv']['power']:.3f}")

@@ -292,8 +292,63 @@
       <p class="eq-note">Features 1 to 5 are real, the other twenty-five are noise. Nothing downstream of this line is told which is which.</p>
     </div>
 
+    <!-- ---------- THE DATA ---------- -->
+    <div class="exhead"><span class="exnum">0</span> The data, before anything is fitted to it</div>
+
+    <div class="prose">
+      <p>
+        One row per subject, one column per feature, and one outcome to predict. Eight of the seventy rows and seven of the thirty columns are shown. Features 1 to 5 are the ones that matter; 7 and 30 are noise, picked out here because they are the two that fool the lasso later on.
+      </p>
+    </div>
+
+    <div class="legend">
+      <span><i class="swatch sig"></i> real feature</span>
+      <span><i class="swatch nse"></i> noise feature</span>
+      <span>signal = the five real columns weighted by <math><msup><mi>&#x3B2;</mi><mo>&#x2217;</mo></msup></math> &middot; noise = a draw from <math><mrow><mi>N</mi><mo>(</mo><mn>0</mn><mo>,</mo><msup><mn>1.5</mn><mn>2</mn></msup><mo>)</mo></mrow></math></span>
+    </div>
+
+    <div class="scroll-x">
+      <table class="design">
+        <thead>
+          <tr class="grp">
+            <th></th>
+            <th colspan="5">the five real features</th>
+            <th colspan="2">two noise features</th>
+            <th colspan="3">the outcome</th>
+          </tr>
+          <tr>
+            <th>subject</th>
+            <th>f&#8321;</th><th>f&#8322;</th><th>f&#8323;</th><th>f&#8324;</th><th>f&#8325;</th>
+            <th>f&#8327;</th><th>f&#8323;&#8320;</th>
+            <th>signal</th><th>+ noise</th><th>= y</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td class="v1">&#8722;0.95</td><td class="v1">&#8722;1.13</td><td class="v1">0.63</td><td class="v1">0.29</td><td class="v1">&#8722;1.14</td><td class="v2">0.81</td><td class="v2">&#8722;1.62</td><td>&#8722;2.59</td><td class="dim">&#8722;2.10</td><td class="y">&#8722;4.69</td></tr>
+          <tr><td>2</td><td class="v1">&#8722;1.24</td><td class="v1">0.64</td><td class="v1">0.85</td><td class="v1">0.40</td><td class="v1">1.44</td><td class="v2">0.74</td><td class="v2">&#8722;0.13</td><td>0.37</td><td class="dim">0.21</td><td class="y">0.58</td></tr>
+          <tr><td>3</td><td class="v1">&#8722;0.75</td><td class="v1">&#8722;1.32</td><td class="v1">&#8722;0.30</td><td class="v1">&#8722;0.47</td><td class="v1">&#8722;0.14</td><td class="v2">0.23</td><td class="v2">&#8722;0.51</td><td>&#8722;3.39</td><td class="dim">&#8722;0.70</td><td class="y">&#8722;4.09</td></tr>
+          <tr><td>4</td><td class="v1">0.18</td><td class="v1">&#8722;0.37</td><td class="v1">&#8722;0.78</td><td class="v1">&#8722;2.29</td><td class="v1">&#8722;0.05</td><td class="v2">0.63</td><td class="v2">&#8722;0.35</td><td>&#8722;2.25</td><td class="dim">&#8722;0.06</td><td class="y">&#8722;2.30</td></tr>
+          <tr><td>5</td><td class="v1">&#8722;1.60</td><td class="v1">&#8722;0.31</td><td class="v1">0.59</td><td class="v1">&#8722;0.44</td><td class="v1">1.72</td><td class="v2">0.16</td><td class="v2">&#8722;1.84</td><td>&#8722;1.98</td><td class="dim">1.55</td><td class="y">&#8722;0.43</td></tr>
+          <tr><td>6</td><td class="v1">0.71</td><td class="v1">&#8722;1.45</td><td class="v1">1.29</td><td class="v1">1.79</td><td class="v1">1.48</td><td class="v2">&#8722;0.60</td><td class="v2">&#8722;0.63</td><td>2.21</td><td class="dim">&#8722;2.70</td><td class="y">&#8722;0.49</td></tr>
+          <tr><td>7</td><td class="v1">&#8722;1.13</td><td class="v1">0.35</td><td class="v1">0.11</td><td class="v1">&#8722;0.73</td><td class="v1">&#8722;1.43</td><td class="v2">0.72</td><td class="v2">&#8722;1.00</td><td>&#8722;2.30</td><td class="dim">2.37</td><td class="y">0.07</td></tr>
+          <tr><td>8</td><td class="v1">1.15</td><td class="v1">0.27</td><td class="v1">1.17</td><td class="v1">0.75</td><td class="v1">0.14</td><td class="v2">&#8722;0.24</td><td class="v2">&#8722;1.50</td><td>3.72</td><td class="dim">&#8722;0.40</td><td class="y">3.32</td></tr>
+          <tr><td class="dim">&#8230; 62 more</td><td class="dim" colspan="5"></td><td class="dim" colspan="2">+23 noise columns</td><td class="dim" colspan="3">y: &#8722;6.07 to 8.14, SD 2.98</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <span><strong>Follow subject 1 across.</strong> The five real columns weighted by
+      <math><mrow><msup><mi>&#x3B2;</mi><mo>&#x2217;</mo></msup><mo>=</mo><mo>(</mo><mn>1.6</mn><mo>,</mo><mn>1.2</mn><mo>,</mo><mn>0.9</mn><mo>,</mo><mn>0.6</mn><mo>,</mo><mn>0.4</mn><mo>)</mo></mrow></math>
+      give <code>1.6(&minus;0.95) + 1.2(&minus;1.13) + 0.9(0.63) + 0.6(0.29) + 0.4(&minus;1.14) = &minus;2.59</code>. A noise draw of &minus;2.10 lands the observed outcome at &minus;4.69. Columns 7 and 30 appear nowhere in that sum, and neither do the other twenty&#8209;three. Every one of them is still there in the matrix the lasso sees.</span>
+    </div>
+
+    <div class="note" style="margin-top:12px;">
+      <span><strong>Nothing here is separable by eye,</strong> which is the point of printing it. The noise columns look exactly like the real ones, the noise term is large enough to flip the sign of a subject&rsquo;s outcome &mdash; subject 7 has a signal of &minus;2.30 and an observed <math><mi>y</mi></math> of &#43;0.07 &mdash; and no single row tells you anything. Every claim made from here on is a claim about a column, drawn from all seventy rows at once.</span>
+    </div>
+
     <!-- ---------- STAGE 0 ---------- -->
-    <div class="exhead"><span class="exnum">0</span> The baseline: one cross&#8209;validated lasso</div>
+    <div class="exhead"><span class="exnum">&#8901;</span> The baseline: one cross&#8209;validated lasso</div>
 
     <div class="prose">
       <p>
