@@ -681,6 +681,15 @@
   table.design .dim { color: var(--muted); }
   table.design .y   { font-weight: 700; }
 
+  /* notation glossary: prose in the second column, so let it wrap */
+  table.design.gloss { white-space: normal; font-size: 13.5px; margin: 4px 0 8px; }
+  table.design.gloss td:first-child {
+    white-space: nowrap; font-weight: 700;
+    vertical-align: top; width: 1%;
+  }
+  table.design.gloss td:last-child { color: var(--muted); line-height: 1.5; }
+  table.design.gloss td:last-child b { color: var(--ink); font-weight: 700; }
+
   /* ---------- compact / trace / sweep variants ---------- */
   table.alpha.compact { font-size: 13.5px; margin-top: 0; }
   table.alpha.compact td { padding: 8px 0; }
