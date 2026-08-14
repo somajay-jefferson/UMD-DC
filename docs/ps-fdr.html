@@ -45,12 +45,24 @@
         &ldquo;findings&rdquo; are noise.
       </p>
       <p>
-        The fix cannot use p&#8209;values, because penalized estimators have no
-        tractable limiting distribution, and it cannot use naive permutation,
-        because under a global null the noise variables face less competition
-        for the <math><msub><mi>L</mi><mn>1</mn></msub></math> budget than they
-        do in real data &mdash; so the false discovery count comes out too low.
-        What follows is the workaround.
+        The goal is the familiar one. Benjamini and Hochberg do not promise zero
+        false positives; they promise that a known fraction of what you report is
+        false, and let you choose the fraction. PS&#8209;Fdr wants that same
+        guarantee. What it gives up is the usual route to it &mdash; there is no
+        p&#8209;value anywhere below, and nothing is assumed about the sampling
+        distribution of
+        <math><mover accent="true"><mi>&#x3B2;</mi><mo>^</mo></mover></math>. The
+        only raw material is <em class="term">how often a variable survives
+        resampling</em>, and that is available for any selection rule at all.
+      </p>
+      <p>
+        It has to be given up, because the fix cannot use p&#8209;values &mdash;
+        penalized estimators have no tractable limiting distribution &mdash; and it
+        cannot use naive permutation either, because under a global null the noise
+        variables face less competition for the
+        <math><msub><mi>L</mi><mn>1</mn></msub></math> budget than they do in real
+        data, so the false discovery count comes out too low. What follows is the
+        workaround.
       </p>
     </div>
 
@@ -67,6 +79,25 @@
         </mrow>
       </math>
       <p class="eq-note">Falsely selected over total selected; its expectation; and the estimator the algorithm actually computes.</p>
+    </div>
+
+    <div class="scroll-x">
+      <table class="design gloss">
+        <thead>
+          <tr><th>symbol</th><th>reads as</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="gk v1">&#928;<sub>j</sub></td><td>how often variable <i>j</i> survived, across the <math><mi>B</mi></math> bootstrap fits on the <b>real</b> data</td></tr>
+          <tr><td class="gk v1">&#928;<sub>(j)</sub></td><td>the same numbers <b>sorted ascending</b>. A parenthesised subscript always means a rank, never a variable</td></tr>
+          <tr><td class="gk dim">&#928;&#771;<sub>(j)</sub><sup>(m)</sup></td><td>one <b>shuffled</b> dataset put through that whole procedure, sorted the same way</td></tr>
+          <tr><td class="gk dim">&#928;&#772;<sub>(j)</sub></td><td>those <math><mi>M</mi></math> shuffled curves averaged rank by rank &mdash; the <b>null</b> each real rank must beat</td></tr>
+          <tr><td class="gk">Z, Z&#772;, Z&#771;</td><td>the same three quantities after the normalization <math><mi>D</mi></math> of step 3</td></tr>
+          <tr><td class="gk">&#916;</td><td>a required margin over the null. Step 4 sweeps it upward until the estimate clears the target</td></tr>
+          <tr><td class="gk">N<sub>+</sub></td><td>how many real variables clear the resulting cutoff &mdash; the denominator</td></tr>
+          <tr><td class="gk">&#234;<sub>0</sub></td><td>how many null variables would have cleared the same cutoff &mdash; the numerator</td></tr>
+          <tr><td class="gk">q</td><td>the false discovery level you are willing to accept, chosen in advance</td></tr>
+        </tbody>
+      </table>
     </div>
 
     <ol class="pipeline">
@@ -136,7 +167,7 @@
                 <msubsup><mover accent="true"><mi>&#x3A0;</mi><mo>~</mo></mover><mrow><mo>(</mo><mi>j</mi><mo>)</mo></mrow><mrow><mo>(</mo><mi>m</mi><mo>)</mo></mrow></msubsup>
               </mrow>
             </math>
-            <p class="eq-note">Averaged over <em>ranks</em>, not over variable identities &mdash; the subscript is parenthesised.</p>
+            <p class="eq-note">Averaged over <em>ranks</em>, not over variable identities. Once <math><mi>y</mi></math> is shuffled, &ldquo;feature 12 was picked often&rdquo; means nothing &mdash; the labels no longer attach to anything. What is stable across shuffles is the <em>shape</em>: how high the most&#8209;selected feature gets when nothing is real, how high the second, and so on. So each permutation is sorted before anything is averaged, which is what the parenthesised subscript records.</p>
           </div>
 
           <div class="note">
@@ -149,7 +180,7 @@
         <div class="stage-num">3</div>
         <div class="stage-body">
           <h4>Normalize</h4>
-          <p>Borrowed from Significance Analysis of Microarrays. Puts the real and null arms on a comparable footing and spreads informative variables away from uninformative ones.</p>
+          <p>Borrowed from Significance Analysis of Microarrays. Divides each selection frequency by its own sampling noise &mdash; the standard&#8209;error correction that turns a raw proportion into a signal&#8209;to&#8209;noise ratio.</p>
 
           <div class="eq">
             <math display="block">
@@ -166,6 +197,21 @@
                 <mi>&#x3BD;</mi><mo>=</mo><mfrac><mn>1</mn><mi>B</mi></mfrac>
               </mrow>
             </math>
+            <p class="eq-note">
+              <math><mrow><msub><mi>&#x3A0;</mi><mi>j</mi></msub></mrow></math> is a
+              proportion out of <math><mi>B</mi></math> draws, so its standard error is
+              <math><mrow><msqrt><mrow><mi>u</mi><mo>(</mo><mn>1</mn><mo>&#x2212;</mo><mi>u</mi><mo>)</mo><mo>/</mo><mi>B</mi></mrow></msqrt></mrow></math>
+              &mdash; largest at <math><mrow><mi>u</mi><mo>=</mo><mn>0.5</mn></mrow></math>, vanishing as
+              <math><mrow><mi>u</mi><mo>&#x2192;</mo><mn>1</mn></mrow></math>. Dividing by that is the
+              whole idea: a fixed gap in raw frequency is cheap in the middle of the range and nearly
+              impossible at the top, and <math><mi>D</mi></math> is what makes those two comparable.
+              <math><mi>&#x3BD;</mi></math> is not a fudge factor either &mdash; with
+              <math><mi>B</mi></math> resamples no frequency can be resolved finer than
+              <math><mrow><mn>1</mn><mo>/</mo><mi>B</mi></mrow></math>, so that is the floor on the
+              denominator, and it caps the statistic at
+              <math><mrow><mi>D</mi><mo>(</mo><mn>1</mn><mo>)</mo><mo>=</mo><mi>B</mi></mrow></math>.
+              Run more resamples and the ceiling rises with them.
+            </p>
           </div>
 
           <div class="eq">
@@ -416,10 +462,40 @@
         Both arms then pass through
         <math><mrow><mi>D</mi><mo>(</mo><mi>u</mi><mo>)</mo></mrow></math> with
         <math><mrow><mi>&#x3BD;</mi><mo>=</mo><mn>1</mn><mo>/</mo><mn>50</mn><mo>=</mo><mn>0.02</mn></mrow></math>.
-        It is a strictly increasing map, so it reorders nothing; it stretches the top of the scale apart. A feature selected in every single resample has
-        <math><mrow><mi>u</mi><mo>=</mo><mn>1</mn></mrow></math>, where the square root vanishes and
-        <math><mrow><mi>D</mi><mo>=</mo><mn>1</mn><mo>/</mo><mi>&#x3BD;</mi><mo>=</mo><mn>50</mn></mrow></math>.
+        A selection frequency here is a proportion out of fifty resamples, and the standard error of
+        such a proportion is
+        <math><mrow><msqrt><mrow><mi>u</mi><mo>(</mo><mn>1</mn><mo>&#x2212;</mo><mi>u</mi><mo>)</mo><mo>/</mo><mn>50</mn></mrow></msqrt></mrow></math>.
+        Dividing by that square root is therefore not a cosmetic stretch &mdash; it is the same
+        move as forming a <math><mi>t</mi></math>&#8209;statistic, measuring each frequency in
+        units of its own noise. The map is strictly increasing, so it reorders nothing.
       </p>
+      <p>
+        The reason that matters is one line of step 4. A single scalar
+        <math><mi>&#x394;</mi></math> is applied at <em class="term">every rank at once</em>, so
+        the margin has to mean the same thing at the top of the range as in the middle. On raw
+        frequencies it does not. Below, the same gap of 0.06 at four different places:
+      </p>
+    </div>
+
+    <div class="scroll-x">
+      <table class="design">
+        <thead>
+          <tr>
+            <th class="gk">&#928;<sub>(j)</sub> &mdash; real</th><th class="gk">&#928;&#772;<sub>(j)</sub> &mdash; null</th><th>raw gap</th>
+            <th class="gk">Z<sub>(j)</sub></th><th class="gk">Z&#772;<sub>(j)</sub></th><th>gap after D</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>0.50</td><td class="dim">0.44</td><td class="dim">0.06</td><td>0.96</td><td class="dim">0.85</td><td>+0.11</td></tr>
+          <tr><td>0.70</td><td class="dim">0.64</td><td class="dim">0.06</td><td>1.46</td><td class="dim">1.28</td><td>+0.18</td></tr>
+          <tr><td>0.90</td><td class="dim">0.84</td><td class="dim">0.06</td><td>2.81</td><td class="dim">2.17</td><td>+0.64</td></tr>
+          <tr><td>1.00</td><td class="dim">0.94</td><td class="dim">0.06</td><td>50.00</td><td class="dim">3.65</td><td class="v1">+46.35</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <span><strong>Every row has the same raw gap and none of them is the same evidence.</strong> Six points of separation where the noise is largest is nothing; six points where forty&#8209;seven of fifty resamples already agree is almost impossible. A rule that thresholds raw frequency cannot tell those apart, and after <math><mi>D</mi></math> it does not have to. The bottom row is the last one to matter &mdash; it is exactly the situation features 1 to 4 are in further down.</span>
     </div>
 
     <div class="chartbox">
