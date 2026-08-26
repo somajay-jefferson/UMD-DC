@@ -29,6 +29,7 @@
 
 import argparse
 import json
+import sys
 
 import numpy as np
 
@@ -66,7 +67,9 @@ def main():
     ap.add_argument('--q', type=int, default=50)
     ap.add_argument('--sparsity', type=float, default=0.8)
     ap.add_argument('--seed', type=int, default=20260817)
-    ap.add_argument('--grid', type=int, default=len(DEFAULT_LAMBDA_GRID))
+    ap.add_argument('--grid', type=int, default=0,
+                    help='0 uses DEFAULT_LAMBDA_GRID itself, so the gate tests '
+                         'the grid that actually ships')
     ap.add_argument('--quick', action='store_true')
     ap.add_argument('--json', type=str, default=None)
     args = ap.parse_args()
@@ -74,7 +77,13 @@ def main():
     if args.quick:
         args.datasets, args.n, args.q, args.grid = 5, 150, 30, 18
 
-    grid = np.geomspace(0.01, 20.0, args.grid)
+    # Default to the shipping grid object, not a same-length rebuild of it.
+    # Taking only the length meant this gate could pass on a grid the selection
+    # rule does not use -- and the script's own FAIL advice ("widen the sparse
+    # end") is exactly what would decouple the two. Code review caught it.
+    grid = (DEFAULT_LAMBDA_GRID if not args.grid
+            else np.geomspace(DEFAULT_LAMBDA_GRID[0], DEFAULT_LAMBDA_GRID[-1],
+                              args.grid))
     print(f'{args.datasets} cohorts, n={args.n} q={args.q}, '
           f'{args.grid}-point grid [{grid[0]:g}, {grid[-1]:g}], '
           f'n_starts={DEFAULT_N_STARTS}')
@@ -86,7 +95,8 @@ def main():
                                        args.seed + d)
         lams, ks, binding = path_for(X, y, grid)
         n_inv, worst = inversions(ks)
-        lam_cv = clusso_fit_cv(X, y, lambda_grid=grid)['lam']
+        lam_cv = clusso_fit_cv(X, y, lambda_grid=grid,
+                               n_starts=DEFAULT_N_STARTS)['lam']
         k_cv = int(ks[np.argmin(np.abs(lams - lam_cv))])
 
         rows.append({'dataset': d, 'k_min': int(ks.min()), 'k_max': int(ks.max()),
@@ -100,6 +110,7 @@ def main():
               f'lam_cv {lam_cv:7.4f} -> k {k_cv:3d}   '
               f'0.001-cut live on {binding.mean():4.0%} of the path   {flag}')
 
+    ok = True
     n_mono = sum(r['monotone'] for r in rows)
     worst_all = max(r['worst_inversion'] for r in rows)
     k_max_all = [r['k_max'] for r in rows]
@@ -135,11 +146,31 @@ def main():
         print('        works -- it only needs to reach the bar, not land on it --')
         print('        but exact-k is definitively out.')
     if frac_unreachable > 0.10:
+        ok = False
         print(f'  FAIL  {frac_unreachable:.1%} of targets are off the grid. Widen the')
         print('        sparse end, or the null arm will silently under-select and')
         print('        Fdr-hat will be anti-conservative.')
     else:
         print(f'  PASS  {frac_unreachable:.1%} of targets unreachable (gate: < 10%).')
+
+    # The sparse end has to actually get sparse. A cohort whose smallest support
+    # is 13 cannot deliver a target of 5 -- it overshoots, which strengthens the
+    # null and costs power. This was previously printed and not gated at all,
+    # so the script could report an unqualified PASS while carrying it.
+    k_target_min = min(targets)
+    over = [r for r in rows if r['k_min'] > k_target_min]
+    if over:
+        worst = max(r['k_min'] for r in over)
+        print(f'  WARN  {len(over)}/{len(rows)} cohorts cannot go below '
+              f'k={worst} even at lambda={grid.max():g}, while a target of '
+              f'k={k_target_min} is asked for.')
+        print('        The floor overshoots there: null stronger than requested,')
+        print('        which is the safe direction but costs power. Report the')
+        print('        realised k alongside any result from this regime.')
+        if worst > 3 * max(k_target_min, 1):
+            ok = False
+            print(f'  FAIL  overshoot exceeds 3x the target ({worst} vs '
+                  f'{k_target_min}).')
     print('=' * 68)
 
     if args.json:
@@ -150,6 +181,8 @@ def main():
                        'frac_unreachable': frac_unreachable}, fh, indent=2)
         print(f'wrote {args.json}')
 
+    return 0 if ok else 1
+
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

@@ -21,12 +21,21 @@ existing code draws that start randomly. I replaced it with five fixed points.
 **Why not one:** measured +2.95 median objective gap against best-of-100 random
 starts. Deterministic but landing in genuinely worse solutions.
 
-**Why not nine:** identical to five (+0.0027 both).
+**Why not nine:** identical to five (+0.00068 both).
 
 **Why a grid rather than five fixed random draws:** at P=2 the L1-normalisation
 and sign convention (`Mainfunction_albet.py:79-81`) collapse the whole
 initialisation space to two one-parameter arcs. So the paper's random restarts
 are sampling an interval by accident. A grid covers it deliberately.
+
+**Bug found in review, now fixed:** the first version generated the start set
+afresh for each `n_starts`, so the sets were not nested -- `alpha_starts(2, 7)`
+returned six starts, and seven starts could beat eight. `alpha_starts` now
+returns a prefix of one fixed sequence, and `check.py` c11 pins both properties.
+
+**Every number in this file was re-measured after that fix.** The old figures
+(+0.0027 arc5, 16/20 monotone, worst inversion 2) were produced with the buggy
+generator. Current: +0.00068, 14/20 monotone, worst inversion 3.
 
 **What would prove me wrong:** P > 2. The arc argument is specific to two
 clusters, and `alpha_starts` generalises to higher P in a way I have not
@@ -44,8 +53,9 @@ is a single measurement.
 **Where:** `stage1_noise.py` — the block above the final PASS/FAIL
 
 **What happened:** I planned to gate on "does the deterministic rule pick the
-same features as best-of-random". It scored 60%, which reads like a failure. I
-changed the criterion to the objective gap, which passes at +0.0027.
+same features as best-of-random". It scored 60% at the time (70% after the
+`alpha_starts` fix below), which reads like a failure. I changed the criterion
+to the objective gap, which passes at +0.00068.
 
 **Why I think that is right and not goalpost-moving:** best-of-random is not
 itself a fixed rule. Where several optima sit at nearly the same objective, no
@@ -59,8 +69,8 @@ result. That is the classic way to talk yourself into a pass. The reasoning is
 written into the code rather than left implicit, and the match rate is still
 reported, so you can disagree with me using the same numbers.
 
-**Supporting evidence:** the disputed features are all within a few multiples of
-the 0.001 cut — i.e. carrying under 1% of total coefficient mass. That points to
+**Supporting evidence:** at 70% match, the disputed features are all within a few
+multiples of the 0.001 cut — i.e. carrying under 1% of total coefficient mass. That points to
 near-degenerate optima rather than worse ones. This is the argument I would
 attack if I wanted to attack the conclusion.
 
@@ -134,9 +144,11 @@ valid, as opposed to merely implementable. That is Stage 3, deliberately tested
 on the plain lasso where both rules can run. **Nothing built on this should be
 trusted until Stage 3 passes.**
 
-**Known cost, measured:** on some cohorts the sparse end of the grid still keeps
-13 features at lambda=20, so a small target k overshoots several-fold. Safe
-direction, but it costs power.
+**Known cost, measured:** 4 of 20 cohorts cannot go below k=13 even at
+lambda=20, while targets as low as k=10 are asked for. The floor overshoots
+there -- null stronger than requested, safe direction, but it costs power.
+`stage2_path.py` now warns on this and fails outright above 3x overshoot; it
+previously printed the number and gated on nothing.
 
 ---
 

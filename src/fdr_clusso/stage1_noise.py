@@ -20,10 +20,16 @@
 # perfect record loses 88% of its score to ONE spurious flip.
 #
 # Three arms:
-#   A  vary alpha_init only, folds held fixed        -> initialisation noise
-#   B  vary CV folds only, alpha_init pinned to ones -> fold noise
-#   C  Pi from one repeated resample vs Pi from real  -> how much of Pi is noise
-#      resamples, both with random alpha_init
+#   A  vary alpha_init only                 -> how unstable the status quo is
+#   B  vary CV folds only, alpha_init pinned -> fold noise
+#   C  deterministic starts vs best-of-random -> does determinism cost anything
+#
+# Arm C started life as a variance split of Pi (optimizer-only vs bootstrap) and
+# was replaced by the quality comparison, because once alpha_init is pinned the
+# rule is a fixed function of the data by construction and "is it stable" stops
+# being the question. The old function lingered, uncalled, with its gate
+# documented but never run -- code review caught it. It is gone; what the script
+# prints under "arm C" is what the gate below actually reads.
 #
 # Gate, evaluated AT THE CV-SELECTED LAMBDA (noise concentrates at small lambda
 # and large supports, so a figure averaged over the grid flatters the result):
@@ -31,7 +37,7 @@
 #   P(support != modal support) < 0.05   -> ship n_starts=1
 #   0.05 to 0.30                         -> deterministic arc grid, re-measure
 #   > 0.30 even at n_starts=9            -> stop; obstacle 01 is the result
-#   arm C: sd(Pi|optimizer) > 0.25 * sd(Pi|bootstrap) -> stop, same reason
+#   arm C: arc5 objective gap > 0.05 vs best-of-random -> stop, same reason
 #
 # Usage:
 #   python stage1_noise.py --reps 200
@@ -194,48 +200,6 @@ def arm_b(X, y, grid, reps, rng, n_folds=5):
     return {'disagreement': rate, 'n_distinct': n_distinct, 'k_modal': k_modal,
             'n_distinct_lambda': len(set(lams)),
             'lam_min': float(min(lams)), 'lam_max': float(max(lams))}
-
-
-def arm_c(X, y, lam, B, rng):
-    """
-    Split Pi's variance. Both arms draw alpha_init randomly, matching what the
-    codebase does today.
-
-      bootstrap arm : a fresh resample each time -> data variation + optimizer
-      optimizer arm : ONE resample, reused B times -> optimizer ONLY
-
-    The statistic is mean_j Pi_j(1 - Pi_j), the average within-feature Bernoulli
-    variance -- NOT the spread of Pi across features, which is mostly real signal
-    (strong features sit at 1, noise features at 0) and would say nothing about
-    stability.
-
-    On the optimizer arm the data is literally identical every time, so a
-    deterministic rule would put every Pi_j at exactly 0 or 1 and the statistic
-    at zero. Whatever it reads instead is pure optimizer noise.
-    """
-    P, q, n = X.shape
-
-    def pi_over(idx_fn):
-        hits = np.zeros(q)
-        for _ in range(B):
-            idx = idx_fn()
-            fit = clusso_fit(X[:, :, idx], y[idx], lam,
-                             alpha_init=rng.normal(size=P))
-            hits += support_mask(fit['bet'])
-        return hits / B
-
-    fixed_idx = rng.integers(0, n, size=n)
-    pi_boot = pi_over(lambda: rng.integers(0, n, size=n))
-    pi_opt = pi_over(lambda: fixed_idx)
-
-    var_boot = float(np.mean(pi_boot * (1.0 - pi_boot)))
-    var_opt = float(np.mean(pi_opt * (1.0 - pi_opt)))
-
-    return {'var_boot': var_boot, 'var_opt': var_opt,
-            'ratio': var_opt / var_boot if var_boot > 0 else 0.0,
-            'unstable_opt': int(np.sum((pi_opt > 0) & (pi_opt < 1))),
-            'unstable_boot': int(np.sum((pi_boot > 0) & (pi_boot < 1))),
-            'pi_boot': pi_boot.tolist(), 'pi_opt': pi_opt.tolist()}
 
 
 def main():

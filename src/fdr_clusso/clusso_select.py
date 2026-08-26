@@ -62,6 +62,47 @@ DEFAULT_N_STARTS = 5
 # deterministic fitting
 # ---------------------------------------------------------------------------
 
+def _canonical_starts(P, n_max=33):
+    """
+    One fixed, ordered sequence of starting points. `alpha_starts` returns a
+    prefix of it, which makes the start sets NESTED by construction: nine starts
+    always includes the five, so a larger n_starts can never return a worse
+    objective.
+
+    That nesting is not cosmetic. Without it "more starts is never worse" is
+    simply false -- an earlier version generated the set afresh per n_starts and
+    at n_starts=7 produced a set that was neither size 7 nor a superset of the
+    5-set, giving a lower objective at 7 than at 8. Code review caught it.
+
+    Ordering is coarse-to-fine over t, so early entries spread across the space
+    rather than clustering: t = 1/2 (as `ones`), then 1/4 and 3/4, then eighths,
+    and so on, each crossed with both signs.
+    """
+    P = int(P)
+    starts = [np.ones(P)]                      # t = 1/2, positive orthant
+
+    ts = []
+    for level in range(1, 7):
+        step = 2.0 ** -level
+        ts.extend(i * step for i in range(1, 2 ** level, 2))
+
+    for t in ts:
+        for sign in (1.0, -1.0):
+            v = np.full(P, (1.0 - t) / max(P - 1, 1))
+            v[0] = t
+            v[1:] *= sign
+            # Mainfunction_albet normalises to sum|alpha| == 1 and fixes the
+            # sign of the largest entry, so starts that collapse onto an
+            # existing one under that map are genuinely the same start.
+            vn = v / np.sum(np.abs(v))
+            if any(np.allclose(vn, s / np.sum(np.abs(s))) for s in starts):
+                continue
+            starts.append(v)
+            if len(starts) >= n_max:
+                return starts
+    return starts
+
+
 def alpha_starts(P, n_starts=1):
     """
     Deterministic replacement for CLUSSO's random restarts.
@@ -76,27 +117,16 @@ def alpha_starts(P, n_starts=1):
     ``n_starts=1`` returns ``[ones(P)]``, which normalises to the uniform
     weighting -- the natural neutral start.
 
-    Returns a list of (P,) arrays.
+    Returns exactly ``n_starts`` arrays of shape (P,), as a prefix of a fixed
+    sequence, so the sets are nested in ``n_starts``.
     """
-    P = int(P)
-    if n_starts <= 1:
-        return [np.ones(P)]
-
-    starts = [np.ones(P)]
-    n_t = int(np.ceil((n_starts - 1) / 2.0))
-    for sign in (1.0, -1.0):
-        for t in np.linspace(0.15, 0.85, n_t):
-            v = np.full(P, (1.0 - t) / max(P - 1, 1))
-            v[0] = t
-            v[1:] *= sign
-            # skip anything the normalisation would collapse onto an existing start
-            if any(np.allclose(v / np.sum(np.abs(v)), s / np.sum(np.abs(s)))
-                   for s in starts):
-                continue
-            starts.append(v)
-            if len(starts) >= n_starts:
-                return starts
-    return starts
+    n_starts = max(int(n_starts), 1)
+    pool = _canonical_starts(P, n_max=max(n_starts, 33))
+    if len(pool) < n_starts:
+        raise ValueError(
+            f'only {len(pool)} distinct starts exist for P={P}, '
+            f'{n_starts} requested')
+    return pool[:n_starts]
 
 
 def clusso_fit(X, y, lam, alpha_init=None, beta_init=None):

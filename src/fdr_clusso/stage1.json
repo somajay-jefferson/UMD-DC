@@ -1,0 +1,352 @@
+{
+  "args": {
+    "n": 300,
+    "q": 50,
+    "sparsity": 0.8,
+    "reps": 100,
+    "reps_folds": 30,
+    "resamples": 10,
+    "seed": 20260817,
+    "grid": 25,
+    "quick": false,
+    "json": "stage1.json"
+  },
+  "lam_cv": 0.447213595499958,
+  "clustering_accuracy": 1.0,
+  "k_cv": 47,
+  "arm_a": [
+    {
+      "resample": 0,
+      "n_unique": 179,
+      "lam": 0.17293633402042619,
+      "disagreement": 0.6,
+      "n_distinct": 11,
+      "k_modal": 48
+    },
+    {
+      "resample": 1,
+      "n_unique": 188,
+      "lam": 14.570923537052197,
+      "disagreement": 0.12,
+      "n_distinct": 2,
+      "k_modal": 5
+    },
+    {
+      "resample": 2,
+      "n_unique": 190,
+      "lam": 14.570923537052197,
+      "disagreement": 0.0,
+      "n_distinct": 1,
+      "k_modal": 5
+    },
+    {
+      "resample": 3,
+      "n_unique": 186,
+      "lam": 7.733947972985649,
+      "disagreement": 0.0,
+      "n_distinct": 1,
+      "k_modal": 7
+    },
+    {
+      "resample": 4,
+      "n_unique": 188,
+      "lam": 0.8425599871529115,
+      "disagreement": 0.56,
+      "n_distinct": 8,
+      "k_modal": 38
+    },
+    {
+      "resample": 5,
+      "n_unique": 187,
+      "lam": 1.1564949675432419,
+      "disagreement": 0.49,
+      "n_distinct": 3,
+      "k_modal": 36
+    },
+    {
+      "resample": 6,
+      "n_unique": 192,
+      "lam": 0.6138438574092374,
+      "disagreement": 0.53,
+      "n_distinct": 10,
+      "k_modal": 42
+    },
+    {
+      "resample": 7,
+      "n_unique": 189,
+      "lam": 0.8425599871529115,
+      "disagreement": 0.5900000000000001,
+      "n_distinct": 8,
+      "k_modal": 40
+    },
+    {
+      "resample": 8,
+      "n_unique": 189,
+      "lam": 0.6138438574092374,
+      "disagreement": 0.53,
+      "n_distinct": 11,
+      "k_modal": 40
+    },
+    {
+      "resample": 9,
+      "n_unique": 183,
+      "lam": 0.6138438574092374,
+      "disagreement": 0.71,
+      "n_distinct": 11,
+      "k_modal": 25
+    }
+  ],
+  "arm_b": {
+    "disagreement": 0.5666666666666667,
+    "n_distinct": 6,
+    "k_modal": 7,
+    "n_distinct_lambda": 10,
+    "lam_min": 0.048720819249782034,
+    "lam_max": 14.570923537052197
+  },
+  "arm_quality": [
+    {
+      "resample": 0,
+      "lam": 0.6138438574092374,
+      "best_rand_obj": 11032.328822454412,
+      "k_best_rand": 28,
+      "ones": {
+        "obj": 39168.76619685364,
+        "gap": 2.5503624689949724,
+        "k": 42,
+        "matches_best": false
+      },
+      "arc5": {
+        "obj": 11047.837650641999,
+        "gap": 0.0014057619598884105,
+        "k": 27,
+        "matches_best": false
+      },
+      "arc9": {
+        "obj": 11047.837650641999,
+        "gap": 0.0014057619598884105,
+        "k": 27,
+        "matches_best": false
+      }
+    },
+    {
+      "resample": 1,
+      "lam": 10.615590636131074,
+      "best_rand_obj": 32285.25821389235,
+      "k_best_rand": 6,
+      "ones": {
+        "obj": 32342.881976118937,
+        "gap": 0.001784832007377027,
+        "k": 6,
+        "matches_best": true
+      },
+      "arc5": {
+        "obj": 32285.62809373876,
+        "gap": 1.1456617257316103e-05,
+        "k": 6,
+        "matches_best": true
+      },
+      "arc9": {
+        "obj": 32285.24669239257,
+        "gap": -3.568656537382755e-07,
+        "k": 6,
+        "matches_best": true
+      }
+    },
+    {
+      "resample": 2,
+      "lam": 0.23737182283699315,
+      "best_rand_obj": 10324.382065101085,
+      "k_best_rand": 38,
+      "ones": {
+        "obj": 48267.7149175651,
+        "gap": 3.67511901566697,
+        "k": 48,
+        "matches_best": false
+      },
+      "arc5": {
+        "obj": 10367.89228521017,
+        "gap": 0.004214317121812065,
+        "k": 39,
+        "matches_best": false
+      },
+      "arc9": {
+        "obj": 10367.89228521017,
+        "gap": 0.004214317121812065,
+        "k": 39,
+        "matches_best": false
+      }
+    },
+    {
+      "resample": 3,
+      "lam": 10.615590636131074,
+      "best_rand_obj": 26611.13884398501,
+      "k_best_rand": 7,
+      "ones": {
+        "obj": 26758.271785234923,
+        "gap": 0.005528998293253102,
+        "k": 7,
+        "matches_best": true
+      },
+      "arc5": {
+        "obj": 26676.25565323689,
+        "gap": 0.0024469756681082615,
+        "k": 7,
+        "matches_best": true
+      },
+      "arc9": {
+        "obj": 26676.25565323689,
+        "gap": 0.0024469756681082615,
+        "k": 7,
+        "matches_best": true
+      }
+    },
+    {
+      "resample": 4,
+      "lam": 0.6138438574092374,
+      "best_rand_obj": 9557.196135742224,
+      "k_best_rand": 30,
+      "ones": {
+        "obj": 42548.28241435735,
+        "gap": 3.4519628780280334,
+        "k": 43,
+        "matches_best": false
+      },
+      "arc5": {
+        "obj": 9567.783351241276,
+        "gap": 0.0011077742204596724,
+        "k": 30,
+        "matches_best": true
+      },
+      "arc9": {
+        "obj": 9567.783351241276,
+        "gap": 0.0011077742204596724,
+        "k": 30,
+        "matches_best": true
+      }
+    },
+    {
+      "resample": 5,
+      "lam": 10.615590636131074,
+      "best_rand_obj": 30534.74157787325,
+      "k_best_rand": 5,
+      "ones": {
+        "obj": 30541.339076511158,
+        "gap": 0.00021606531763441124,
+        "k": 5,
+        "matches_best": true
+      },
+      "arc5": {
+        "obj": 30535.920727587512,
+        "gap": 3.861665936339961e-05,
+        "k": 5,
+        "matches_best": true
+      },
+      "arc9": {
+        "obj": 30535.610132022193,
+        "gap": 2.8444784663658878e-05,
+        "k": 5,
+        "matches_best": true
+      }
+    },
+    {
+      "resample": 6,
+      "lam": 0.17293633402042619,
+      "best_rand_obj": 9750.949355004586,
+      "k_best_rand": 42,
+      "ones": {
+        "obj": 42367.69438218844,
+        "gap": 3.3449814822844512,
+        "k": 47,
+        "matches_best": false
+      },
+      "arc5": {
+        "obj": 9945.867974802926,
+        "gap": 0.01998970692000361,
+        "k": 42,
+        "matches_best": false
+      },
+      "arc9": {
+        "obj": 9917.797678757155,
+        "gap": 0.01711098249802061,
+        "k": 42,
+        "matches_best": false
+      }
+    },
+    {
+      "resample": 7,
+      "lam": 0.447213595499958,
+      "best_rand_obj": 9552.81651960593,
+      "k_best_rand": 37,
+      "ones": {
+        "obj": 47403.07482348593,
+        "gap": 3.962209284162131,
+        "k": 45,
+        "matches_best": false
+      },
+      "arc5": {
+        "obj": 9552.613742184523,
+        "gap": -2.122697750881568e-05,
+        "k": 37,
+        "matches_best": true
+      },
+      "arc9": {
+        "obj": 9552.613742184523,
+        "gap": -2.122697750881568e-05,
+        "k": 37,
+        "matches_best": true
+      }
+    },
+    {
+      "resample": 8,
+      "lam": 0.3258157552380037,
+      "best_rand_obj": 9080.14754385197,
+      "k_best_rand": 32,
+      "ones": {
+        "obj": 47844.793814285455,
+        "gap": 4.269164799715225,
+        "k": 47,
+        "matches_best": false
+      },
+      "arc5": {
+        "obj": 9079.371329933861,
+        "gap": -8.548472526023949e-05,
+        "k": 32,
+        "matches_best": true
+      },
+      "arc9": {
+        "obj": 9079.371329933861,
+        "gap": -8.548472526023949e-05,
+        "k": 32,
+        "matches_best": true
+      }
+    },
+    {
+      "resample": 9,
+      "lam": 10.615590636131074,
+      "best_rand_obj": 30185.954236190602,
+      "k_best_rand": 6,
+      "ones": {
+        "obj": 30193.305511489212,
+        "gap": 0.00024353297699617623,
+        "k": 6,
+        "matches_best": true
+      },
+      "arc5": {
+        "obj": 30193.305511489212,
+        "gap": 0.00024353297699617623,
+        "k": 6,
+        "matches_best": true
+      },
+      "arc9": {
+        "obj": 30193.305511489212,
+        "gap": 0.00024353297699617623,
+        "k": 6,
+        "matches_best": true
+      }
+    }
+  ],
+  "median_disagreement": 0.53,
+  "arc5_gap": 0.0006756535987279244,
+  "arc5_match": 0.7
+}

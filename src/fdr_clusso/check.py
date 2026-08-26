@@ -34,7 +34,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
 from Mainfunction_albet import Mainfunction_albet          # noqa: E402
 from SLasso_MSE import CV_make_folds, slasso_mse           # noqa: E402
 
-from clusso_select import (_score_fold, clusso_fit, clusso_fit_cv,
+from clusso_select import (DEFAULT_N_STARTS, _score_fold, alpha_starts,
+                           clusso_fit, clusso_fit_cv,
                            clusso_fit_multistart, clusso_objective,
                            clusso_support_at_least_k, clusso_support_cv,
                            cv_mse, make_folds, support_mask)   # noqa: E402
@@ -200,13 +201,17 @@ def c6_purity_under_hostile_global_seeds():
     # robust enough to survive a fold change by luck, which makes a
     # support-only comparison a test that passes for the wrong reason --
     # mutation testing caught exactly that here.
+    # n_starts must match the shipping default. Code review caught an earlier
+    # version of this check calling clusso_fit_cv bare, which defaults to
+    # n_starts=1 -- so the multi-start path that actually ships, and the
+    # _score_fold scoring it routes through, went unperturbed.
     np.random.seed(1)
-    fa = clusso_fit_cv(X, y, lambda_grid=grid)
+    fa = clusso_fit_cv(X, y, lambda_grid=grid, n_starts=DEFAULT_N_STARTS)
     a = support_mask(fa['bet'])
 
     np.random.seed(9999)
     _ = np.random.normal(size=17)          # unrelated draw, mid-stream
-    fb = clusso_fit_cv(X, y, lambda_grid=grid)
+    fb = clusso_fit_cv(X, y, lambda_grid=grid, n_starts=DEFAULT_N_STARTS)
     b = support_mask(fb['bet'])
 
     assert fa['lam'] == fb['lam'], (
@@ -242,21 +247,41 @@ def c7_determinism_on_repeat():
 
 def c8_at_least_k_contract():
     """
-    Either the support reaches k, or exhausted is True. Never a quiet shortfall
-    -- that failure is anti-conservative and must be visible to the caller.
+    Two halves, and the second is the one that matters.
+
+    Weak half: never a silent shortfall -- either the support reaches k, or
+    exhausted is True.
+
+    Strong half: exhausted must be EARNED. Code review showed the weak half
+    alone is satisfied by a rule that returns an empty support with
+    exhausted=True for every k -- which would make the permuted arm select
+    nothing, e0 zero, and Fdr-hat zero. That is precisely the anti-conservative
+    failure this check exists to prevent, and it passed. So: for any k the grid
+    can actually reach, exhausted must be False and the support must reach k.
     """
     X, y, _ = toy(seed=17, q=25)
     grid = np.geomspace(0.01, 20.0, 20)
 
+    # what the grid can actually deliver, measured rather than assumed
+    k_max = max(int(support_mask(clusso_fit_multistart(X, y, lam, n_starts=1)['bet']).sum())
+                for lam in grid)
+    assert k_max >= 5, f'fixture too weak to test with: grid tops out at {k_max}'
+
     for k in (1, 5, 12, 20, 25, 40):
-        mask, info = clusso_support_at_least_k(X, y, k, lambda_grid=grid)
+        mask, info = clusso_support_at_least_k(X, y, k, lambda_grid=grid,
+                                               n_starts=1)
         got = int(mask.sum())
+        assert info['k_realised'] == got, f'k={k}: k_realised disagrees with the mask'
         assert got >= k or info['exhausted'], (
             f'k={k}: got {got} and exhausted is False -- silent shortfall')
-        assert info['k_realised'] == got, f'k={k}: k_realised disagrees with the mask'
+        if k <= k_max:
+            assert got >= k, f'k={k} is reachable (grid reaches {k_max}) but got {got}'
+            assert not info['exhausted'], (
+                f'k={k} is reachable but reported exhausted -- '
+                f'a null arm that gives up here under-controls FDR')
         if k > X.shape[1]:
             assert info['exhausted'], f'k={k} exceeds q; must report exhausted'
-    return 'reaches k or flags exhausted, for k in 1,5,12,20,25,40'
+    return f'reaches every k the grid supports (k_max={k_max}); flags the rest'
 
 
 def c9_multistart_never_worse():
@@ -268,12 +293,38 @@ def c9_multistart_never_worse():
 
     for lam in (0.05, 0.5, 2.0):
         objs = []
-        for ns in (1, 5, 9):
+        for ns in range(1, 10):
             f = clusso_fit_multistart(X, y, lam, n_starts=ns)
             objs.append(clusso_objective(X, y, f['alpha'], f['bet'], lam))
-        assert objs[1] <= objs[0] + 1e-9, f'lam={lam}: 5 starts worse than 1'
-        assert objs[2] <= objs[1] + 1e-9, f'lam={lam}: 9 starts worse than 5'
-    return 'objective non-increasing in n_starts at 3 lambdas'
+        for a, b in zip(objs, objs[1:]):
+            assert b <= a + 1e-9, (
+                f'lam={lam}: objective rose with more starts -- '
+                f'{objs} over n_starts=1..9')
+    return 'objective non-increasing over n_starts 1..9, at 3 lambdas'
+
+
+def c11_alpha_starts_nested_and_exact():
+    """
+    alpha_starts was never tested. Code review showed the whole suite passes
+    with it gutted to a single start -- silently reverting to the rule this
+    branch measures at +2.95 objective gap.
+
+    Two properties everything else leans on: exactly n_starts arrays, and sets
+    nested in n_starts. Nesting is what makes 'more starts is never worse'
+    (c9) true rather than merely usually true.
+    """
+    for P in (2, 3):
+        for n in range(1, 16):
+            got = alpha_starts(P, n)
+            assert len(got) == n, f'P={P}, n={n}: got {len(got)} starts'
+            assert all(np.any(np.abs(v) > 0) for v in got),                 f'P={P}, n={n}: a start is all zeros'
+        for n in range(1, 15):
+            small, big = alpha_starts(P, n), alpha_starts(P, n + 1)
+            assert all(np.array_equal(a, b) for a, b in zip(small, big)),                 f'P={P}: start set at n={n} is not a prefix of n={n + 1}'
+
+    assert len(alpha_starts(2, 1)) == 1 and np.array_equal(
+        alpha_starts(2, 1)[0], np.ones(2)), 'n_starts=1 must be ones(P)'
+    return 'exact length and nesting for P=2,3 over n_starts 1..15'
 
 
 def c10_recovers_signal_and_rejects_noise():
@@ -308,6 +359,7 @@ def main():
     check('purity   determinism on repeat', c7_determinism_on_repeat)
     check('contract at_least_k reaches k or flags', c8_at_least_k_contract)
     check('contract objective non-increasing in n_starts', c9_multistart_never_worse)
+    check('contract alpha_starts nested and exact', c11_alpha_starts_nested_and_exact)
     check('sanity   finds signal, rejects pure noise',
           c10_recovers_signal_and_rejects_noise)
 
