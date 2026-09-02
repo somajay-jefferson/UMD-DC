@@ -44,7 +44,8 @@ def make_data(rng, n=N_SUBJECTS, beta=BETA_STAR, sigma=SIGMA, rho=RHO):
     return X, y
 
 
-def run_once(seed, q_levels=(0.05, 0.1, 0.2), B=50, M=100, null_mode='fixed'):
+def run_once(seed, q_levels=(0.05, 0.1, 0.2), B=50, M=100,
+             null_mode='fixed', null_rule='exact'):
     """One cohort end to end. Returns CV-lasso and PS-Fdr outcomes."""
     rng = np.random.default_rng(seed)
     X, y = make_data(rng)
@@ -54,7 +55,7 @@ def run_once(seed, q_levels=(0.05, 0.1, 0.2), B=50, M=100, null_mode='fixed'):
     cv_fdp, cv_power = fdp_power(np.flatnonzero(cv_mask), truth)
 
     res = ps_fdr(X, y, q=max(q_levels), B=B, M=M, seed=seed,
-                 null_mode=null_mode)
+                 null_mode=null_mode, null_rule=null_rule)
 
     out = {'cv': {'n_sel': int(cv_mask.sum()), 'fdp': cv_fdp,
                   'power': cv_power, 'selected': np.flatnonzero(cv_mask)},
@@ -83,6 +84,11 @@ def main():
     ap.add_argument('--reps', type=int, default=0,
                     help='repeat the whole pipeline this many times')
     ap.add_argument('--jobs', type=int, default=-1)
+    ap.add_argument('--null-rule', dest='null_rule', default='exact',
+                    choices=('exact', 'atleast', 'nearest'),
+                    help='how the permuted arm hits its target support size. '
+                         'exact is the published rule; atleast is the '
+                         'relaxation CLUSSO needs')
     ap.add_argument('--json', type=str, default=None)
     ap.add_argument('--viz', type=str, default=None,
                     help='dump the per-step figure data for the docs page')
@@ -213,7 +219,8 @@ def main():
 
         for mode in ('fixed', 'cv'):
             runs = Parallel(n_jobs=args.jobs, verbose=0)(
-                delayed(run_once)(s, B=args.B, M=args.M, null_mode=mode)
+                delayed(run_once)(s, B=args.B, M=args.M, null_mode=mode,
+                                  null_rule=args.null_rule)
                 for s in seeds)
 
             label = ('permuted count fixed to k (as published)' if mode == 'fixed'
