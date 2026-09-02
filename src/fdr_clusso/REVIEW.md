@@ -69,6 +69,22 @@ result. That is the classic way to talk yourself into a pass. The reasoning is
 written into the code rather than left implicit, and the match rate is still
 reported, so you can disagree with me using the same numbers.
 
+**SETTLED by measurement.** Rather than argue it, the benchmark was run twice
+with different seeds and compared to itself. Over 10 bootstrap resamples at
+n=300, q=50:
+
+    best-of-100 random starts agrees with ITSELF   80%
+    arc5 agrees with best-of-100                   80%
+
+Seeding makes best-of-random reproducible but not canonical -- seed 1000 and
+seed 5000 are equally valid runs of the same procedure, and they disagree twice
+in ten. So 80% is the ceiling, not a shortfall, and the deterministic rule sits
+exactly on it. The original criterion was asking a fixed rule to reproduce
+something that does not reproduce itself.
+
+Caveat: 10 resamples, so both figures are 8/10. The equality is exact but the
+sample is small.
+
 **Supporting evidence:** at 70% match, the disputed features are all within a few
 multiples of the 0.001 cut — i.e. carrying under 1% of total coefficient mass. That points to
 near-degenerate optima rather than worse ones. This is the argument I would
@@ -120,6 +136,21 @@ across the whole cohort, so one subject's design row depends on every other
 subject's objects. Resampling subjects is therefore not resampling independent
 units. Freezing lets you *condition* on this rather than fixing it. I think that
 is honest and statable; a referee might not.
+
+**Related, and easy to miss:** the clustering step is the one place the Python
+is explicitly NOT a faithful port. `CLUSSO_Functions_Project1_6_16_23.py:98-100`
+calls sklearn's `GaussianMixture` "the closest Python equivalent to R's
+`Mclust`" -- an approximation, not a translation. So the parity claim in
+CLAUDE.md already has a hole exactly where this obstacle lives. The two
+questions are the same question wearing different clothes.
+
+**DECISION (2026-08-26): proceed as planned, frozen, and measure the cost at
+the end rather than argue it now.** Stage 5 therefore owes a second arm: run it
+with the TRUE clustering, which the simulations know, alongside the estimated
+one. If the false discovery rate barely moves, "conditional on this clustering"
+becomes a footnote with a number behind it. If it moves a lot, the size of the
+problem is quantified rather than hand-waved. Either outcome is reportable;
+only failing to measure it is not.
 
 ---
 
@@ -191,10 +222,57 @@ other, so a constant error in it would not change any result.
 
 ---
 
-## Open questions I would like an opinion on
+## 7. The blind spot underneath everything above
 
-1. Is taking the `src/core/` edit worth it, to kill the `_score_fold`
-   duplication and to make the 0.001 threshold a parameter? Both are cleaner
-   ends; both break the "src/core is a frozen port" rule.
-2. Is conditional-on-one-clustering a statable caveat or a fatal one?
-3. Is the objective-gap gate criterion (§2) defensible, or am I fooling myself?
+Every check in `check.py` compares my code against **the Python port**. Not one
+of them says anything about whether that port matches the R it was translated
+from. If the translation is wrong, every number in this directory is wrong and
+nothing here would notice, because it is Python being compared against Python.
+
+That is the foundation the whole project sits on, and as far as I can tell it
+has never been verified end to end.
+
+**Verified cheaply, without R:** all 8 R files have Python counterparts, and
+every R function has one (three look missing from `CLUSSO_Functions` only
+because Python moved them into `SLasso_MSE.py`). `_glmnet_lasso` is
+Python-only, because R calls `glmnet` directly and the port reimplements it.
+
+**What that does not tell you:** whether the numbers agree. Only running both
+settles that, and R is not installed here.
+
+**Where drift would most likely hide, worst first:**
+
+1. `_glmnet_lasso` (`Mainfunction_albet.py:12`) -- hand-reimplements glmnet's
+   centering, scaling, and the `alpha = lambda/2` objective conversion. The most
+   arithmetic per line in the port, and the least visible if slightly off.
+2. `coefficient.py` -- a complete port that **nothing imports**. Unused code is
+   unexercised code; a bug there could sit indefinitely.
+3. The GMM-for-Mclust substitution -- documented as an approximation rather than
+   a translation, so this one is known to differ.
+4. `CV_make_folds` -- `np.random.choice` where R uses `sample()`. Different
+   algorithms, so folds differ even at matched seeds.
+
+**How to actually check it:** the two languages' RNGs differ, so you cannot
+generate matching data from a shared seed. Write one fixed dataset to CSV, run
+both implementations against it, compare coefficients. Needs R with `glmnet` and
+`mclust`. Half a day, and it would either retire the question or find something
+that invalidates a lot of work.
+
+---
+
+## Open questions
+
+1. ~~Is the objective-gap gate criterion defensible?~~ **Settled by measurement,
+   see section 2.** The benchmark agrees with itself 80% of the time and the
+   deterministic rule matches it 80% of the time. It was on the ceiling.
+2. ~~Is conditional-on-one-clustering statable or fatal?~~ **Decided: proceed
+   frozen, measure the cost in stage 5. See section 4.**
+3. Is taking the `src/core/` edit worth it? **Still open.** My recommendation is
+   no to the `_score_fold` de-duplication, since `check.py` already pins it at
+   zero tolerance, and not yet to parameterising the 0.001 threshold, since that
+   is currently a diagnostic finding rather than a demonstrated problem. Worth
+   knowing that adding the parameter with default 0.001 would change no existing
+   result -- it exposes a knob rather than altering a translation -- so it is a
+   smaller violation than it sounds.
+4. **New:** is validating the R-to-Python translation worth half a day and an R
+   install? See section 7. Everything else here is conditional on it.
