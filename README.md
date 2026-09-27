@@ -62,6 +62,7 @@ required, not just a suggestion.
 |---|---|
 | `ps_fdr.py` | PS-Fdr from He et al. 2018: bootstrap stability selection (`stability_selection`), a permutation null whose support size is pinned to the real arm's median (`lasso_support_fixed_k`), the SAM normalization `D(u)` (`sam_normalize`), and the step-down cutoff and `Fdr` estimate (`ps_fdr`). `null_mode='cv'` reproduces the variant the paper argues is invalid — CV re-tuned on permuted data — so the difference can be measured rather than asserted. |
 | `PS_Fdr_Data_Example.py` | End-to-end worked example on 70 subjects and 30 features, 5 of them real: the CV-lasso baseline, every intermediate quantity of the four steps, and (with `--reps`) the same pipeline repeated over many cohorts. `--json` dumps the numbers the documentation page renders. |
+| `PS_Fdr_Tiny_Example.py` | The same four steps at 50 subjects, 8 predictors, `B = M = 20` — small enough that every table on the docs page can be recomputed by hand, including the 20x8 bootstrap grid and the whole permuted null. `--html` writes the `<section>` that `docs/ps-fdr.html` embeds, so those tables are generated from the run rather than transcribed. |
 
 Standalone: nothing in `src/fdr/` imports `src/core/`, because PS-Fdr as
 published takes a fixed design matrix, and CLUSSO manufactures its design
@@ -109,6 +110,10 @@ cd src/core && python CLUSSO_Simulations_Project1_6_16_23.py <job_index>
 
 # PS-Fdr worked example (add --reps 200 for the repeated-cohort study)
 cd src/fdr && python PS_Fdr_Data_Example.py
+
+# The hand-checkable version, and the docs section it generates
+cd src/fdr && python PS_Fdr_Tiny_Example.py
+cd src/fdr && python PS_Fdr_Tiny_Example.py --html frag.html
 
 # TEPIG synthetic simulation study
 cd src/tepig && python simulation_synthetic.py --n 300 --q 10 --sparsity 0.8
