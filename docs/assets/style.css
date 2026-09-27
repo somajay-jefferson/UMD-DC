@@ -721,6 +721,36 @@
   table.design .n3 {
     color: var(--amber); font-weight: 700;
   }
+  /* ---------- tiny example: quoted paper text and the 0/1 grid ---------- */
+  .quote {
+    border-left: 3px solid var(--slate);
+    background: var(--slate-soft);
+    padding: 12px 18px;
+    margin: 0 0 18px;
+    max-width: 66ch;
+    font-size: 15.5px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+
+  table.design.grid td { text-align: center; padding: 4px 9px; }
+  table.design.grid td:first-child,
+  table.design.grid th:first-child { text-align: left; }
+  table.design.grid td.on  { color: var(--slate); font-weight: 700; }
+  table.design.grid td.off { color: var(--line-strong); }
+
+  table.design tr.tot td {
+    border-top: 2px solid var(--line-strong);
+    border-bottom: none;
+    font-weight: 700;
+  }
+  table.design tr.tot td:first-child { color: var(--ink); }
+  table.design td.hit {
+    background: var(--mulberry-soft);
+    color: var(--mulberry);
+    font-weight: 700;
+  }
+
   table.design tr.here td {
     background: var(--mulberry-soft); font-weight: 700;
   }
