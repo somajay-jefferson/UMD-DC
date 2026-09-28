@@ -428,6 +428,27 @@
     </div>
 
     <div class="prose"><p>
+      One predictor, f₆, written five ways. Same letter every time; the decorations are what change, and each one carries exactly one piece of information.
+    </p></div>
+
+    <div class="scroll-x">
+      <table class="design">
+        <thead><tr><th>symbol</th><th>arm</th><th>addressed by</th><th>over</th><th>value</th><th>reads as</th></tr></thead>
+        <tbody>
+          <tr><td class="gk">&#928;<sub>j</sub></td><td class="dim">real</td><td class="dim">predictor</td><td class="dim">&mdash;</td><td><b>0.45</b></td><td class="dim">f₆ on the real data</td></tr>
+          <tr><td class="gk">&#928;<sub>(j)</sub></td><td class="dim">real</td><td class="dim">rank</td><td class="dim">&mdash;</td><td><b>0.45</b></td><td class="dim">the same number, now rank (2)</td></tr>
+          <tr><td class="gk">&#928;&#771;<sub>j</sub><sup>(m)</sup></td><td class="dim">permuted</td><td class="dim">predictor</td><td class="dim">one permutation</td><td><b>0.85</b></td><td class="dim">f₆ in permutation 1</td></tr>
+          <tr><td class="gk">&#928;&#771;<sub>(j)</sub><sup>(m)</sup></td><td class="dim">permuted</td><td class="dim">rank</td><td class="dim">one permutation</td><td><b>0.85</b></td><td class="dim">the same number, now rank (7)</td></tr>
+          <tr><td class="gk">&#928;&#772;<sub>(j)</sub></td><td class="dim">permuted</td><td class="dim">rank</td><td class="dim">averaged over all 20</td><td><b>0.79</b></td><td class="dim">what rank (7) averages when nothing is real</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <span><strong>Three independent switches.</strong> A tilde means the outcome was shuffled; no tilde means the real data. A subscript in parentheses means a rank; a bare one means a predictor. A superscript <math><mrow><mo>(</mo><mi>m</mi><mo>)</mo></mrow></math> means one particular permutation, a bar means averaged over all of them. Check those three and any of these symbols reads itself. The bar and the tilde never appear together, because averaging is the last thing done to the null &mdash; once averaged you are no longer talking about any single shuffle.</span>
+    </div>
+
+    <div class="prose"><p>
       That sorted line is row 1 below. All twenty rows, each one 20 more fits &mdash; 400 in this step alone:
     </p></div>
 

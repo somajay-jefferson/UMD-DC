@@ -173,6 +173,26 @@ def html(r, probe):
     cv = [int(j) + 1 for j in r['cv']]
     cv_false = [j for j in cv if not real[j - 1]]
     m0 = r['masks_null'][0].sum(axis=0) / B
+
+    # One predictor followed through every name the paper gives it.
+    TRACE = 6
+    t = TRACE - 1
+    real_rank = int(np.argsort(np.argsort(Pi, kind='stable'))[t]) + 1
+    null_rank = int(np.argsort(np.argsort(m0, kind='stable'))[t]) + 1
+    FAMILY = [
+        ('&#928;<sub>j</sub>', 'real', 'predictor', '&mdash;',
+         f'{Pi[t]:.2f}', f'{fj(TRACE)} on the real data'),
+        ('&#928;<sub>(j)</sub>', 'real', 'rank', '&mdash;',
+         f'{Pi[t]:.2f}', f'the same number, now rank ({real_rank})'),
+        ('&#928;&#771;<sub>j</sub><sup>(m)</sup>', 'permuted', 'predictor',
+         'one permutation', f'{m0[t]:.2f}', f'{fj(TRACE)} in permutation 1'),
+        ('&#928;&#771;<sub>(j)</sub><sup>(m)</sup>', 'permuted', 'rank',
+         'one permutation', f'{m0[t]:.2f}',
+         f'the same number, now rank ({null_rank})'),
+        ('&#928;&#772;<sub>(j)</sub>', 'permuted', 'rank',
+         f'averaged over all {M}', f'{r["Pi_bar"][null_rank - 1]:.2f}',
+         f'what rank ({null_rank}) averages when nothing is real'),
+    ]
     o = []
     w = o.append
 
@@ -289,6 +309,37 @@ def html(r, probe):
       'collapsed to one line:')
     w('    </p></div>')
     w('')
+    w('    <div class="eq">')
+    w('      <math display="block">')
+    w('        <mrow>')
+    w('          <msubsup><mover accent="true"><mi>&#928;</mi><mo>~</mo></mover>'
+      '<mi>j</mi><mrow><mo>(</mo><mi>m</mi><mo>)</mo></mrow></msubsup>')
+    w('          <mo>=</mo>')
+    w('          <mfrac><mn>1</mn><mi>B</mi></mfrac>')
+    w('          <munderover><mo>&#8721;</mo><mrow><mi>b</mi><mo>=</mo><mn>1</mn>'
+      '</mrow><mi>B</mi></munderover>')
+    w('          <mi>&#120793;</mi><mo>(</mo><mi>j</mi><mo>&#8712;</mo>')
+    w('          <msup><mi>S&#770;</mi><mrow><mo>(</mo><mi>b</mi><mo>,</mo><mi>m</mi>'
+      '<mo>)</mo></mrow></msup>')
+    w('          <mo>)</mo>')
+    w('          <mspace width="2.2em"></mspace>')
+    w('          <mtext>then sorted:</mtext>')
+    w('          <mspace width="0.6em"></mspace>')
+    w('          <msubsup><mover accent="true"><mi>&#928;</mi><mo>~</mo></mover>'
+      '<mrow><mo>(</mo><mn>1</mn><mo>)</mo></mrow><mrow><mo>(</mo><mi>m</mi>'
+      '<mo>)</mo></mrow></msubsup>')
+    w('          <mo>&#8804;</mo><mo>&#8943;</mo><mo>&#8804;</mo>')
+    w('          <msubsup><mover accent="true"><mi>&#928;</mi><mo>~</mo></mover>'
+      '<mrow><mo>(</mo><mi>p</mi><mo>)</mo></mrow><mrow><mo>(</mo><mi>m</mi>'
+      '<mo>)</mo></mrow></msubsup>')
+    w('        </mrow>')
+    w('      </math>')
+    w('      <p class="eq-note">Permutation <math><mi>m</mi></math>, predictor '
+      '<math><mi>j</mi></math>: the share of its <math><mi>B</mi></math> fits that kept '
+      '<math><mi>j</mi></math>. A bare subscript is a predictor; a parenthesised one is '
+      'a rank.</p>')
+    w('    </div>')
+    w('')
     w('    <div class="scroll-x">')
     w('      <table class="design">')
     w('        <thead><tr><th>permutation 1</th>'
@@ -319,6 +370,36 @@ def html(r, probe):
       f'{m0[4]:.2f}, which lands at rank '
       f'{int(np.argsort(np.argsort(m0, kind="stable"))[4]) + 1}. Two predictors here '
       'tie at 0.70, and which of them takes the earlier rank is arbitrary.</span>')
+    w('    </div>')
+    w('')
+    w('    <div class="prose"><p>')
+    w(f'      One predictor, {fj(TRACE)}, written five ways. Same letter every time; the '
+      'decorations are what change, and each one carries exactly one piece of '
+      'information.')
+    w('    </p></div>')
+    w('')
+    w('    <div class="scroll-x">')
+    w('      <table class="design">')
+    w('        <thead><tr><th>symbol</th><th>arm</th><th>addressed by</th>'
+      '<th>over</th><th>value</th><th>reads as</th></tr></thead>')
+    w('        <tbody>')
+    for sym, arm, addr, over, val, reads in FAMILY:
+        w(f'          <tr><td class="gk">{sym}</td><td class="dim">{arm}</td>'
+          f'<td class="dim">{addr}</td><td class="dim">{over}</td>'
+          f'<td><b>{val}</b></td><td class="dim">{reads}</td></tr>')
+    w('        </tbody>')
+    w('      </table>')
+    w('    </div>')
+    w('')
+    w('    <div class="note">')
+    w('      <span><strong>Three independent switches.</strong> A tilde means the outcome '
+      'was shuffled; no tilde means the real data. A subscript in parentheses means a '
+      'rank; a bare one means a predictor. A superscript '
+      '<math><mrow><mo>(</mo><mi>m</mi><mo>)</mo></mrow></math> means one particular '
+      'permutation, a bar means averaged over all of them. Check those three and any of '
+      'these symbols reads itself. The bar and the tilde never appear together, because '
+      'averaging is the last thing done to the null &mdash; once averaged you are no '
+      'longer talking about any single shuffle.</span>')
     w('    </div>')
     w('')
     w('    <div class="prose"><p>')
