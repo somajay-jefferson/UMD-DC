@@ -630,6 +630,10 @@
   .fig .bar        { fill: var(--line-strong); }
   .fig .bar.real   { fill: var(--slate); }
 
+  .fig .cell.null  { fill: var(--mulberry); opacity: .55; }
+  .fig .bar.null   { fill: var(--mulberry); opacity: .55; }
+  .fig .rowbar     { fill: var(--line-strong); }
+
   /* step 2 */
   .fig .nline { fill: none; stroke: var(--mulberry); stroke-width: 1; opacity: .09; }
   .fig .nmean { fill: none; stroke: var(--mulberry); stroke-width: 2; stroke-dasharray: 5 3; }
