@@ -159,6 +159,75 @@ var D = {"features": [1, 2, 3, 4, 5, 30, 7, 10, 22, 14, 19, 18, 8, 13, 23, 12, 2
     s.innerHTML = el(out);
   })();
 
+  /* ---------- the null arm as one object, and the two ways it is summed ---- */
+  (function () {
+    var s = svg('fig-nullmatrix'); if (!s) return;
+    var W = 620, H = 366, L = 46, R = 14, T = 26;
+    var M = D.null.length, B = D.B;
+    var plotW = W - L - R, step = plotW / p, cw = step - 1.2;
+    var rowH = 2.4, gridH = M * rowH, gridBot = T + gridH;
+    var barTop = gridBot + 22, base = H - 40, barH = base - barTop;
+    var COL = 0;                       // the column we outline: rank (p)
+    var out = [];
+
+    // every cell of the M x p grid, shaded by its own frequency
+    var lo = 1, hi = 0;
+    for (var a = 0; a < M; a++)
+      for (var c = 0; c < p; c++) {
+        var v = D.null[a][c] / B;
+        if (v < lo) lo = v;
+        if (v > hi) hi = v;
+      }
+    for (var m = 0; m < M; m++) {
+      for (var j = 0; j < p; j++) {
+        var val = D.null[m][j] / B;
+        var sat = D.null[m][j] === B;
+        var op = 0.10 + (val - lo) / (hi - lo) * 0.80;
+        out.push('<rect class="ncell' + (sat ? ' sat' : '') +
+                 '" x="' + (L + j * step + 0.6).toFixed(1) +
+                 '" y="' + (T + m * rowH).toFixed(1) +
+                 '" width="' + cw.toFixed(1) + '" height="' + (rowH - 0.6).toFixed(1) +
+                 '"' + (sat ? '' : ' opacity="' + op.toFixed(2) + '"') + '/>');
+      }
+    }
+
+    // the column whose mean becomes Pi-bar
+    out.push('<rect class="colmark" x="' + (L + COL * step - 0.8).toFixed(1) +
+             '" y="' + (T - 4) + '" width="' + (step + 1.6).toFixed(1) +
+             '" height="' + (gridH + 8).toFixed(1) + '"/>');
+    out.push('<text class="collbl" x="' + (L + (COL + 0.5) * step).toFixed(1) +
+             '" y="' + (T - 10) + '" text-anchor="middle">rank (' + p + ')</text>');
+
+    out.push('<text class="axl" transform="translate(13,' + (T + gridH / 2) +
+             ') rotate(-90)" text-anchor="middle">' + M + ' permutations</text>');
+
+    // the column means, as bars underneath
+    out.push('<line class="ax" x1="' + L + '" y1="' + base + '" x2="' + (W - R) +
+             '" y2="' + base + '"/>');
+    [0.5, 1].forEach(function (t) {
+      var y = base - t * barH;
+      out.push('<line class="grid" x1="' + L + '" y1="' + y + '" x2="' + (W - R) +
+               '" y2="' + y + '"/>');
+      out.push('<text class="tl" x="' + (L - 7) + '" y="' + (y + 4) +
+               '" text-anchor="end">' + t.toFixed(2) + '</text>');
+    });
+    for (var k = 0; k < p; k++) {
+      var h = D.null_mean[k] * barH;
+      out.push('<rect class="nbar' + (k === COL ? ' on' : '') +
+               '" x="' + (L + k * step + 0.6).toFixed(1) +
+               '" y="' + (base - h).toFixed(1) + '" width="' + cw.toFixed(1) +
+               '" height="' + h.toFixed(1) + '"/>');
+    }
+    out.push('<text class="axl" transform="translate(13,' + ((barTop + base) / 2) +
+             ') rotate(-90)" text-anchor="middle">&#928;&#772;</text>');
+    out.push('<text class="collbl" x="' + (L + (COL + 0.5) * step + 6).toFixed(1) +
+             '" y="' + (base - D.null_mean[COL] * barH - 6).toFixed(1) +
+             '" text-anchor="start">' + D.null_mean[COL].toFixed(3) + '</text>');
+    out.push('<text class="axl" x="' + ((L + W - R) / 2) + '" y="' + (H - 8) +
+             '" text-anchor="middle">rank, highest first</text>');
+    s.innerHTML = el(out);
+  })();
+
   /* ---------- step 3: what D(u) does to the spacing ---------- */
   (function () {
     var s = svg('fig-norm'); if (!s) return;
