@@ -389,6 +389,23 @@
       Every row below is a whole stability&#8209;selection pass, not one fit. Here is permutation 1 unpacked &mdash; another 20&#8209;fit grid exactly like the one above, collapsed to one line:
     </p></div>
 
+    <div class="chartbox">
+      <svg id="fig-nullgrid" class="fig" viewBox="0 0 620 344" role="img"
+           aria-label="The fifty bootstrap fits behind one permuted dataset, with their column totals"></svg>
+      <div class="scatter-cap">
+        <span>one permutation &middot; its own fifty fits</span>
+        <span>columns in the same order as the step 1 grid</span>
+      </div>
+    </div>
+
+    <div class="note">
+      <span><strong>This is one row of the table below, unrolled.</strong> Shuffling <math><mi>y</mi></math> does not save any work: each permutation runs the same fifty bootstrap fits that step 1 ran, so the null arm costs <math><mrow><mi>M</mi><mo>&#215;</mo><mi>B</mi><mo>=</mo><mn>100</mn><mo>&#215;</mo><mn>50</mn><mo>=</mo><mn>5000</mn></mrow></math> fits against step 1&rsquo;s fifty. The bars underneath are that permutation&rsquo;s <math><msub><mover accent="true"><mi>&#928;</mi><mo>~</mo></mover><mi>j</mi></msub></math>, and they are the thirty numbers the next table sorts.</span>
+    </div>
+
+    <div class="note" style="margin-top:12px;">
+      <span><strong>Two things to compare against the step 1 grid.</strong> The left&#8209;hand block is gone &mdash; features 1 to 4 were solid there and are unremarkable here, which is what &ldquo;no association with the outcome&rdquo; looks like. And the <math><mrow><mo>|</mo><mi>S&#770;</mi><mo>|</mo></mrow></math> strip down the right is flat: every one of these fifty fits kept exactly 18 features, where the real arm&rsquo;s fits ranged from 8 to all 30. That flat edge is the frozen count doing its job, fit by fit.</span>
+    </div>
+
     <div class="scroll-x">
       <table class="design">
         <thead><tr><th>permutation 1</th><th>f₁</th><th>f₂</th><th>f₃</th><th>f₄</th><th>f₅</th><th>f₆</th><th>f₇</th><th>f₈</th></tr></thead>

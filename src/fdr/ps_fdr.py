@@ -217,7 +217,8 @@ def sam_normalize(u, nu):
 
 
 def ps_fdr(X, y, q=0.1, B=50, M=100, seed=None, n_folds=10,
-           null_mode='fixed', null_rule='exact', k_null=None):
+           null_mode='fixed', null_rule='exact', k_null=None,
+           keep_null_masks=0):
     """
     Run the whole procedure and return every intermediate quantity.
 
@@ -271,6 +272,8 @@ def ps_fdr(X, y, q=0.1, B=50, M=100, seed=None, n_folds=10,
       k            int     median support size -- the count fixed on the null arm
       Pi_null      (M, p)  permuted-arm frequencies, each row sorted ascending
       Pi_null_raw  (M, p)  the same frequencies before sorting, by variable
+      masks_null   list    selection indicators for the first
+                           ``keep_null_masks`` permutations, each (B, p)
       Pi_bar       (p,)    mean of Pi_null over permutations, by rank
       Z, Z_bar     (p,)    normalized real and null order statistics
       Z_null       (M, p)  normalized permuted order statistics
@@ -309,11 +312,19 @@ def ps_fdr(X, y, q=0.1, B=50, M=100, seed=None, n_folds=10,
 
     Pi_null = np.zeros((M, p))
     Pi_null_raw = np.zeros((M, p))
+    masks_null = []
     for m in range(M):
         y_perm = rng.permutation(y)
-        Pi_m, _ = stability_selection(X, y_perm, B=B, k_fixed=k_target, rng=rng,
-                                      n_folds=n_folds, null_rule=null_rule,
-                                      lam_fixed=lam_star)
+        want_masks = m < keep_null_masks
+        out = stability_selection(X, y_perm, B=B, k_fixed=k_target, rng=rng,
+                                  n_folds=n_folds, null_rule=null_rule,
+                                  lam_fixed=lam_star,
+                                  return_masks=want_masks)
+        if want_masks:
+            Pi_m, _, masks_m = out
+            masks_null.append(masks_m)
+        else:
+            Pi_m, _ = out
         # Keep both: the frequencies as they come out, per variable, and the
         # sorted copy the procedure actually uses.  Sorted ascending, because
         # the null is a distribution over *ranks*, not over variable
@@ -361,6 +372,7 @@ def ps_fdr(X, y, q=0.1, B=50, M=100, seed=None, n_folds=10,
         'Pi': Pi, 'counts': counts, 'k': k, 'k_used': k_used, 'masks': masks,
         'lam_star': lam_star,
         'Pi_null': Pi_null, 'Pi_null_raw': Pi_null_raw, 'Pi_bar': Pi_bar,
+        'masks_null': masks_null,
         'order': order,
         'Z': Z, 'Z_bar': Z_bar, 'Z_null': Z_null,
         'sweep': sweep,

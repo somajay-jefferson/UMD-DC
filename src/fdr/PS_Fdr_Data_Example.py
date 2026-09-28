@@ -45,7 +45,7 @@ def make_data(rng, n=N_SUBJECTS, beta=BETA_STAR, sigma=SIGMA, rho=RHO):
 
 
 def run_once(seed, q_levels=(0.05, 0.1, 0.2), B=50, M=100,
-             null_mode='fixed', null_rule='exact'):
+             null_mode='fixed', null_rule='exact', keep_null_masks=0):
     """One cohort end to end. Returns CV-lasso and PS-Fdr outcomes."""
     rng = np.random.default_rng(seed)
     X, y = make_data(rng)
@@ -55,7 +55,8 @@ def run_once(seed, q_levels=(0.05, 0.1, 0.2), B=50, M=100,
     cv_fdp, cv_power = fdp_power(np.flatnonzero(cv_mask), truth)
 
     res = ps_fdr(X, y, q=max(q_levels), B=B, M=M, seed=seed,
-                 null_mode=null_mode, null_rule=null_rule)
+                 null_mode=null_mode, null_rule=null_rule,
+                 keep_null_masks=keep_null_masks)
 
     out = {'cv': {'n_sel': int(cv_mask.sum()), 'fdp': cv_fdp,
                   'power': cv_power, 'selected': np.flatnonzero(cv_mask)},
@@ -191,7 +192,8 @@ def main():
     dump = {'beta_star': BETA_STAR.tolist(), 'sigma': SIGMA, 'rho': RHO,
             'n': N_SUBJECTS, 'B': args.B, 'M': args.M, 'seed': args.seed}
 
-    one = run_once(args.seed, B=args.B, M=args.M)
+    one = run_once(args.seed, B=args.B, M=args.M,
+                   keep_null_masks=1 if args.viz else 0)
     res, X, y = one['res'], one['X'], one['y']
     Pi, order = res['Pi'], res['order']
 
@@ -372,6 +374,14 @@ def main():
             'null': [[int(round(v * args.B)) for v in row[::-1]]
                      for row in res['Pi_null']],
             'null_mean': [round(float(v), 4) for v in res['Pi_bar'][::-1]],
+            # step 2, unrolled: the B fits behind ONE permutation, in the same
+            # column order as the step 1 grid so the two can be read together
+            'masks_null': [''.join('1' if m else '0'
+                                   for m in res['masks_null'][0][b, col])
+                           for b in range(args.B)],
+            'pi_null1': [round(float(v), 4)
+                         for v in res['Pi_null_raw'][0][col]],
+            'k': int(res['k']),
             'B': args.B, 'M': args.M,
             # step 3 is a closed-form map, recomputed in the page from pi
             # step 4: the ordered pairs the step-down rule compares
