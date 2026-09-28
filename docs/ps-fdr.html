@@ -767,6 +767,45 @@
       <p>
         Shuffle <math><mi>y</mi></math>, run all fifty resamples again, and do that a hundred times over &mdash; five thousand further fits. On every one of them the support size is pinned at 18. The permuted frequencies are then sorted within each permutation and averaged <em class="term">position by position</em>, so the null describes what the <math><mi>j</mi></math>&#8209;th largest selection frequency looks like when nothing is real.
       </p>
+    </div>
+    <div class="scroll-x">
+      <table class="design">
+        <thead><tr><th>permutation 1</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th><th>14</th><th>15</th><th>16</th><th>17</th><th>18</th><th>19</th><th>20</th><th>21</th><th>22</th><th>23</th><th>24</th><th>25</th><th>26</th><th>27</th><th>28</th><th>29</th><th>30</th></tr></thead>
+        <tbody>
+          <tr><td class="dim">&#928;&#771;<sub>j</sub> as it comes out &mdash; column is predictor j</td><td>0.50</td><td>0.56</td><td>0.60</td><td>0.54</td><td>0.58</td><td>0.62</td><td>0.26</td><td>0.80</td><td>0.48</td><td>0.78</td><td>0.58</td><td>0.78</td><td>0.88</td><td>0.54</td><td>0.70</td><td>0.42</td><td>0.66</td><td>0.78</td><td>0.56</td><td>0.64</td><td>0.78</td><td>0.46</td><td>0.98</td><td>0.54</td><td>0.64</td><td>0.46</td><td>0.36</td><td>0.48</td><td>0.42</td><td>0.62</td></tr>
+          <tr class="tot"><td>sorted &mdash; column is now rank (j)</td><td>0.26</td><td>0.36</td><td>0.42</td><td>0.42</td><td>0.46</td><td>0.46</td><td>0.48</td><td>0.48</td><td>0.50</td><td>0.54</td><td>0.54</td><td>0.54</td><td>0.56</td><td>0.56</td><td>0.58</td><td>0.58</td><td>0.60</td><td>0.62</td><td>0.62</td><td>0.64</td><td>0.64</td><td>0.66</td><td>0.70</td><td>0.78</td><td>0.78</td><td>0.78</td><td>0.78</td><td>0.80</td><td>0.88</td><td>0.98</td></tr>
+          <tr><td class="dim">which predictor landed there</td><td class="dim">f₇</td><td class="dim">f₂₇</td><td class="dim">f₁₆</td><td class="dim">f₂₉</td><td class="dim">f₂₂</td><td class="dim">f₂₆</td><td class="dim">f₉</td><td class="dim">f₂₈</td><td class="dim">f₁</td><td class="dim">f₄</td><td class="dim">f₁₄</td><td class="dim">f₂₄</td><td class="dim">f₂</td><td class="dim">f₁₉</td><td class="dim">f₅</td><td class="dim">f₁₁</td><td class="dim">f₃</td><td class="dim">f₆</td><td class="dim">f₃₀</td><td class="dim">f₂₀</td><td class="dim">f₂₅</td><td class="dim">f₁₇</td><td class="dim">f₁₅</td><td class="dim">f₁₀</td><td class="dim">f₁₂</td><td class="dim">f₁₈</td><td class="dim">f₂₁</td><td class="dim">f₈</td><td class="dim">f₁₃</td><td class="dim">f₂₃</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="eq-note">Thirty columns &mdash; scrolls sideways. Both rows hold the same thirty numbers.</p>
+
+
+    <div class="note">
+      <span><strong>The middle row is the same thirty numbers as the top row, reordered.</strong> Nothing is recomputed by the sort and nothing is dropped. What is dropped is the bottom row: it is never stored. After this point the null is a list of thirty positions, and no position belongs to any predictor.</span>
+    </div>
+
+    <div class="scroll-x">
+      <table class="design">
+        <thead><tr><th>top ranks</th><th>(30)</th><th>(29)</th><th>(28)</th><th>(27)</th><th>(26)</th><th>(25)</th></tr></thead>
+        <tbody>
+          <tr><td class="dim">permutation 1</td><td>0.98 <span class="dim">f₂₃</span></td><td>0.88 <span class="dim">f₁₃</span></td><td>0.80 <span class="dim">f₈</span></td><td>0.78 <span class="dim">f₂₁</span></td><td>0.78 <span class="dim">f₁₈</span></td><td>0.78 <span class="dim">f₁₂</span></td></tr>
+          <tr><td class="dim">permutation 2</td><td>1.00 <span class="dim">f₁₇</span></td><td>0.92 <span class="dim">f₂₀</span></td><td>0.90 <span class="dim">f₆</span></td><td>0.86 <span class="dim">f₂₂</span></td><td>0.84 <span class="dim">f₃</span></td><td>0.82 <span class="dim">f₈</span></td></tr>
+          <tr><td class="dim">permutation 3</td><td>0.98 <span class="dim">f₂₇</span></td><td>0.90 <span class="dim">f₁₂</span></td><td>0.88 <span class="dim">f₃</span></td><td>0.72 <span class="dim">f₁₄</span></td><td>0.72 <span class="dim">f₈</span></td><td>0.72 <span class="dim">f₆</span></td></tr>
+          <tr><td class="dim">permutation 4</td><td>1.00 <span class="dim">f₁₁</span></td><td>0.94 <span class="dim">f₈</span></td><td>0.92 <span class="dim">f₆</span></td><td>0.88 <span class="dim">f₉</span></td><td>0.78 <span class="dim">f₁₈</span></td><td>0.76 <span class="dim">f₂₉</span></td></tr>
+          <tr><td class="dim">permutation 5</td><td>0.86 <span class="dim">f₂₆</span></td><td>0.86 <span class="dim">f₁₆</span></td><td>0.82 <span class="dim">f₂₁</span></td><td>0.82 <span class="dim">f₁₀</span></td><td>0.74 <span class="dim">f₁</span></td><td>0.70 <span class="dim">f₁₈</span></td></tr>
+          <tr><td class="dim">permutation 6</td><td>1.00 <span class="dim">f₂₀</span></td><td>0.80 <span class="dim">f₉</span></td><td>0.78 <span class="dim">f₁₅</span></td><td>0.78 <span class="dim">f₁₄</span></td><td>0.76 <span class="dim">f₂₅</span></td><td>0.76 <span class="dim">f₁₇</span></td></tr>
+          <tr><td class="dim">&#8230; 94 more</td><td class="dim">&#8942;</td><td class="dim">&#8942;</td><td class="dim">&#8942;</td><td class="dim">&#8942;</td><td class="dim">&#8942;</td><td class="dim">&#8942;</td></tr>
+          <tr class="tot"><td>mean of all 100 &rarr; &#928;&#772;<sub>(j)</sub></td><td>0.936</td><td>0.891</td><td>0.849</td><td>0.816</td><td>0.788</td><td>0.762</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <span><strong>Read down a column, not across a row.</strong> The mean in the bottom row is taken over all 100 permutations at that one position, which is what &ldquo;position by position&rdquo; means. The grey labels show why it has to be done that way: the top rank is held by a different predictor almost every time. Over the 100 permutations all 30 predictors take that slot at some point, and the greediest manages it 7 times. There is no such thing as &ldquo;predictor f₃&rsquo;s null frequency&rdquo; to average.</span>
+    </div>
+
+    <div class="prose">
       <p>
         Both arms then pass through
         <math><mrow><mi>D</mi><mo>(</mo><mi>u</mi><mo>)</mo></mrow></math> with
@@ -774,9 +813,17 @@
         A selection frequency here is a proportion out of fifty resamples, and the standard error of
         such a proportion is
         <math><mrow><msqrt><mrow><mi>u</mi><mo>(</mo><mn>1</mn><mo>&#x2212;</mo><mi>u</mi><mo>)</mo><mo>/</mo><mn>50</mn></mrow></msqrt></mrow></math>.
-        Dividing by that square root is therefore not a cosmetic stretch &mdash; it is the same
-        move as forming a <math><mi>t</mi></math>&#8209;statistic, measuring each frequency in
-        units of its own noise. The map is strictly increasing, so it reorders nothing.
+        Dividing by <math><mrow><msqrt><mrow><mi>u</mi><mo>(</mo><mn>1</mn><mo>&#x2212;</mo><mi>u</mi><mo>)</mo></mrow></msqrt></mrow></math>
+        is therefore measuring each frequency in units of its own noise, up to the constant
+        <math><msqrt><mn>50</mn></msqrt></math> &mdash; the same move as forming a
+        <math><mi>t</mi></math>&#8209;statistic. The map is strictly increasing, so it reorders nothing.
+      </p>
+      <p>
+        The <math><mi>&#x3BD;</mi></math> is doing something different, and it is worth separating out.
+        It is there to stop the denominator reaching zero at
+        <math><mrow><mi>u</mi><mo>=</mo><mn>1</mn></mrow></math>, and in stopping it, it fixes a
+        ceiling: <math><mrow><mi>D</mi><mo>(</mo><mn>1</mn><mo>)</mo><mo>=</mo><mn>1</mn><mo>/</mo><mi>&#x3BD;</mi><mo>=</mo><mn>50</mn></mrow></math>.
+        The two mechanisms hand over to each other near the top of the range.
       </p>
       <p>
         The reason that matters is one line of step 4. A single scalar
@@ -791,20 +838,25 @@
         <thead>
           <tr>
             <th class="gk">&#928;<sub>(j)</sub> &mdash; real</th><th class="gk">&#928;&#772;<sub>(j)</sub> &mdash; null</th><th>raw gap</th>
+            <th>SE of a proportion</th><th>raw gap in SE</th>
             <th class="gk">Z<sub>(j)</sub></th><th class="gk">Z&#772;<sub>(j)</sub></th><th>gap after D</th>
           </tr>
         </thead>
         <tbody>
-          <tr><td>0.50</td><td class="dim">0.44</td><td class="dim">0.06</td><td>0.96</td><td class="dim">0.85</td><td>+0.11</td></tr>
-          <tr><td>0.70</td><td class="dim">0.64</td><td class="dim">0.06</td><td>1.46</td><td class="dim">1.28</td><td>+0.18</td></tr>
-          <tr><td>0.90</td><td class="dim">0.84</td><td class="dim">0.06</td><td>2.81</td><td class="dim">2.17</td><td>+0.64</td></tr>
-          <tr><td>1.00</td><td class="dim">0.94</td><td class="dim">0.06</td><td>50.00</td><td class="dim">3.65</td><td class="v1">+46.35</td></tr>
+          <tr><td>0.50</td><td class="dim">0.44</td><td class="dim">0.06</td><td class="dim">0.0702</td><td>0.85</td><td>0.96</td><td class="dim">0.85</td><td>+0.11</td></tr>
+          <tr><td>0.70</td><td class="dim">0.64</td><td class="dim">0.06</td><td class="dim">0.0679</td><td>0.88</td><td>1.46</td><td class="dim">1.28</td><td>+0.18</td></tr>
+          <tr><td>0.90</td><td class="dim">0.84</td><td class="dim">0.06</td><td class="dim">0.0518</td><td>1.16</td><td>2.81</td><td class="dim">2.17</td><td>+0.64</td></tr>
+          <tr><td>1.00</td><td class="dim">0.94</td><td class="dim">0.06</td><td class="dim">0.0336</td><td>1.79</td><td>50.00</td><td class="dim">3.65</td><td class="v1">+46.35</td></tr>
         </tbody>
       </table>
     </div>
 
     <div class="note">
-      <span><strong>Every row has the same raw gap and none of them is the same evidence.</strong> Six points of separation where the noise is largest is nothing; six points where forty&#8209;seven of fifty resamples already agree is almost impossible. A rule that thresholds raw frequency cannot tell those apart, and after <math><mi>D</mi></math> it does not have to. The bottom row is the last one to matter &mdash; it is exactly the situation features 1 to 4 are in further down.</span>
+      <span><strong>Every row has the same raw gap and none of them is the same evidence.</strong> Six points of separation where the noise is largest is worth 0.85 standard errors; the same six points where 42 of 50 resamples already agree is worth 1.16. A rule that thresholds raw frequency cannot tell those apart, and after <math><mi>D</mi></math> it does not have to.</span>
+    </div>
+
+    <div class="note" style="margin-top:12px;">
+      <span><strong>The bottom row is not that argument taken further.</strong> Read the two right&#8209;hand columns against each other. Through the first three rows they agree in direction &mdash; more standard errors, wider gap after <math><mi>D</mi></math>. The last row breaks it. In standard errors that row is worth 1.79, larger than the others but nothing remarkable; after <math><mi>D</mi></math> it is +46.35. The difference is not evidence, it is <math><mi>&#x3BD;</mi></math>. At <math><mrow><mi>u</mi><mo>=</mo><mn>1</mn></mrow></math> the square root vanishes, the ceiling takes over, and how high that ceiling sits is set by <math><mi>B</mi></math> and nothing else. Worth knowing, because it is exactly the situation features 1 to 4 are in further down: the selection on this cohort is made at the ceiling, not anywhere in the middle of the scale.</span>
     </div>
 
     <div class="chartbox">

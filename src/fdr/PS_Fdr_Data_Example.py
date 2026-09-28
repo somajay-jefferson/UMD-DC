@@ -76,6 +76,97 @@ def fmt_set(idx):
     return '{' + ', '.join(str(int(i) + 1) for i in sorted(idx)) + '}' if len(idx) else '{}'
 
 
+
+SUB = str.maketrans('0123456789',
+                    '₀₁₂₃₄₅'
+                    '₆₇₈₉')
+
+
+def _fj(j):
+    return 'f' + str(j).translate(SUB)
+
+
+def sort_tables_html(res, B, M, n_perm=6, n_rank=6):
+    """The <div>s docs/ps-fdr.html embeds inside step 2-3.
+
+    Two things the prose alone cannot show: what the sort does to one
+    permutation, and what "averaged position by position" means once the
+    identities underneath have moved.
+    """
+    raw = res['Pi_null_raw']
+    p = raw.shape[1]
+    o = []
+    w = o.append
+
+    # ---- the sort, on one permutation --------------------------------
+    first = raw[0]
+    order1 = np.argsort(first, kind='stable')
+    w('    <div class="scroll-x">')
+    w('      <table class="design">')
+    w('        <thead><tr><th>permutation 1</th>'
+      + ''.join(f'<th>{i + 1}</th>' for i in range(p)) + '</tr></thead>')
+    w('        <tbody>')
+    w('          <tr><td class="dim">&#928;&#771;<sub>j</sub> as it comes out '
+      '&mdash; column is predictor j</td>'
+      + ''.join(f'<td>{v:.2f}</td>' for v in first) + '</tr>')
+    w('          <tr class="tot"><td>sorted &mdash; column is now rank (j)</td>'
+      + ''.join(f'<td>{v:.2f}</td>' for v in np.sort(first)) + '</tr>')
+    w('          <tr><td class="dim">which predictor landed there</td>'
+      + ''.join(f'<td class="dim">{_fj(int(j) + 1)}</td>' for j in order1)
+      + '</tr>')
+    w('        </tbody>')
+    w('      </table>')
+    w('    </div>')
+    w('')
+    w('    <div class="note">')
+    w('      <span><strong>The middle row is the same thirty numbers as the top '
+      'row, reordered.</strong> Nothing is recomputed by the sort and nothing is '
+      'dropped. What is dropped is the bottom row: it is never stored. After '
+      'this point the null is a list of thirty positions, and no position '
+      'belongs to any predictor.</span>')
+    w('    </div>')
+
+    # ---- averaging by position ---------------------------------------
+    w('')
+    w('    <div class="scroll-x">')
+    w('      <table class="design">')
+    w('        <thead><tr><th>top ranks</th>'
+      + ''.join(f'<th>({p - i})</th>' for i in range(n_rank)) + '</tr></thead>')
+    w('        <tbody>')
+    for m in range(n_perm):
+        order = np.argsort(raw[m], kind='stable')
+        cells = ''.join(
+            f'<td>{raw[m][order[-(i + 1)]]:.2f} '
+            f'<span class="dim">{_fj(int(order[-(i + 1)]) + 1)}</span></td>'
+            for i in range(n_rank))
+        w(f'          <tr><td class="dim">permutation {m + 1}</td>{cells}</tr>')
+    w(f'          <tr><td class="dim">&#8230; {M - n_perm} more</td>'
+      + ''.join('<td class="dim">&#8942;</td>' for _ in range(n_rank)) + '</tr>')
+    w(f'          <tr class="tot"><td>mean of all {M} '
+      '&rarr; &#928;&#772;<sub>(j)</sub></td>'
+      + ''.join(f'<td>{res["Pi_bar"][p - 1 - i]:.3f}</td>'
+                for i in range(n_rank)) + '</tr>')
+    w('        </tbody>')
+    w('      </table>')
+    w('    </div>')
+    w('')
+    top = [int(np.argmax(raw[m])) + 1 for m in range(M)]
+    counts = {j: top.count(j) for j in set(top)}
+    busiest = max(counts.values())
+    w('    <div class="note">')
+    w(f'      <span><strong>Read down a column, not across a row.</strong> The '
+      f'mean in the bottom row is taken over all {M} permutations at that one '
+      'position, which is what &ldquo;position by position&rdquo; means. The '
+      'grey labels show why it has to be done that way: the top rank is held by '
+      f'a different predictor almost every time. Over the {M} permutations all '
+      f'{len(counts)} predictors take that slot at some point, and the greediest '
+      f'manages it {busiest} times. There is no such thing as &ldquo;predictor '
+      f'{_fj(max(counts, key=counts.get))}&rsquo;s null frequency&rdquo; to '
+      'average.</span>')
+    w('    </div>')
+    return chr(10).join(o)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--seed', type=int, default=20260802)
@@ -90,6 +181,8 @@ def main():
                          'exact is the published rule; atleast is the '
                          'relaxation CLUSSO needs')
     ap.add_argument('--json', type=str, default=None)
+    ap.add_argument('--html-sort', dest='html_sort', type=str, default=None,
+                    help='write the step 2-3 sort/average tables for the docs page')
     ap.add_argument('--viz', type=str, default=None,
                     help='dump the per-step figure data for the docs page')
     args = ap.parse_args()
@@ -253,6 +346,11 @@ def main():
                                          'n_sel': float(cv_n.mean()),
                                          'hit': float(np.mean(cv_fdp <= 0.1))}
         dump['reps'] = args.reps
+
+    if args.html_sort:
+        with open(args.html_sort, 'w', encoding='utf-8') as fh:
+            fh.write(sort_tables_html(res, args.B, args.M))
+        print(f"wrote {args.html_sort}", file=sys.stderr)
 
     if args.json:
         with open(args.json, 'w') as fh:

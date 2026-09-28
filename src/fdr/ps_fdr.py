@@ -270,6 +270,7 @@ def ps_fdr(X, y, q=0.1, B=50, M=100, seed=None, n_folds=10,
       masks        (B, p)  real-arm selection indicators, one row per resample
       k            int     median support size -- the count fixed on the null arm
       Pi_null      (M, p)  permuted-arm frequencies, each row sorted ascending
+      Pi_null_raw  (M, p)  the same frequencies before sorting, by variable
       Pi_bar       (p,)    mean of Pi_null over permutations, by rank
       Z, Z_bar     (p,)    normalized real and null order statistics
       Z_null       (M, p)  normalized permuted order statistics
@@ -307,13 +308,17 @@ def ps_fdr(X, y, q=0.1, B=50, M=100, seed=None, n_folds=10,
     k_target = k_used if null_mode == 'fixed' else None
 
     Pi_null = np.zeros((M, p))
+    Pi_null_raw = np.zeros((M, p))
     for m in range(M):
         y_perm = rng.permutation(y)
         Pi_m, _ = stability_selection(X, y_perm, B=B, k_fixed=k_target, rng=rng,
                                       n_folds=n_folds, null_rule=null_rule,
                                       lam_fixed=lam_star)
-        # Sorted ascending: the null is a distribution over *ranks*, not over
-        # variable identities.  Pi_(j), never Pi_j.
+        # Keep both: the frequencies as they come out, per variable, and the
+        # sorted copy the procedure actually uses.  Sorted ascending, because
+        # the null is a distribution over *ranks*, not over variable
+        # identities.  Pi_(j), never Pi_j.
+        Pi_null_raw[m] = Pi_m
         Pi_null[m] = np.sort(Pi_m)
 
     Pi_bar = Pi_null.mean(axis=0)
@@ -355,7 +360,7 @@ def ps_fdr(X, y, q=0.1, B=50, M=100, seed=None, n_folds=10,
     return {
         'Pi': Pi, 'counts': counts, 'k': k, 'k_used': k_used, 'masks': masks,
         'lam_star': lam_star,
-        'Pi_null': Pi_null, 'Pi_bar': Pi_bar,
+        'Pi_null': Pi_null, 'Pi_null_raw': Pi_null_raw, 'Pi_bar': Pi_bar,
         'order': order,
         'Z': Z, 'Z_bar': Z_bar, 'Z_null': Z_null,
         'sweep': sweep,
