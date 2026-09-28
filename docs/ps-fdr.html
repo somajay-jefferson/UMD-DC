@@ -389,6 +389,31 @@
       Every row below is a whole stability&#8209;selection pass, not one fit. Here is permutation 1 unpacked &mdash; another 20&#8209;fit grid exactly like the one above, collapsed to one line:
     </p></div>
 
+    <div class="prose"><p>
+      Before the tables, the shape of the thing. Each level of the loop produces a
+      different object, and most of the confusion about this step is really confusion
+      about which level you are looking at.
+    </p></div>
+
+    <div class="scroll-x">
+      <table class="design">
+        <thead>
+          <tr><th>level</th><th>how many</th><th>what exists there</th><th>shape</th><th>kept?</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>one lasso fit</td><td class="dim">M &#215; B = 5,000</td><td>a selected set <math><msup><mi>S&#770;</mi><mrow><mo>(</mo><mi>b</mi><mo>,</mo><mi>m</mi><mo>)</mo></mrow></msup></math></td><td class="dim">p bits</td><td class="dim">no</td></tr>
+          <tr><td>one permutation</td><td class="dim">M = 100</td><td>selection frequencies <math><msup><mover accent="true"><mi>&#928;</mi><mo>~</mo></mover><mrow><mo>(</mo><mi>m</mi><mo>)</mo></mrow></msup></math>, then sorted</td><td class="dim">p numbers</td><td>yes</td></tr>
+          <tr><td>the null arm</td><td class="dim">1</td><td>the sorted rows, stacked</td><td class="dim">M &#215; p</td><td>yes</td></tr>
+          <tr class="here"><td>summary A</td><td class="dim">&mdash;</td><td>mean <em>down each column</em> &rarr; <math><msub><mover accent="true"><mi>&#928;</mi><mo>&#772;</mo></mover><mrow><mo>(</mo><mi>j</mi><mo>)</mo></mrow></msub></math></td><td class="dim">p numbers</td><td>places the cutoff</td></tr>
+          <tr class="here"><td>summary B</td><td class="dim">&mdash;</td><td>count of <em>all cells</em> at or above the cutoff &rarr; <math><msub><mover accent="true"><mi>e</mi><mo>^</mo></mover><mn>0</mn></msub></math></td><td class="dim">1 number</td><td>prices it</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <span><strong>Two summaries, not one.</strong> The same <math><mrow><mi>M</mi><mo>&#215;</mo><mi>p</mi></mrow></math> grid is read twice and differently. Averaging down the columns says where the bar is; counting individual cells above that bar says how many false discoveries to expect. The second never touches the first &mdash; <math><msub><mover accent="true"><mi>e</mi><mo>^</mo></mover><mn>0</mn></msub></math> goes back to the three thousand original values, not to the thirty averages.</span>
+    </div>
+
     <div class="chartbox">
       <svg id="fig-nullgrid" class="fig" viewBox="0 0 620 344" role="img"
            aria-label="The fifty bootstrap fits behind one permuted dataset, with their column totals"></svg>
@@ -820,6 +845,23 @@
 
     <div class="note">
       <span><strong>Read down a column, not across a row.</strong> The mean in the bottom row is taken over all 100 permutations at that one position, which is what &ldquo;position by position&rdquo; means. The grey labels show why it has to be done that way: the top rank is held by a different predictor almost every time. Over the 100 permutations all 30 predictors take that slot at some point, and the greediest manages it 7 times. There is no such thing as &ldquo;predictor f₃&rsquo;s null frequency&rdquo; to average.</span>
+    </div>
+
+    <div class="chartbox">
+      <svg id="fig-nullmatrix" class="fig" viewBox="0 0 620 366" role="img"
+           aria-label="The whole permuted null as a hundred by thirty grid, with one column outlined and the saturated cells marked"></svg>
+      <div class="scatter-cap">
+        <span>every permutation, every rank &mdash; 3,000 cells</span>
+        <span><i class="swatch sat"></i> reached &#928;&#771; = 1.00</span>
+      </div>
+    </div>
+
+    <div class="note">
+      <span><strong>Both summaries, on the same picture.</strong> Each row is one permutation&rsquo;s sorted frequencies; darker is more often selected. The outlined column is rank (30), and the bar beneath it is the mean of those hundred cells &mdash; 0.936, the number at the top of the null column in the table below. That is summary A, done thirty times over, once per column.</span>
+    </div>
+
+    <div class="note" style="margin-top:12px;">
+      <span><strong>Summary B is the amber.</strong> Seventeen of the three thousand cells reached <math><mrow><mover accent="true"><mi>&#928;</mi><mo>~</mo></mover><mo>=</mo><mn>1.00</mn></mrow></math> &mdash; a predictor kept by all fifty bootstraps on shuffled data. Fifteen sit at rank 30 and two at rank 29, spread over fifteen of the hundred permutations. Read that as a frequency: on roughly one shuffled dataset in seven, some pure&#8209;noise predictor was unanimous. Counting them and dividing by <math><mi>M</mi></math> gives <math><mrow><msub><mover accent="true"><mi>e</mi><mo>^</mo></mover><mn>0</mn></msub><mo>=</mo><mn>17</mn><mo>/</mo><mn>100</mn><mo>=</mo><mn>0.17</mn></mrow></math>, and against the four features the real arm puts at that level, <math><mrow><mover accent="true"><mtext>Fdr</mtext><mo>^</mo></mover><mo>=</mo><mn>0.17</mn><mo>/</mo><mn>4</mn><mo>=</mo><mn>0.043</mn></mrow></math>. The whole guarantee is those amber squares counted.</span>
     </div>
 
     <div class="prose">
