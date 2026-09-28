@@ -301,8 +301,24 @@ def html(r, probe):
       + ''.join(f'<td>{v:.2f}</td>' for v in m0) + '</tr>')
     w('          <tr class="tot"><td>sorted &mdash; by <em>rank</em></td>'
       + ''.join(f'<td>{v:.2f}</td>' for v in np.sort(m0)) + '</tr>')
+    w('          <tr><td class="dim">which predictor landed there</td>'
+      + ''.join(f'<td class="dim">{fj(int(j) + 1)}</td>'
+                for j in np.argsort(m0, kind='stable')) + '</tr>')
     w('        </tbody>')
     w('      </table>')
+    w('    </div>')
+    w('')
+    w('')
+    w('    <div class="note">')
+    w('      <span><strong>The bottom row is the part that gets thrown away.</strong> '
+      'Once sorted, a column is a <em>rank</em>, not a predictor. Column 5 of the middle '
+      f'row is not {fj(5)} &mdash; it is the fifth&#8209;smallest frequency in this '
+      f'permutation, which happens to belong to '
+      f'{fj(int(np.argsort(m0, kind="stable")[4]) + 1)}. Tracing '
+      f'{fj(5)} instead: it took {int(m0[4] * B)} of {B} fits, so '
+      f'{m0[4]:.2f}, which lands at rank '
+      f'{int(np.argsort(np.argsort(m0, kind="stable"))[4]) + 1}. Two predictors here '
+      'tie at 0.70, and which of them takes the earlier rank is arbitrary.</span>')
     w('    </div>')
     w('')
     w('    <div class="prose"><p>')
