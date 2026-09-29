@@ -147,8 +147,54 @@ def lasso_support_at_lambda(X, y, lam):
     return fit.coef_ != 0.0
 
 
+# ---------------------------------------------------------------------------
+# the estimator seam
+# ---------------------------------------------------------------------------
+#
+# PS-Fdr never inspects its estimator.  It needs a selected set back, and
+# nothing else -- which is why the paper can claim the procedure is
+# estimator-agnostic, and why substituting a different penalized estimator is
+# thinkable at all.  There are exactly four places the estimator is called, so
+# the seam is four methods wide:
+#
+#   cv_lambda(X, y, n_folds, random_state)   -> float      once, before step 1
+#   at_lambda(X, y, lam)                     -> (p,) bool  both arms, fixed_lambda
+#   support_cv(X, y, n_folds, random_state)  -> (p,) bool  real arm
+#   support_fixed_k(X, y, k, rule)           -> (p,) bool  permuted arm
+#
+# `LASSO_SELECTOR` calls exactly what this module called before the seam
+# existed, so the default path is unchanged by construction.  An alternative
+# estimator supplies the same four methods; see
+# src/fdr_clusso/clusso_ps_fdr.py.
+#
+# Nothing below indexes X beyond `X[idx]` (resample along axis 0) and
+# `X.shape[-1]` (count features), both of which mean the right thing for a 2-D
+# (n, p) design AND a 3-D (n, P, q) tensor.  So the loop does not need to know
+# which it is holding.
+
+
+class _LassoSelector:
+    """The published estimator, behind the seam."""
+
+    def cv_lambda(self, X, y, n_folds, random_state):
+        return lasso_cv_lambda(X, y, n_folds=n_folds, random_state=random_state)
+
+    def at_lambda(self, X, y, lam):
+        return lasso_support_at_lambda(X, y, lam)
+
+    def support_cv(self, X, y, n_folds, random_state):
+        return lasso_support_cv(X, y, n_folds=n_folds, random_state=random_state)
+
+    def support_fixed_k(self, X, y, k, rule):
+        return lasso_support_fixed_k(X, y, k, rule=rule)
+
+
+LASSO_SELECTOR = _LassoSelector()
+
+
 def stability_selection(X, y, B=50, k_fixed=None, rng=None, n_folds=10,
-                        return_masks=False, null_rule='exact', lam_fixed=None):
+                        return_masks=False, null_rule='exact', lam_fixed=None,
+                        selector=None):
     """
     Step 1 (and, with ``k_fixed`` set, the inner loop of step 2).
 
@@ -168,6 +214,7 @@ def stability_selection(X, y, B=50, k_fixed=None, rng=None, n_folds=10,
     rng     : numpy Generator
     return_masks : also return the (B, p) selection indicator matrix that the
               frequencies are counted from
+    selector : the estimator behind the seam; ``None`` means the lasso.
 
     Returns
     -------
@@ -176,23 +223,25 @@ def stability_selection(X, y, B=50, k_fixed=None, rng=None, n_folds=10,
     masks  : (B, p) bool, only when ``return_masks``
     """
     rng = np.random.default_rng() if rng is None else rng
+    selector = LASSO_SELECTOR if selector is None else selector
     n = X.shape[0]
+    p = X.shape[-1]
 
-    hits = np.zeros(X.shape[1])
+    hits = np.zeros(p)
     counts = np.zeros(B, dtype=int)
-    masks = np.zeros((B, X.shape[1]), dtype=bool)
+    masks = np.zeros((B, p), dtype=bool)
 
     for b in range(B):
         idx = rng.integers(0, n, size=n)
         Xb, yb = X[idx], y[idx]
 
         if lam_fixed is not None:
-            mask = lasso_support_at_lambda(Xb, yb, lam_fixed)
+            mask = selector.at_lambda(Xb, yb, lam_fixed)
         elif k_fixed is None:
-            mask = lasso_support_cv(Xb, yb, n_folds=n_folds,
-                                    random_state=int(rng.integers(0, 2**31 - 1)))
+            mask = selector.support_cv(Xb, yb, n_folds,
+                                       int(rng.integers(0, 2**31 - 1)))
         else:
-            mask = lasso_support_fixed_k(Xb, yb, k_fixed, rule=null_rule)
+            mask = selector.support_fixed_k(Xb, yb, k_fixed, null_rule)
 
         hits += mask
         masks[b] = mask
@@ -218,7 +267,7 @@ def sam_normalize(u, nu):
 
 def ps_fdr(X, y, q=0.1, B=50, M=100, seed=None, n_folds=10,
            null_mode='fixed', null_rule='exact', k_null=None,
-           keep_null_masks=0):
+           keep_null_masks=0, selector=None):
     """
     Run the whole procedure and return every intermediate quantity.
 
@@ -261,6 +310,9 @@ def ps_fdr(X, y, q=0.1, B=50, M=100, seed=None, n_folds=10,
               Supplying a larger value is how an estimator that can only clear
               a target rather than land on one gets priced: it makes the null
               arm systematically wider than the paper intends.
+    selector : the estimator behind the four-method seam above.  ``None`` means
+              the lasso, which is the published choice and leaves every number
+              this module produces unchanged.
 
     Returns
     -------
@@ -285,21 +337,23 @@ def ps_fdr(X, y, q=0.1, B=50, M=100, seed=None, n_folds=10,
     """
     X = np.asarray(X, dtype=float)
     y = np.asarray(y, dtype=float).ravel()
-    p = X.shape[1]
+    selector = LASSO_SELECTOR if selector is None else selector
+    p = X.shape[-1]
     nu = 1.0 / B
 
     rng = np.random.default_rng(seed)
 
     # One penalty for everything, chosen before any resampling begins.
-    lam_star = (lasso_cv_lambda(X, y, n_folds=n_folds,
-                                random_state=int(rng.integers(0, 2**31 - 1)))
+    lam_star = (selector.cv_lambda(X, y, n_folds,
+                                   int(rng.integers(0, 2**31 - 1)))
                 if null_mode == 'fixed_lambda' else None)
 
     # --- step 1: stability selection on the real data ---------------------
     Pi, counts, masks = stability_selection(X, y, B=B, rng=rng,
                                             n_folds=n_folds,
                                             return_masks=True,
-                                            lam_fixed=lam_star)
+                                            lam_fixed=lam_star,
+                                            selector=selector)
 
     # The number of variables the null arm is forced to select.  Median, not
     # mean: the paper wants a typical CV-tuned support size, and the bootstrap
@@ -318,7 +372,7 @@ def ps_fdr(X, y, q=0.1, B=50, M=100, seed=None, n_folds=10,
         want_masks = m < keep_null_masks
         out = stability_selection(X, y_perm, B=B, k_fixed=k_target, rng=rng,
                                   n_folds=n_folds, null_rule=null_rule,
-                                  lam_fixed=lam_star,
+                                  lam_fixed=lam_star, selector=selector,
                                   return_masks=want_masks)
         if want_masks:
             Pi_m, _, masks_m = out
