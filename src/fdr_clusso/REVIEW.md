@@ -260,6 +260,96 @@ that invalidates a lot of work.
 
 ---
 
+## 8. The permuted-arm rule changed again, and sections 5 and 6 are stale
+
+**Where:** `clusso_select.py:clusso_support_exact_k`, `clusso_ps_fdr.py`,
+`stage4_clusso_fdr.py`
+
+**This section supersedes section 5.** Everything above it was written before
+stage 3 ran. Read this first, then section 5 for the history.
+
+**What happened.** Section 5 argued for relaxing PS-Fdr's exact-k to a floor,
+because CLUSSO can clear a bar but cannot land on a number. Stage 3 measured
+what that costs and **it failed**: `stage3.json` records power 0.688 -> 0.565 at
+delta=3, against a gate allowing -0.05. FDR control was never the problem; the
+floor overshoots, the overshoot makes the null stronger than requested, and a
+stronger null costs detections.
+
+**The fix, and it was sitting in the paper the whole time.** Keep the floor, then
+**truncate to the k largest coefficients**. That is not a workaround invented
+here -- it is what `ps_fdr.lasso_support_fixed_k` already does when a path step
+overshoots k (`ps_fdr.py:112-113`). The lasso needs it rarely, because the path
+gives fine-grained control; `stage3.json`'s `part_a` found `exact`, `atleast` and
+`nearest` differ on 0 of 120 lasso cohorts. CLUSSO needs it constantly. Same
+rule, different bite.
+
+**What that retires, and it is more than it looks:**
+
+- Section 5's whole premise. "CLUSSO cannot land on a number" is true of the
+  fit and false of the selection rule, once truncation is allowed.
+- Stage 2's non-monotonicity. We never needed lambda -> support size to be
+  invertible. We needed it to clear a bar once, which it does.
+- The fineness of `DEFAULT_LAMBDA_GRID`. Overshoot is free now, so the grid
+  could be coarsened for speed at no cost in accuracy. Not done yet; `mean_fits`
+  in `stage4.json` is the number that would justify it.
+
+**What it does NOT retire, and this is the one to watch.** Grid exhaustion. If
+the scan reaches the dense end without ever clearing k, the support comes back
+SHORT. That makes `e0` too small and `Fdr-hat` too small -- **anti-conservative**,
+and it does not announce itself. Truncation does nothing about this. Section 5's
+warning stands unchanged, `info['exhausted']` still flags it, `check.py` c8 still
+verifies it is never silent, and `stage4_clusso_fdr.py` **gates** on the rate
+rather than merely printing it.
+
+**`fixed_lambda` survived as a comparison arm.** One CV-tuned lambda everywhere,
+nothing targeting a count. It passed on the lasso (`stage3b.json`) and it is much
+cheaper -- one fit per resample instead of a scan. But it is a *deviation* from
+the published procedure, and "we ported the published rule" is a defensible
+sentence where "we changed the procedure and it seemed fine" is not. So exact-k
+is arm A and gates; `fixed_lambda` is arm B and only reports. If they agree, the
+count-fixing device was not load-bearing for CLUSSO. If they diverge, the gap is
+the measurement.
+
+**Two things I rejected, so they do not get re-proposed:**
+
+*Retrying different initialisations until one hits k.* Determinism is not the
+objection -- `alpha_starts` is a fixed nested sequence, so ordered retries stay
+pure. **Comparability** is. `clusso_fit_multistart` currently picks the start
+with the best objective; picking the start with the right *count* instead would
+let the null arm settle into materially worse stationary points purely because
+they had k nonzeros. The null arm's fits would then be drawn from a different
+region of the solution space than the real arm's -- a second asymmetry stacked on
+the one the paper already tolerates (real arm tunes lambda by CV, null arm sets
+it by count). Truncation removes the need anyway.
+
+*Warm-starting the lambda scan from the previous resample's answer.* It would
+roughly halve arm A's cost. It would also make resample 7's answer depend on
+resamples 1-6, so the selection rule would stop being a fixed function of the
+data -- which is the exact property `stage1_noise.py` exists to establish and
+Meinshausen-Bühlmann's framework requires. Not worth it. The scan cost is
+bounded and measured.
+
+**One thing I added that the lasso version does not have.** The truncation sort
+is `kind='stable'`. `bet` comes back L1-normalised and then hard-cut at 0.001
+inside `Mainfunction_albet`, which piles surviving coefficients near the
+threshold and makes exact ties ordinary rather than exotic. numpy's default
+quicksort would break those ties on array order, which is not data. The lasso
+version at `:113` does not ask for stability, but it is not sorting
+normalised-then-cut coefficients. `check.py` c13 pins it.
+
+**Section 6 is also stale, in a smaller way.** It reports the 0.001 threshold as
+a diagnostic finding. Truncation now ranks features *by* those same coefficients,
+so the cut is no longer only deciding the support -- it is also deciding which
+features survive truncation. That raises the stakes on section 6's "real fix"
+(parameterising the threshold, which means editing `src/core/`) without settling
+it. `stage4_clusso_fdr.py` reports the binding rate per run.
+
+**What would prove this wrong:** a material `exhausted_rate` in `stage4.json`, or
+arm A and arm B disagreeing in a direction that says the truncation is throwing
+away the wrong features. Both are printed. Neither is argued.
+
+---
+
 ## Open questions
 
 1. ~~Is the objective-gap gate criterion defensible?~~ **Settled by measurement,
