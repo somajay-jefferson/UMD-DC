@@ -52,9 +52,9 @@ CORE_BETA_THRESH = 0.001
 #
 # Measured in stage1_noise.py (n=300, q=50): a single pinned start lands in
 # materially worse optima -- median objective gap +2.95 against best-of-100
-# random starts. The five-point arc grid closes that to +0.0027, and going to
-# nine buys nothing further. So one start is deterministic but not good enough,
-# and five is the cheapest setting that is both.
+# random starts. The five-point arc grid closes that to +0.00068, and going to
+# nine buys nothing further (+0.00068 as well). So one start is deterministic but
+# not good enough, and five is the cheapest setting that is both.
 DEFAULT_N_STARTS = 5
 
 
@@ -409,9 +409,11 @@ def clusso_support_at_least_k(X, y, k, lambda_grid=None,
 
     if k <= 0:
         return (np.zeros(q, dtype=bool),
-                {'lam': None, 'k_realised': 0, 'exhausted': False, 'n_fits': 0})
+                {'lam': None, 'k_realised': 0, 'exhausted': False, 'n_fits': 0,
+                 'bet': np.zeros(q)})
 
     best_mask = np.zeros(q, dtype=bool)
+    best_bet = np.zeros(q)
     best_lam = None
     n_fits = 0
 
@@ -421,11 +423,97 @@ def clusso_support_at_least_k(X, y, k, lambda_grid=None,
         mask = support_mask(fit['bet'], tau=tau)
 
         if mask.sum() > best_mask.sum():
-            best_mask, best_lam = mask, float(lam)
+            best_mask, best_bet, best_lam = mask, fit['bet'], float(lam)
 
         if mask.sum() >= k:
             return mask, {'lam': float(lam), 'k_realised': int(mask.sum()),
-                          'exhausted': False, 'n_fits': n_fits}
+                          'exhausted': False, 'n_fits': n_fits,
+                          'bet': fit['bet']}
 
     return best_mask, {'lam': best_lam, 'k_realised': int(best_mask.sum()),
-                       'exhausted': True, 'n_fits': n_fits}
+                       'exhausted': True, 'n_fits': n_fits, 'bet': best_bet}
+
+
+def clusso_support_exact_k(X, y, k, lambda_grid=None,
+                           n_starts=DEFAULT_N_STARTS, tau=0.0):
+    """
+    Permuted-arm rule: a support of size EXACTLY k.
+
+    This is the published rule, ported. PS-Fdr pins the permuted arm at k so the
+    two arms compete for a comparable L1 budget. A lasso hits k by walking its
+    path to the first step with k nonzeros and, if that step overshoots, keeping
+    the k largest coefficients (ps_fdr.lasso_support_fixed_k, rule='exact').
+
+    CLUSSO has no path, so the walk is a grid scan -- but the truncation carries
+    over unchanged, and that is what makes exactness reachable. Any lambda giving
+    AT LEAST k will do, because the cut down to k happens afterwards. So the
+    scan's overshoot, which `clusso_support_at_least_k` could only report and
+    stage3_relax_k.py measured as costing 0.12 power, simply stops existing.
+
+    Two consequences worth stating:
+
+      The lambda grid no longer has to be fine. Overshoot is free now, so a
+      coarser grid costs accuracy nowhere and buys fits everywhere.
+
+      Stage 2's non-monotonicity stops mattering. We never needed the map from
+      lambda to support size to be invertible; we needed it to clear a bar once.
+
+    What truncation does NOT fix is the grid running out before reaching k. The
+    support then comes back SHORT, which makes e0 too small and Fdr-hat too
+    small -- anti-conservative, and silent unless someone looks.
+    ``info['exhausted']`` is that look, and callers must report its rate.
+
+    Returns ``(mask, info)``. ``info`` carries ``lam``, ``k_realised`` (the size
+    AFTER truncation), ``k_before_truncation``, ``exhausted`` and ``n_fits``.
+    """
+    mask, info = clusso_support_at_least_k(X, y, k, lambda_grid=lambda_grid,
+                                           n_starts=n_starts, tau=tau)
+    k = int(k)
+    bet = np.abs(np.asarray(info['bet'], dtype=float).ravel())
+    n_before = int(mask.sum())
+
+    if n_before > k:
+        sel = np.flatnonzero(mask)
+        # Stable sort, deliberately. `bet` is L1-normalised and then hard-cut at
+        # 0.001 inside Mainfunction_albet, which piles surviving coefficients up
+        # near the threshold and makes exact ties plausible. An unstable sort
+        # would break those ties on array order rather than on the data, and the
+        # selection rule has to be a pure function of the data -- that is the
+        # whole premise stage1_noise.py established. numpy's default quicksort
+        # gives no such guarantee; the lasso version at ps_fdr.py:113 does not
+        # ask for one either, but it is not operating on normalised-then-cut
+        # coefficients.
+        keep = sel[np.argsort(-bet[sel], kind='stable')[:k]]
+        mask = np.zeros_like(mask)
+        mask[keep] = True
+
+    out = dict(info)
+    out['k_before_truncation'] = n_before
+    out['k_realised'] = int(mask.sum())
+    return mask, out
+
+
+def clusso_cv_lambda(X, y, lambda_grid=None, n_folds=5, rng=None,
+                     n_starts=DEFAULT_N_STARTS):
+    """
+    The penalty CV picks on this data, and nothing else.
+
+    Mirrors ``ps_fdr.lasso_cv_lambda``. Used to choose ONE lambda up front,
+    outside any resampling, for ``null_mode='fixed_lambda'`` -- so that lambda
+    only ever means "predict well" and never doubles as a cardinality knob.
+
+    ``rng=None`` gives `make_folds` contiguous folds, which keeps this pure and
+    matches what stages 1 and 2 already do.
+    """
+    fit = clusso_fit_cv(X, y, lambda_grid=lambda_grid, n_folds=n_folds,
+                        rng=rng, n_starts=n_starts)
+    return float(fit['lam'])
+
+
+def clusso_support_at_lambda(X, y, lam, n_starts=DEFAULT_N_STARTS, tau=0.0):
+    """
+    Support at a penalty fixed from outside -- no tuning, no scan, no target
+    size. One fit. Mirrors ``ps_fdr.lasso_support_at_lambda``.
+    """
+    fit = clusso_fit_multistart(X, y, lam, n_starts=n_starts)
+    return support_mask(fit['bet'], tau=tau)

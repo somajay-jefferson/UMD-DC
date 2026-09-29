@@ -34,10 +34,13 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
 from Mainfunction_albet import Mainfunction_albet          # noqa: E402
 from SLasso_MSE import CV_make_folds, slasso_mse           # noqa: E402
 
+from clusso_ps_fdr import ClussoSelector, to_clusso, to_ps_fdr  # noqa: E402
 from clusso_select import (DEFAULT_N_STARTS, _score_fold, alpha_starts,
                            clusso_fit, clusso_fit_cv,
                            clusso_fit_multistart, clusso_objective,
+                           clusso_support_at_lambda,
                            clusso_support_at_least_k, clusso_support_cv,
+                           clusso_support_exact_k,
                            cv_mse, make_folds, support_mask)   # noqa: E402
 
 
@@ -348,6 +351,90 @@ def c10_recovers_signal_and_rejects_noise():
     return f'{found}/5 real found; {kn} selected from pure noise'
 
 
+def c12_tensor_axis_order():
+    """
+    The adapter's transpose is the one genuinely easy thing to get wrong in the
+    composition. clusso_select speaks (P, q, n); ps_fdr resamples along axis 0
+    and counts features with shape[-1], so it needs (n, P, q). Getting it
+    backwards would not crash -- P=2 and q=25 are both valid axis lengths -- it
+    would silently regress on the wrong thing.
+
+    So: round-trip the transpose, and check the seam returns what a direct call
+    on the native tensor returns.
+    """
+    X, y, _ = toy(seed=3)
+    P, q, n = X.shape
+
+    if to_ps_fdr(X).shape != (n, P, q):
+        raise AssertionError(f'to_ps_fdr gave {to_ps_fdr(X).shape}, want {(n, P, q)}')
+    if not np.array_equal(to_clusso(to_ps_fdr(X)), X):
+        raise AssertionError('transpose does not round-trip')
+
+    sel = ClussoSelector()
+    Xp = to_ps_fdr(X)
+
+    # ps_fdr counts features off the last axis; that has to be q, not n.
+    if Xp.shape[-1] != q:
+        raise AssertionError(f'ps_fdr would read p={Xp.shape[-1]}, want q={q}')
+
+    for lam in (0.5, 3.0):
+        direct = clusso_support_at_lambda(X, y, lam)
+        seam = sel.at_lambda(Xp, y, lam)
+        if not np.array_equal(direct, seam):
+            raise AssertionError(f'seam disagrees with direct call at lam={lam}')
+
+    # And a resample: ps_fdr does X[idx] on axis 0, which must pick subjects.
+    idx = np.arange(0, n, 2)
+    direct = clusso_support_at_lambda(X[:, :, idx], y[idx], 1.0)
+    seam = sel.at_lambda(Xp[idx], y[idx], 1.0)
+    if not np.array_equal(direct, seam):
+        raise AssertionError('axis-0 resample does not select subjects')
+
+    return f'(P,q,n)={X.shape} -> (n,P,q)={Xp.shape}, agrees on 3 calls'
+
+
+def c13_exact_k_contract():
+    """
+    `clusso_support_exact_k` must land on k exactly, or say it could not.
+
+    The floor it is built on can only overshoot; truncation is what converts
+    that into the published rule. Three things have to hold, and the third is
+    the one that would rot silently: the rule must be a pure function of the
+    data, which needs the truncation sort to be stable, because `bet` is
+    L1-normalised and then hard-cut at 0.001 and near-ties are ordinary.
+    """
+    X, y, _ = toy(seed=4)
+    seen_truncation = False
+
+    for k in (2, 4, 6, 9, 12):
+        mask, info = clusso_support_exact_k(X, y, k)
+        floor_mask, _ = clusso_support_at_least_k(X, y, k)
+
+        if info['exhausted']:
+            if int(mask.sum()) >= k:
+                raise AssertionError(
+                    f'k={k}: flagged exhausted but returned {int(mask.sum())} >= k')
+        elif int(mask.sum()) != k:
+            raise AssertionError(
+                f'k={k}: got {int(mask.sum())} selected, want exactly {k}')
+
+        if (mask & ~floor_mask).any():
+            raise AssertionError(f'k={k}: truncation invented a feature')
+
+        if info['k_before_truncation'] > k:
+            seen_truncation = True
+
+        again, _ = clusso_support_exact_k(X, y, k)
+        if not np.array_equal(mask, again):
+            raise AssertionError(f'k={k}: not deterministic on repeat')
+
+    if not seen_truncation:
+        raise AssertionError('no target overshot, so truncation was never '
+                             'exercised -- this check proved nothing')
+
+    return 'exact on 5 targets, subset of the floor, stable on repeat'
+
+
 def main():
     check('parity   clusso_fit is Mainfunction_albet', c1_fit_is_passthrough)
     check('parity   _score_fold == slasso_mse', c2_score_fold_matches_slasso_mse)
@@ -360,6 +447,8 @@ def main():
     check('contract at_least_k reaches k or flags', c8_at_least_k_contract)
     check('contract objective non-increasing in n_starts', c9_multistart_never_worse)
     check('contract alpha_starts nested and exact', c11_alpha_starts_nested_and_exact)
+    check('contract exact_k lands on k or flags', c13_exact_k_contract)
+    check('wiring   tensor axis order through the seam', c12_tensor_axis_order)
     check('sanity   finds signal, rejects pure noise',
           c10_recovers_signal_and_rejects_noise)
 
