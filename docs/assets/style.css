@@ -847,3 +847,32 @@
 
   .todolist { margin: 26px 0 0; padding-left: 20px; }
   .todolist li { margin-bottom: 12px; font-size: 16px; }
+
+  /* ---- stage 4 result block, fdr-clusso.html -------------------------------
+     The site already reads slate as "holds" and amber as "does not"
+     (.panel.good / .panel.bad), so these reuse that vocabulary rather than
+     introducing a second one. */
+  .fdpstrip {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin: 14px 0 0; padding: 0;
+  }
+  .fdpstrip .good, .fdpstrip .bad {
+    font-family: var(--mono); font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    padding: 2px 7px; border-radius: 2px;
+  }
+  .fdpstrip .good { background: var(--slate-soft); color: var(--slate); }
+  .fdpstrip .bad  { background: var(--amber-soft); color: var(--amber); }
+
+  table.alpha td.ok  { color: var(--slate); font-weight: 600; }
+  table.alpha td.bad { color: var(--amber); font-weight: 600; }
+
+  .tag.done { background: var(--slate-soft); color: var(--slate); }
+
+  .obstacle.retired .rank { text-decoration: line-through; opacity: 0.6; }
+  .obstacle.retired h4 s  { color: var(--muted); }
+  .obstacle.retired p.dim {
+    font-family: var(--sans); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--muted); margin: 20px 0 6px;
+  }
