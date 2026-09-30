@@ -126,7 +126,15 @@ def main():
     ap.add_argument('--q-features', type=int, default=50)
     ap.add_argument('--sparsity', type=float, default=0.8)
     ap.add_argument('--arm', choices=('a', 'b', 'both'), default='both')
-    ap.add_argument('--jobs', type=int, default=-1)
+    # -1 is joblib's "every LOGICAL core", which oversubscribes SMT siblings.
+    # Measured on a Ryzen 5 5600 (6 physical / 12 logical): 12 workers ran each
+    # fit 2.5x slower than 4 and bought only ~16% total throughput, because this
+    # workload is compute-dense rather than latency-bound. Prefer one worker per
+    # PHYSICAL core.
+    ap.add_argument('--jobs', type=int, default=-1,
+                    help='worker processes. NOTE -1 means every logical core; '
+                         'on an SMT machine pass the physical core count '
+                         'instead, which is usually half that')
     ap.add_argument('--seed', type=int, default=20260929)
     ap.add_argument('--exhausted-max', type=float, default=0.02,
                     help='gate: max tolerable rate of lambda-grid exhaustion '
@@ -149,7 +157,11 @@ def main():
           f'sparsity={args.sparsity}, B={args.B} M={args.M}, target q={Q}')
     print('  CLUSSO inside PS-Fdr, clustering frozen once per cohort\n')
 
-    per_cohort = Parallel(n_jobs=args.jobs, verbose=0)(
+    # verbose=10 so a long run reports progress instead of going silent for
+    # hours. A 20-cohort run at n=300 q=50 is ~175 min of worker time PER
+    # cohort -- the real arm alone runs a 40-lambda x 5-fold CV inside each of
+    # the B resamples, which is 41s x 50 -- so silence is not a viable default.
+    per_cohort = Parallel(n_jobs=args.jobs, verbose=10)(
         delayed(one_cohort)(s, args.B, args.M, args.n, args.q_features,
                             args.sparsity, arms)
         for s in seeds)
