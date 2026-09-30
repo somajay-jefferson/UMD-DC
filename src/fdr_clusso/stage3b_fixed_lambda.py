@@ -61,16 +61,22 @@ from ps_fdr import fdp_power, ps_fdr                       # noqa: E402
 from PS_Fdr_Data_Example import BETA_STAR, make_data       # noqa: E402
 
 Q = 0.1
-MODES = ('fixed', 'cv', 'fixed_lambda')
+# 'cv' is the paper's known-bad variant, kept as a calibration arm. It is by
+# far the most expensive of the three -- a full LassoCV inside every one of the
+# M*B permuted fits -- and its behaviour on this exact cohort is already
+# reported on docs/ps-fdr.html (null top 0.801 vs 0.936, six features selected,
+# realised FDP 0.167 against a promised 0.10). So it is off by default.
+ALL_MODES = ('fixed', 'cv', 'fixed_lambda')
+MODES = ('fixed', 'fixed_lambda')
 
 
-def one_cohort(seed, B, M, q=Q):
+def one_cohort(seed, B, M, modes, q=Q):
     rng = np.random.default_rng(seed)
     X, y = make_data(rng)
     truth = BETA_STAR != 0
 
     out = {}
-    for mode in MODES:
+    for mode in modes:
         res = ps_fdr(X, y, q=q, B=B, M=M, seed=seed, null_mode=mode)
         fdp, power = fdp_power(res['selected'], truth)
         out[mode] = {
@@ -92,6 +98,9 @@ def main():
     ap.add_argument('--M', type=int, default=100)
     ap.add_argument('--jobs', type=int, default=-1)
     ap.add_argument('--seed', type=int, default=20260902)
+    ap.add_argument('--with-cv', action='store_true',
+                    help="also run the paper's known-bad 'cv' arm as a "
+                         'calibration reference (slow)')
     ap.add_argument('--quick', action='store_true')
     ap.add_argument('--json', type=str, default=None)
     args = ap.parse_args()
@@ -101,19 +110,20 @@ def main():
 
     from joblib import Parallel, delayed
 
+    modes = ALL_MODES if args.with_cv else MODES
     truth = BETA_STAR != 0
     seeds = [args.seed + i for i in range(args.reps)]
-    print(f'{args.reps} cohorts x {len(MODES)} null modes, '
+    print(f'{args.reps} cohorts x {len(modes)} null modes, '
           f'B={args.B} M={args.M}, q={Q}')
     print(f'  {int(truth.sum())} real features of {truth.size}, plain lasso\n')
 
     per_cohort = Parallel(n_jobs=args.jobs, verbose=0)(
-        delayed(one_cohort)(s, args.B, args.M) for s in seeds)
+        delayed(one_cohort)(s, args.B, args.M, modes) for s in seeds)
 
     print(f'  {"null mode":>13} {"mean FDP":>9} {"power":>7} {"mean |S|":>9} '
           f'{"FDP<=q":>7} {"null top":>9}')
     out = {}
-    for mode in MODES:
+    for mode in modes:
         runs = [c[mode] for c in per_cohort]
         fdp = np.array([r['fdp'] for r in runs])
         pw = np.array([r['power'] for r in runs])
@@ -128,19 +138,21 @@ def main():
         print(f'  {mode:>13} {r["fdp"]:>9.3f} {r["power"]:>7.3f} '
               f'{r["n_sel"]:>9.2f} {r["hit_rate"]:>7.3f} {r["null_top"]:>9.3f}')
 
-    f, c, fl = out['fixed'], out['cv'], out['fixed_lambda']
+    f, fl = out['fixed'], out['fixed_lambda']
+    c = out.get('cv')
 
     print('\n' + '=' * 72)
     print(f'  target q = {Q}.  FDP is the promise; power is what it costs.')
     print(f'    paper (fixed)        FDP {f["fdp"]:.3f}   power {f["power"]:.3f}')
-    print(f'    known-bad (cv)       FDP {c["fdp"]:.3f}   power {c["power"]:.3f}')
+    if c:
+        print(f'    known-bad (cv)       FDP {c["fdp"]:.3f}   power {c["power"]:.3f}')
     print(f'    one lambda           FDP {fl["fdp"]:.3f}   power {fl["power"]:.3f}')
     print()
 
     # Where does fixed_lambda sit between the good and bad arms? 0 = on the
     # paper's rule, 1 = as bad as the variant the paper rejects.
-    span = c['fdp'] - f['fdp']
-    pos = (fl['fdp'] - f['fdp']) / span if abs(span) > 1e-9 else 0.0
+    span = (c['fdp'] - f['fdp']) if c else 0.0
+    pos = (fl['fdp'] - f['fdp']) / span if abs(span) > 1e-9 else float('nan')
 
     ok_fdp = fl['fdp'] <= Q and fl['fdp'] <= f['fdp'] + 0.02
     better_power = fl['power'] >= f['power'] - 0.05
@@ -162,8 +174,8 @@ def main():
         print('        if the compute saving matters more than the detection.')
 
     print(f'\n  diagnostic: mean top-ranked null frequency')
-    print(f'    fixed {f["null_top"]:.3f}   cv {c["null_top"]:.3f}   '
-          f'one lambda {fl["null_top"]:.3f}')
+    cv_bit = f'   cv {c["null_top"]:.3f}' if c else ''
+    print(f'    fixed {f["null_top"]:.3f}{cv_bit}   one lambda {fl["null_top"]:.3f}')
     print('    a LOWER null top means a weaker bar, which is how the invalid')
     print('    variant over-selects. Compare one lambda against both.')
     print('=' * 72)
