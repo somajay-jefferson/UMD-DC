@@ -350,6 +350,76 @@ away the wrong features. Both are printed. Neither is argued.
 
 ---
 
+## 9. A coarser ladder for the permuted arm, and a warm start that failed
+
+**Where:** `clusso_select.py:NULL_LAMBDA_GRID`, `clusso_ps_fdr.py:ClussoSelector`
+
+The scan is the dominant cost of the whole composition: `M*B` = 5,000 scans per
+cohort, each walking down a lambda ladder fitting at every rung. A 20-cohort run
+at the default regime took **19 hours** and was still going. Two things were
+tried.
+
+### Adopted: the permuted arm gets 13 rungs instead of 40
+
+Overshoot is free now that `clusso_support_exact_k` truncates, so the ladder no
+longer has to be fine. Measured end to end on one cohort (n=200, q=40, B=10,
+M=10), fine grid against coarse:
+
+        grid          fits/target   null_top   |S|    fdp   power
+        fine (40)         15.9        0.880      8   0.000  1.000
+        coarse (13)        5.9        0.880      8   0.000  1.000
+
+**2.7x fewer fits and identical output** -- same `null_top` to three decimals,
+same selected set, same FDP and power. At production B=50 M=100 the null arm
+dominates, so this is roughly 2.2x end to end.
+
+Why identical rather than merely close: the permuted arm's output is `Pi_bar`, a
+curve over sorted RANKS. Permuting y destroys feature identity, which is why
+`ps_fdr` sorts every permutation before averaging. The null arm needs the right
+shape, not the right features. **The real arm keeps the fine grid**, because
+there identity does matter.
+
+**Not a deviation from He et al.** The paper has no lambda grid -- `lars_path`
+gives exact breakpoints, so there is nothing to discretize. The grid is our
+artifact for coping with CLUSSO's missing path, and its resolution sits below
+the level the paper specifies.
+
+### Rejected by measurement: warm-starting the scan
+
+Continuation is standard -- glmnet warm-starts down its own path. Within one
+scan it is also legal here, since the chain never leaves a single call, so the
+rule stays a pure function of that resample's data. (Warm-starting ACROSS
+resamples is the thing section 8 rejects, and for a different reason.)
+
+Tried both ways, on the expensive cohort under null-arm conditions, over the
+first 7 rungs:
+
+        mode        fits   mean objective vs cold
+        cold          35        +0.0000
+        extra         41        +0.0000      <- 17% more work, zero gain
+        warm-only     11     +1985 to +4916  <- far worse optima
+
+As an **extra** candidate the warm start never won once against the five arc
+starts, so it bought nothing and cost a sixth fit per rung. As a **replacement**
+it was catastrophic: for scale, section 1 rejected a single cold start over a
+gap of **+2.95**, and this is three orders of magnitude worse.
+
+The reason is section 1's own argument. At P=2 the L1-normalisation collapses
+the initialisation space to two one-parameter arcs, and the five-point grid
+already covers them -- there is no unexplored basin for a warm start to reach.
+Warm-only is bad because it abandons multistart to track one branch, which
+drifts into a poor stationary point as lambda moves.
+
+**Not shipped.** Section 7 criticises `coefficient.py` for being code nothing
+exercises; a `warm_start` parameter defaulted off would be the same fault.
+
+**What would change this:** P > 2. The arc-coverage argument is specific to two
+clusters, and with a larger initialisation space a warm start could plausibly
+reach basins the fixed grid misses. Worth re-measuring before any three-cluster
+variant, not before.
+
+---
+
 ## Open questions
 
 1. ~~Is the objective-gap gate criterion defensible?~~ **Settled by measurement,

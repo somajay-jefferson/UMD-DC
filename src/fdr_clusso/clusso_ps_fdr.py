@@ -31,7 +31,8 @@ sys.path.insert(0, os.path.join(_HERE, '..', 'fdr'))
 from ps_fdr import ps_fdr                                   # noqa: E402
 
 from clusso_select import (DEFAULT_LAMBDA_GRID, DEFAULT_N_STARTS,  # noqa: E402
-                           clusso_cv_lambda, clusso_support_at_lambda,
+                           NULL_LAMBDA_GRID, clusso_cv_lambda,
+                           clusso_support_at_lambda,
                            clusso_support_at_least_k, clusso_support_cv,
                            clusso_support_exact_k)
 
@@ -60,9 +61,17 @@ class ClussoSelector:
     """
 
     def __init__(self, lambda_grid=None, n_starts=DEFAULT_N_STARTS, tau=0.0,
-                 n_folds=5):
+                 n_folds=5, null_lambda_grid=None):
         self.lambda_grid = (DEFAULT_LAMBDA_GRID if lambda_grid is None
                             else np.asarray(lambda_grid, dtype=float))
+        # The permuted arm walks a COARSER ladder than the real arm. Safe only
+        # because truncation cuts back to exactly k however far the scan
+        # overshot, and immaterial because the null arm's output is a curve over
+        # sorted RANKS rather than a list of features -- see NULL_LAMBDA_GRID in
+        # clusso_select.py. The real arm keeps the fine grid, where identity
+        # does matter.
+        self.null_lambda_grid = (NULL_LAMBDA_GRID if null_lambda_grid is None
+                                 else np.asarray(null_lambda_grid, dtype=float))
         self.n_starts = n_starts
         self.tau = tau
         self.n_folds = n_folds
@@ -98,13 +107,13 @@ class ClussoSelector:
     def support_fixed_k(self, X, y, k, rule):
         if rule == 'exact':
             mask, info = clusso_support_exact_k(
-                to_clusso(X), y, k, lambda_grid=self.lambda_grid,
+                to_clusso(X), y, k, lambda_grid=self.null_lambda_grid,
                 n_starts=self.n_starts, tau=self.tau)
             if info['k_before_truncation'] > int(k):
                 self.n_truncated += 1
         elif rule == 'atleast':
             mask, info = clusso_support_at_least_k(
-                to_clusso(X), y, k, lambda_grid=self.lambda_grid,
+                to_clusso(X), y, k, lambda_grid=self.null_lambda_grid,
                 n_starts=self.n_starts, tau=self.tau)
         else:
             raise ValueError(

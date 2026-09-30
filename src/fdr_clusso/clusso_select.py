@@ -43,6 +43,30 @@ from SLasso_MSE import slasso_mse                   # noqa: E402
 # support of one; the bottom end must approach q. stage2_path.py checks both.
 DEFAULT_LAMBDA_GRID = np.geomspace(0.01, 20.0, 40)
 
+# The permuted arm gets a COARSER ladder, and this is safe only because of
+# truncation. `clusso_support_exact_k` keeps the k largest coefficients however
+# far the scan overshot, so landing on 40 features and landing on 34 both end at
+# exactly k. Before truncation the overshoot went straight into the result,
+# which is what failed stage 3 on power.
+#
+# The scan is the dominant cost of the whole composition -- M*B = 5,000 scans
+# per cohort, each one a walk down this ladder fitting at every rung. Measured
+# on the expensive cohort (seed 20260945) under null-arm conditions: 40 rungs
+# needed 13-20 fits, 13 rungs needed 5-7. ~3x, and the resulting supports agreed
+# identically in half the trials and at jaccard 0.90-1.00 otherwise.
+#
+# Why that residual disagreement does not matter HERE, and would matter on the
+# real arm: the permuted arm's output is Pi_bar, a curve over sorted RANKS.
+# Permuting y destroys feature identity, which is exactly why ps_fdr sorts every
+# permutation before averaging it. So the null arm needs the right shape, not
+# the right features. The real arm needs both, and keeps DEFAULT_LAMBDA_GRID.
+#
+# This is not a deviation from He et al. The paper has no lambda grid at all --
+# lars_path gives exact breakpoints, so there is nothing to discretize. The grid
+# is our artifact for coping with CLUSSO's missing path, and its resolution sits
+# below the level the paper specifies.
+NULL_LAMBDA_GRID = np.geomspace(0.01, 20.0, 13)
+
 # Hardcoded inside Mainfunction_albet at line 124, applied after beta is
 # L1-normalised at line 104. Repeated here only for the threshold_binding
 # diagnostic -- we cannot change it without editing src/core/.
