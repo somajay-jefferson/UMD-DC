@@ -23,7 +23,7 @@
 import warnings
 
 import numpy as np
-from sklearn.linear_model import LassoCV, lars_path
+from sklearn.linear_model import Lasso, LassoCV, lars_path
 
 
 def _standardize(X, y):
@@ -50,7 +50,7 @@ def lasso_support_cv(X, y, n_folds=10, random_state=None):
     return fit.coef_ != 0.0
 
 
-def lasso_support_fixed_k(X, y, k):
+def lasso_support_fixed_k(X, y, k, rule='exact'):
     """
     Support of size ``k``: walk the lasso path down in lambda and stop at the
     first point where k variables are active.
@@ -66,9 +66,30 @@ def lasso_support_fixed_k(X, y, k):
     would report.  Where the path steps straight past k, the k largest
     coefficients at the first step above k are kept.
 
-    Returns a boolean mask of length p with at most k true entries (fewer only
-    if the path ends before reaching size k).
+    ``rule`` selects how the target size is enforced.  ``'exact'`` is the
+    published rule and the default; nothing changes unless it is overridden.
+
+      exact    truncate to the k largest coefficients when the path steps past
+               k.  What the paper specifies.
+      atleast  keep the whole support at that step, even if it overshoots k.
+               The relaxation CLUSSO needs, since CLUSSO has no path and can
+               clear a target size but cannot land on one.
+      nearest  take whichever step on the path has ``|nnz - k|`` smallest, and
+               keep it whole.  A middle option: it can undershoot, which
+               ``atleast`` never does, but it overshoots less.
+
+    Why a floor rather than a ceiling is the safe relaxation: the failure the
+    fixed count exists to prevent is the permuted arm selecting too FEW, which
+    shrinks e0 and hence Fdr-hat.  Overshoot makes the null stronger, so it
+    costs power rather than validity.  ``nearest`` gives that up in exchange for
+    a tighter match, which is exactly what this comparison is meant to price.
+
+    Returns a boolean mask of length p.  Under ``'exact'`` it has at most k true
+    entries (fewer only if the path ends before reaching size k); under the
+    other rules it may have more.
     """
+    if rule not in ('exact', 'atleast', 'nearest'):
+        raise ValueError(f"rule must be exact, atleast or nearest, got {rule!r}")
     p = X.shape[1]
     mask = np.zeros(p, dtype=bool)
     if k <= 0:
@@ -80,20 +101,100 @@ def lasso_support_fixed_k(X, y, k):
         _, _, coefs = lars_path(Xs, ys, method='lasso', return_path=True)
 
     nnz = (coefs != 0).sum(axis=0)
-    reached = np.flatnonzero(nnz >= k)
-    step = int(reached[0]) if reached.size else int(np.argmax(nnz))
+    if rule == 'nearest':
+        step = int(np.argmin(np.abs(nnz - k)))
+    else:
+        reached = np.flatnonzero(nnz >= k)
+        step = int(reached[0]) if reached.size else int(np.argmax(nnz))
 
     beta = coefs[:, step]
     support = np.flatnonzero(beta)
-    if support.size > k:
+    if rule == 'exact' and support.size > k:
         support = support[np.argsort(-np.abs(beta[support]))[:k]]
 
     mask[support] = True
     return mask
 
 
+def lasso_cv_lambda(X, y, n_folds=10, random_state=None):
+    """
+    The penalty a cross-validated lasso picks on this data.  Used to choose one
+    lambda up front, outside any resampling, for ``null_mode='fixed_lambda'``.
+    """
+    Xs, ys, _ = _standardize(X, y)
+    fit = LassoCV(cv=n_folds, fit_intercept=False, max_iter=100_000,
+                  random_state=random_state)
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        fit.fit(Xs, ys)
+    return float(fit.alpha_)
+
+
+def lasso_support_at_lambda(X, y, lam):
+    """
+    Support at a penalty fixed from outside -- no tuning, no path walk, no
+    target size.
+
+    This is the selection rule an estimator without a coefficient path can
+    actually supply cheaply, which is the whole reason it is here: CLUSSO can
+    fit at a given lambda, but it cannot walk to a given support size.
+    """
+    Xs, ys, _ = _standardize(X, y)
+    fit = Lasso(alpha=float(lam), fit_intercept=False, max_iter=100_000)
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        fit.fit(Xs, ys)
+    return fit.coef_ != 0.0
+
+
+# ---------------------------------------------------------------------------
+# the estimator seam
+# ---------------------------------------------------------------------------
+#
+# PS-Fdr never inspects its estimator.  It needs a selected set back, and
+# nothing else -- which is why the paper can claim the procedure is
+# estimator-agnostic, and why substituting a different penalized estimator is
+# thinkable at all.  There are exactly four places the estimator is called, so
+# the seam is four methods wide:
+#
+#   cv_lambda(X, y, n_folds, random_state)   -> float      once, before step 1
+#   at_lambda(X, y, lam)                     -> (p,) bool  both arms, fixed_lambda
+#   support_cv(X, y, n_folds, random_state)  -> (p,) bool  real arm
+#   support_fixed_k(X, y, k, rule)           -> (p,) bool  permuted arm
+#
+# `LASSO_SELECTOR` calls exactly what this module called before the seam
+# existed, so the default path is unchanged by construction.  An alternative
+# estimator supplies the same four methods; see
+# src/fdr_clusso/clusso_ps_fdr.py.
+#
+# Nothing below indexes X beyond `X[idx]` (resample along axis 0) and
+# `X.shape[-1]` (count features), both of which mean the right thing for a 2-D
+# (n, p) design AND a 3-D (n, P, q) tensor.  So the loop does not need to know
+# which it is holding.
+
+
+class _LassoSelector:
+    """The published estimator, behind the seam."""
+
+    def cv_lambda(self, X, y, n_folds, random_state):
+        return lasso_cv_lambda(X, y, n_folds=n_folds, random_state=random_state)
+
+    def at_lambda(self, X, y, lam):
+        return lasso_support_at_lambda(X, y, lam)
+
+    def support_cv(self, X, y, n_folds, random_state):
+        return lasso_support_cv(X, y, n_folds=n_folds, random_state=random_state)
+
+    def support_fixed_k(self, X, y, k, rule):
+        return lasso_support_fixed_k(X, y, k, rule=rule)
+
+
+LASSO_SELECTOR = _LassoSelector()
+
+
 def stability_selection(X, y, B=50, k_fixed=None, rng=None, n_folds=10,
-                        return_masks=False):
+                        return_masks=False, null_rule='exact', lam_fixed=None,
+                        selector=None):
     """
     Step 1 (and, with ``k_fixed`` set, the inner loop of step 2).
 
@@ -105,10 +206,15 @@ def stability_selection(X, y, B=50, k_fixed=None, rng=None, n_folds=10,
     X, y    : (n, p) design and (n,) outcome
     B       : number of bootstrap resamples
     k_fixed : if None, each fit picks its own support by cross-validation;
-              otherwise every fit returns exactly this many variables
+              otherwise every fit targets this many variables
+    null_rule : how ``k_fixed`` is enforced -- see ``lasso_support_fixed_k``.
+              Ignored when ``k_fixed`` is None.
+    lam_fixed : if given, every fit uses this penalty and neither tunes nor
+              targets a support size.  Takes priority over ``k_fixed``.
     rng     : numpy Generator
     return_masks : also return the (B, p) selection indicator matrix that the
               frequencies are counted from
+    selector : the estimator behind the seam; ``None`` means the lasso.
 
     Returns
     -------
@@ -117,21 +223,25 @@ def stability_selection(X, y, B=50, k_fixed=None, rng=None, n_folds=10,
     masks  : (B, p) bool, only when ``return_masks``
     """
     rng = np.random.default_rng() if rng is None else rng
+    selector = LASSO_SELECTOR if selector is None else selector
     n = X.shape[0]
+    p = X.shape[-1]
 
-    hits = np.zeros(X.shape[1])
+    hits = np.zeros(p)
     counts = np.zeros(B, dtype=int)
-    masks = np.zeros((B, X.shape[1]), dtype=bool)
+    masks = np.zeros((B, p), dtype=bool)
 
     for b in range(B):
         idx = rng.integers(0, n, size=n)
         Xb, yb = X[idx], y[idx]
 
-        if k_fixed is None:
-            mask = lasso_support_cv(Xb, yb, n_folds=n_folds,
-                                    random_state=int(rng.integers(0, 2**31 - 1)))
+        if lam_fixed is not None:
+            mask = selector.at_lambda(Xb, yb, lam_fixed)
+        elif k_fixed is None:
+            mask = selector.support_cv(Xb, yb, n_folds,
+                                       int(rng.integers(0, 2**31 - 1)))
         else:
-            mask = lasso_support_fixed_k(Xb, yb, k_fixed)
+            mask = selector.support_fixed_k(Xb, yb, k_fixed, null_rule)
 
         hits += mask
         masks[b] = mask
@@ -156,7 +266,8 @@ def sam_normalize(u, nu):
 
 
 def ps_fdr(X, y, q=0.1, B=50, M=100, seed=None, n_folds=10,
-           null_mode='fixed', keep_null_masks=0):
+           null_mode='fixed', null_rule='exact', k_null=None,
+           keep_null_masks=0, selector=None):
     """
     Run the whole procedure and return every intermediate quantity.
 
@@ -171,6 +282,37 @@ def ps_fdr(X, y, q=0.1, B=50, M=100, seed=None, n_folds=10,
               size at the real arm's median; 'cv' lets cross-validation choose
               it freely on permuted data.  'cv' is the variant the paper argues
               is invalid, kept here so the difference can be measured.
+
+              'fixed_lambda' is a third option, and it changes what lambda MEANS
+              rather than how it is chosen.  One penalty is tuned once on the
+              real data, up front, and then used for every fit on BOTH arms --
+              so lambda only ever means "predict well" and never doubles as a
+              cardinality knob.  Nothing targets a support size, so nothing can
+              overshoot one.
+
+              That matters for an estimator with no coefficient path.  A lasso
+              can walk to an exact support size for free; CLUSSO cannot, and
+              pays for the attempt in overshoot and lost power.  Under
+              'fixed_lambda' it would not have to try.
+
+              The risk is the one the fixed count exists to prevent: the
+              permuted arm's support size is now uncontrolled, and with no
+              signal to fit, the same penalty zeroes more coefficients.  If the
+              permuted arm ends up systematically narrower than the real arm,
+              e0 shrinks, Fdr-hat shrinks, and the procedure over-selects.
+              Whether it does is measurable, not arguable, which is why the mode
+              is here.
+    null_rule : how the permuted arm hits its target size when
+              ``null_mode='fixed'`` -- 'exact', 'atleast' or 'nearest'.  See
+              ``lasso_support_fixed_k``.  'exact' is the published rule.
+    k_null  : override the permuted arm's target support size.  None (the
+              default, and the published rule) uses the real arm's median.
+              Supplying a larger value is how an estimator that can only clear
+              a target rather than land on one gets priced: it makes the null
+              arm systematically wider than the paper intends.
+    selector : the estimator behind the four-method seam above.  ``None`` means
+              the lasso, which is the published choice and leaves every number
+              this module produces unchanged.
 
     Returns
     -------
@@ -195,23 +337,32 @@ def ps_fdr(X, y, q=0.1, B=50, M=100, seed=None, n_folds=10,
     """
     X = np.asarray(X, dtype=float)
     y = np.asarray(y, dtype=float).ravel()
-    p = X.shape[1]
+    selector = LASSO_SELECTOR if selector is None else selector
+    p = X.shape[-1]
     nu = 1.0 / B
 
     rng = np.random.default_rng(seed)
 
+    # One penalty for everything, chosen before any resampling begins.
+    lam_star = (selector.cv_lambda(X, y, n_folds,
+                                   int(rng.integers(0, 2**31 - 1)))
+                if null_mode == 'fixed_lambda' else None)
+
     # --- step 1: stability selection on the real data ---------------------
     Pi, counts, masks = stability_selection(X, y, B=B, rng=rng,
                                             n_folds=n_folds,
-                                            return_masks=True)
+                                            return_masks=True,
+                                            lam_fixed=lam_star,
+                                            selector=selector)
 
     # The number of variables the null arm is forced to select.  Median, not
     # mean: the paper wants a typical CV-tuned support size, and the bootstrap
     # support-size distribution is skewed.
     k = int(np.median(counts))
+    k_used = k if k_null is None else int(k_null)
 
     # --- step 2: permutation-calibrated null ------------------------------
-    k_null = k if null_mode == 'fixed' else None
+    k_target = k_used if null_mode == 'fixed' else None
 
     Pi_null = np.zeros((M, p))
     Pi_null_raw = np.zeros((M, p))
@@ -219,8 +370,10 @@ def ps_fdr(X, y, q=0.1, B=50, M=100, seed=None, n_folds=10,
     for m in range(M):
         y_perm = rng.permutation(y)
         want_masks = m < keep_null_masks
-        out = stability_selection(X, y_perm, B=B, k_fixed=k_null, rng=rng,
-                                  n_folds=n_folds, return_masks=want_masks)
+        out = stability_selection(X, y_perm, B=B, k_fixed=k_target, rng=rng,
+                                  n_folds=n_folds, null_rule=null_rule,
+                                  lam_fixed=lam_star, selector=selector,
+                                  return_masks=want_masks)
         if want_masks:
             Pi_m, _, masks_m = out
             masks_null.append(masks_m)
@@ -270,7 +423,8 @@ def ps_fdr(X, y, q=0.1, B=50, M=100, seed=None, n_folds=10,
     best = max(ok, key=lambda s: s['n_pos']) if ok else None
 
     return {
-        'Pi': Pi, 'counts': counts, 'k': k, 'masks': masks,
+        'Pi': Pi, 'counts': counts, 'k': k, 'k_used': k_used, 'masks': masks,
+        'lam_star': lam_star,
         'Pi_null': Pi_null, 'Pi_null_raw': Pi_null_raw, 'Pi_bar': Pi_bar,
         'masks_null': masks_null,
         'order': order,
