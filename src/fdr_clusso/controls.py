@@ -20,10 +20,18 @@
 #
 #   He et al. (tables 1-2):   FD, FN, FDP, power, FD+FN
 #   CLUSSO paper (sec. 4.2):  TPR %, FPR %, L1 bias of beta, in-sample MSE
+#   Rubin's R code (both):    seconds per method, and the lambda it chose
 #
-# Bias and MSE need a coefficient estimate. A PS-Fdr arm returns a selected set
-# and nothing else, so those two are None for the PS-Fdr arms rather than
-# invented by a refit neither paper does.
+# Bias and MSE need a coefficient estimate, and a PS-Fdr arm returns only a
+# selected set. Random CLUSSO has the same problem and Rubin's code solves it by
+# refitting STRUCTURED OLS on just the selected features
+# (Random_CLUSSO_Functions_Simulate_Real_Data.R:283-311). `refit_metrics` does
+# the same. Rubin takes Random CLUSSO's bias from its bootstrap-averaged betas
+# instead; PS-Fdr keeps no betas, so its bias comes from the refit too.
+#
+# Clustering accuracy stays core's pooled-over-tubules number, which is also what
+# Rubin's code computes. The paper's Appendix B averages per subject first. Doing
+# that needs per-tubule labels, which only exist inside core's generator.
 
 import os
 import sys
@@ -36,8 +44,10 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(_HERE, '..', 'core'))
 
 from CLUSSO_Functions_Project1_6_16_23 import simulation_results  # noqa: E402
+from Mainfunction_albet_Structured_OLS import Mainfunction_albet_OLS  # noqa: E402
 
-from clusso_select import clusso_fit_cv, support_mask              # noqa: E402
+from clusso_select import (DEFAULT_N_STARTS, alpha_starts,         # noqa: E402
+                           clusso_fit_cv, support_mask)
 
 
 def naive_fit(X_avg, Y):
@@ -79,7 +89,8 @@ def naive_fit(X_avg, Y):
 
     beta_orig[zero_inds] = 0.0
     sse = float(np.sum((Y - X_avg @ beta_orig - intercept) ** 2))
-    return {'bet': beta, 'mse': sse / len(Y)}
+    # lam on R's glmnet scale, like every other lambda this directory records
+    return {'bet': beta, 'mse': sse / len(Y), 'lam': float(avg_model.alpha_) * 2.0}
 
 
 def oracle_fit(X_full, Y):
@@ -114,6 +125,7 @@ def structured_metrics(fit, Y, X, beta_star, truth):
     out = selection_metrics(support_mask(fit['bet']), truth)
     _, _, bias, mse = simulation_results(fit['bet'], beta_star, fit['alpha'], Y, X)
     out['bias'], out['mse'] = float(bias), float(mse)
+    out['lam'] = float(fit['lam'])
     return out
 
 
@@ -123,22 +135,50 @@ def naive_metrics(X_avg, Y, beta_star, truth):
     bs = np.asarray(beta_star, dtype=float)
     out['bias'] = float(np.sum(np.abs(bs / np.sum(np.abs(bs)) - fit['bet'])))
     out['mse'] = float(fit['mse'])
+    out['lam'] = fit['lam']
     return out
 
 
-def set_metrics(selected, truth):
-    """A PS-Fdr arm: a selected set, so no bias or MSE."""
+def refit_sols(X, Y, selected, n_starts=DEFAULT_N_STARTS):
+    """
+    Structured OLS on the selected columns only, as Random CLUSSO does. Rubin
+    starts from rnorm draws; this uses the same deterministic starts CLUSSO
+    does and keeps the lowest in-sample SSE. Returns a full-length (q,) beta,
+    zero off the selected set, so it scores against the full design.
+    """
+    P, q, n = X.shape
+    selected = np.asarray(selected, dtype=int)
+    bet_full = np.zeros(q)
+    if selected.size == 0:
+        return {'alpha': np.zeros(P), 'bet': bet_full}
+    Xs = X[:, selected, :]
+    best, best_sse = None, np.inf
+    for a0 in alpha_starts(P, n_starts):
+        fit = Mainfunction_albet_OLS(Xs, Y, a0, np.ones(selected.size))
+        sse = simulation_results(fit['bet'], np.ones(selected.size),
+                                 fit['alpha'], Y, Xs)[3]
+        if sse < best_sse:
+            best, best_sse = fit, sse
+    bet_full[selected] = best['bet']
+    return {'alpha': best['alpha'], 'bet': bet_full}
+
+
+def refit_metrics(selected, X, Y, beta_star, truth):
+    """A PS-Fdr arm: selection metrics from the set, bias and MSE from the refit."""
     mask = np.zeros(len(truth), dtype=bool)
     mask[np.asarray(selected, dtype=int)] = True
     out = selection_metrics(mask, truth)
-    out['bias'], out['mse'] = None, None
+    fit = refit_sols(X, Y, selected)
+    _, _, bias, mse = simulation_results(fit['bet'], beta_star, fit['alpha'], Y, X)
+    out['bias'], out['mse'] = float(bias), float(mse)
     return out
 
 
 # Report order and labels. The keys are what per_cohort records carry.
 METRICS = [('fd', 'FD'), ('fn', 'FN'), ('fdp', 'FDP'), ('power', 'power'),
            ('fd_fn', 'FD+FN'), ('tpr', 'TPR%'), ('fpr', 'FPR%'),
-           ('bias', 'bias'), ('mse', 'MSE'), ('n_sel', '|S|')]
+           ('bias', 'bias'), ('mse', 'MSE'), ('n_sel', '|S|'),
+           ('sec', 'sec')]
 
 
 def summarize(records):
