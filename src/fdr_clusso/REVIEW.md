@@ -379,6 +379,24 @@ curve over sorted RANKS. Permuting y destroys feature identity, which is why
 shape, not the right features. **The real arm keeps the fine grid**, because
 there identity does matter.
 
+> **CORRECTION (2026-10-26): not identical at full scale.** One small cohort
+> was not enough to show the difference. `stage5_reps100.json` (13 rungs) and
+> `stage4.json` (40 rungs) share their first 20 cohorts exactly. On those 20,
+> bare CLUSSO and one-λ reproduce identically, but exact-k does not:
+>
+>         null_top lower with 13 rungs     19 of 20 cohorts, by ~0.005
+>         one extra false discovery         4 of 20 (cohorts 3, 6, 13, 15)
+>         exact-k FDP over the 20           0.138 (40 rungs) -> 0.157 (13 rungs)
+>         power                             unchanged on every cohort
+>
+> Likely mechanism: a coarser step overshoots k by more, so truncation picks
+> its k from a fit at a smaller λ. That spreads selection across more features,
+> flattens the sorted null, and lowers e0 and Fdr-hat. The argument above holds
+> for the *count* and fails for the *shape*. The effect is small, but it is in
+> the anti-conservative direction, which is the one that matters.
+> `stage4_clusso_fdr.py --null-ladder fine` restores the 40-step ladder, and
+> `stage6_exactk_fine_reps100.json` reruns the 100 cohorts on it. See section 11.
+
 **Not a deviation from He et al.** The paper has no lambda grid -- `lars_path`
 gives exact breakpoints, so there is nothing to discretize. The grid is our
 artifact for coping with CLUSSO's missing path, and its resolution sits below
@@ -456,7 +474,8 @@ the page alone until the 100-replication run below replaces the numbers.
 
 1. **100 replications of the stage 4 setting, both arms, nothing else changed**
    -- He et al.'s count, and enough to put the FDP standard error near 0.012.
-   CPU, `--jobs 6`, coarse ladder (section 9). About 40-45 hours.
+   CPU, `--jobs 6`, coarse ladder (section 9). Estimated 40-45 hours; it took
+   13. **Done: section 11.**
 2. Then a small grid on arm B (cheap) -- true features 3/5/10/20 of 50, crossed
    with effect sizes scaled down until bare CLUSSO's power is around 0.7 (He et
    al. use 0.25-0.40 with random signs). The sparsity axis is the direct test of
@@ -483,6 +502,52 @@ profile. Caching it changes no numbers.
 
 ---
 
+## 11. 100 replications, with the papers' controls
+
+**Where:** `stage5_reps100.json` / `.log` (RUNS.md). The stage 4 setting,
+100 cohorts, both arms, 13-step null ladder, at `fa47c56`. 778 minutes on 6
+cores.
+
+        method              mean FDP   95% CI           median   power    FD    hit q
+        naive averaging       0.631                       0.697   0.979  20.6
+        CLUSSO, bare          0.313    [0.284, 0.342]     0.310   0.975   5.1    9/100
+        FDR-CLUSSO exact-k    0.118    [0.098, 0.138]     0.095   0.934   1.4   55/100
+        FDR-CLUSSO one-λ      0.117    [0.092, 0.143]     0.091   0.956   1.5   65/100
+        oracle (true tubules) 0.096    [0.068, 0.125]     0.000   1.000   1.5
+
+**The headline moved from "misses" to "borderline."** Exact-k's FDP is 1.81 SE
+above 0.10, its interval just reaches 0.10, and its median is under. Section
+10's 1.47-SE reading at 20 reps was right to hold back. The gate still prints
+FAIL, because it reads the mean against 0.10 with no interval.
+
+**Part of the 0.118 is the ladder** (section 9's correction). On the 20 cohorts
+this run shares with `stage4.json`, the 13-step ladder raised exact-k's FDP
+0.138 -> 0.157. Over all 100 the mean is 0.118. The 40-step rerun
+(`stage6_exactk_fine_reps100.json`) gives the paper's rule on its own ladder and
+is the number to report.
+
+**One-λ vs exact-k holds at 100.** Paired over the same cohorts: FDP -0.001
+(t=-0.11), power +0.022 (t=+4.05, higher on 20 cohorts and lower on 2),
+null_top -0.100 (t=-6.62). Same FDP, more power, a clearly lower null bar, and
+5.4x cheaper (424 s vs 2,299 s per cohort). Section 10's warning stands: the
+mechanism for over-selection is visibly active, even though FDP didn't rise.
+
+**The oracle says CLUSSO's false discoveries are not clustering error.**
+Clustering accuracy was 1.000 on every cohort, yet bare CLUSSO's FDP is 0.313
+against the oracle's 0.096. The oracle sees the true latent tubule means;
+CLUSSO sees averages of ~40 sampled tubules with measurement noise. That noise,
+not misassignment, is what PS-Fdr is cleaning up here. It also means section 4's
+frozen-clustering objection costs nothing *at this setting*, and the σ_R sweep
+in the CLUSSO paper is where it would start to cost.
+
+**Bias and MSE.** L1 bias: oracle 0.014, one-λ 0.156, exact-k 0.161, bare CLUSSO
+0.181, naive 0.529. The PS-Fdr arms' bias comes from the structured-OLS refit on
+their selected set (controls.py). In-sample MSE is about 276-279 for CLUSSO and
+both arms, 322 for naive, and 0.95 for the oracle. The scale of Y makes MSE
+mostly a measure of design noise here, not of selection.
+
+---
+
 ## Open questions
 
 1. ~~Is the objective-gap gate criterion defensible?~~ **Settled by measurement,
@@ -501,3 +566,7 @@ profile. Caching it changes no numbers.
    install? See section 7. Everything else here is conditional on it.
 5. **New:** is arm B's lower null an accident of 10-of-50, or does it hold at
    other sparsities? Stage 5 step 2 answers it. See section 10.
+6. **New:** should the default null ladder go back to 40 steps? The 13-step
+   ladder is measurably anti-conservative (section 9) and about 2x cheaper.
+   Decide once `stage6_exactk_fine_reps100.json` shows how big the gap is over
+   100 cohorts.

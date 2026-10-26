@@ -64,12 +64,13 @@ class ClussoSelector:
                  n_folds=5, null_lambda_grid=None):
         self.lambda_grid = (DEFAULT_LAMBDA_GRID if lambda_grid is None
                             else np.asarray(lambda_grid, dtype=float))
-        # The permuted arm walks a COARSER ladder than the real arm. Safe only
-        # because truncation cuts back to exactly k however far the scan
-        # overshot, and immaterial because the null arm's output is a curve over
-        # sorted RANKS rather than a list of features -- see NULL_LAMBDA_GRID in
-        # clusso_select.py. The real arm keeps the fine grid, where identity
-        # does matter.
+        # The permuted arm walks a COARSER ladder than the real arm by default.
+        # Truncation cuts back to exactly k however far the scan overshot, so
+        # the count is safe. It was also expected to be immaterial, since the
+        # null arm's output is a curve over sorted RANKS -- but at full scale it
+        # slightly flattens that curve and adds false discoveries. See the
+        # correction at NULL_LAMBDA_GRID in clusso_select.py. The real arm keeps
+        # the fine grid.
         self.null_lambda_grid = (NULL_LAMBDA_GRID if null_lambda_grid is None
                                  else np.asarray(null_lambda_grid, dtype=float))
         self.n_starts = n_starts
