@@ -27,6 +27,7 @@
 # src/core/ is not modified. `Mainfunction_albet` and `slasso_mse` are called
 # directly; only the fold logic is reimplemented.
 
+import functools
 import os
 import sys
 
@@ -86,6 +87,7 @@ DEFAULT_N_STARTS = 5
 # deterministic fitting
 # ---------------------------------------------------------------------------
 
+@functools.lru_cache(maxsize=None)
 def _canonical_starts(P, n_max=33):
     """
     One fixed, ordered sequence of starting points. `alpha_starts` returns a
@@ -101,6 +103,10 @@ def _canonical_starts(P, n_max=33):
     Ordering is coarse-to-fine over t, so early entries spread across the space
     rather than clustering: t = 1/2 (as `ones`), then 1/4 and 3/4, then eighths,
     and so on, each crossed with both signs.
+
+    Cached: it is a pure function of (P, n_max), and rebuilding it on every fit
+    was ~15% of null-arm time. Callers get copies from `alpha_starts`, so the
+    cached arrays are never mutated.
     """
     P = int(P)
     starts = [np.ones(P)]                      # t = 1/2, positive orthant
@@ -150,7 +156,7 @@ def alpha_starts(P, n_starts=1):
         raise ValueError(
             f'only {len(pool)} distinct starts exist for P={P}, '
             f'{n_starts} requested')
-    return pool[:n_starts]
+    return [s.copy() for s in pool[:n_starts]]
 
 
 def clusso_fit(X, y, lam, alpha_init=None, beta_init=None):
