@@ -63,8 +63,9 @@ sys.path.insert(0, os.path.join(_HERE, '..', 'fdr'))
 from ps_fdr import fdp_power                              # noqa: E402
 
 from clusso_ps_fdr import ClussoSelector, clusso_ps_fdr   # noqa: E402
-from clusso_select import (clusso_fit_cv, support_mask,   # noqa: E402
-                           threshold_binding)
+from clusso_select import (DEFAULT_LAMBDA_GRID,           # noqa: E402
+                           DEFAULT_N_STARTS, NULL_LAMBDA_GRID,
+                           clusso_fit_cv, support_mask, threshold_binding)
 from stage1_noise import make_cohort_full                 # noqa: E402
 from controls import (METRICS, naive_metrics, oracle_fit,    # noqa: E402
                       refit_metrics, structured_metrics, summarize)
@@ -77,7 +78,47 @@ ARMS = {
 }
 
 
-def one_cohort(seed, B, M, n, q_feat, sparsity, arms, q=Q):
+# The permuted arm's lambda ladder. 'fine' is the real arm's own 40-step grid,
+# which is what the permuted arm walked until commit 4992ca8 and what stage4.json
+# ran on. 'coarse' is the 13-step NULL_LAMBDA_GRID adopted there. stage5_reps100
+# showed coarse is NOT output-identical: it lowers null_top slightly and adds
+# false discoveries on a few cohorts. REVIEW.md section 9.
+NULL_LADDERS = {'coarse': NULL_LAMBDA_GRID, 'fine': DEFAULT_LAMBDA_GRID}
+
+
+def run_meta(args, argv):
+    """
+    What a result file needs to say about itself beyond its CLI args: which code
+    ran, on which ladders, when, and for how long. stage4.json and stage5_reps100
+    have identical args and different ladders, which is why this exists.
+    """
+    import platform
+    import subprocess
+    import sklearn
+
+    def git(*a):
+        try:
+            return subprocess.run(['git', *a], cwd=_HERE, capture_output=True,
+                                  text=True, timeout=10).stdout.strip()
+        except Exception:
+            return None
+
+    return {
+        'git_commit': git('rev-parse', 'HEAD'),
+        'git_dirty_src': bool(git('status', '--porcelain', '--untracked-files=no', '--', '..')),
+        'command': ' '.join(argv),
+        'null_ladder': args.null_ladder,
+        'n_lambda_real_arm': int(len(DEFAULT_LAMBDA_GRID)),
+        'n_lambda_null_arm': int(len(NULL_LADDERS[args.null_ladder])),
+        'n_starts': int(DEFAULT_N_STARTS),
+        'python': platform.python_version(),
+        'numpy': np.__version__,
+        'sklearn': sklearn.__version__,
+        'machine': platform.node(),
+    }
+
+
+def one_cohort(seed, B, M, n, q_feat, sparsity, arms, q=Q, null_ladder='coarse'):
     # The clustering happens HERE, once, and never again. Everything downstream
     # resamples subjects out of this one frozen tensor.
     c = make_cohort_full(n, q_feat, sparsity, seed)
@@ -113,7 +154,7 @@ def one_cohort(seed, B, M, n, q_feat, sparsity, arms, q=Q):
     out['baseline']['sec'] = base_sec
 
     for arm in arms:
-        sel = ClussoSelector()
+        sel = ClussoSelector(null_lambda_grid=NULL_LADDERS[null_ladder])
         t0 = time.perf_counter()
         res, sel = clusso_ps_fdr(clust_X, Y, q=q, B=B, M=M, seed=seed,
                                  selector=sel, **ARMS[arm])
@@ -297,6 +338,10 @@ def main():
     ap.add_argument('--q-features', type=int, default=50)
     ap.add_argument('--sparsity', type=float, default=0.8)
     ap.add_argument('--arm', choices=('a', 'b', 'both'), default='both')
+    ap.add_argument('--null-ladder', choices=tuple(NULL_LADDERS), default='coarse',
+                    help="permuted arm's lambda ladder: 'coarse' (13 steps, the "
+                         "default since 4992ca8) or 'fine' (the real arm's 40, "
+                         'what stage4.json ran on)')
     # -1 is joblib's "every LOGICAL core", which oversubscribes SMT siblings.
     # Measured on a Ryzen 5 5600 (6 physical / 12 logical): 12 workers ran each
     # fit 2.5x slower than 4 and bought only ~16% total throughput, because this
@@ -324,6 +369,9 @@ def main():
     ap.add_argument('--run-date', type=str, default=None,
                     help='date to stamp on the --html block')
     args = ap.parse_args()
+    meta = run_meta(args, sys.argv)
+    meta['started'] = time.strftime('%Y-%m-%dT%H:%M:%S%z')
+    t_start = time.perf_counter()
 
     if args.quick:
         args.reps, args.B, args.M, args.n, args.q_features = 3, 10, 10, 120, 25
@@ -336,7 +384,10 @@ def main():
     seeds = [args.seed + i for i in range(args.reps)]
     print(f'{args.reps} cohorts, n={args.n} q={args.q_features} '
           f'sparsity={args.sparsity}, B={args.B} M={args.M}, target q={Q}')
-    print('  CLUSSO inside PS-Fdr, clustering frozen once per cohort\n')
+    if not args.from_json:
+        print(f'  CLUSSO inside PS-Fdr, clustering frozen once per cohort, '
+              f'null ladder {args.null_ladder} ({meta["n_lambda_null_arm"]} '
+              f'steps) at {(meta["git_commit"] or "?")[:7]}\n')
 
     # verbose=10 so a long run reports progress instead of going silent for
     # hours. A 20-cohort run at n=300 q=50 is ~175 min of worker time PER
@@ -350,12 +401,18 @@ def main():
                 setattr(args, k, v)
         arms = [a for a in ARMS if a in per_cohort[0]]
         args.run_date = args.run_date or saved.get('run_date')
-        print('  (re-reporting %s, no fits performed)\n' % args.from_json)
+        # The saved run's own record, never this invocation's: a re-report
+        # must not relabel what ran.
+        meta = saved.get('meta', {'note': 'saved before run metadata existed'})
+        print('  (re-reporting %s, no fits performed; null ladder %s)\n'
+              % (args.from_json, meta.get('null_ladder', 'not recorded')))
     else:
         per_cohort = Parallel(n_jobs=args.jobs, verbose=10)(
             delayed(one_cohort)(s, args.B, args.M, args.n, args.q_features,
-                                args.sparsity, arms)
+                                args.sparsity, arms, null_ladder=args.null_ladder)
             for s in seeds)
+        meta['finished'] = time.strftime('%Y-%m-%dT%H:%M:%S%z')
+        meta['wall_minutes'] = round((time.perf_counter() - t_start) / 60.0, 1)
 
     out = {}
     print(f'  {"arm":>14} {"mean FDP":>9} {"power":>7} {"mean |S|":>9} '
@@ -452,8 +509,9 @@ def main():
 
     if args.json:
         with open(args.json, 'w') as fh:
-            json.dump({'args': vars(args), 'q': Q, 'arms': out,
-                       'per_cohort': per_cohort, 'pass': bool(passed)},
+            json.dump({'meta': meta, 'args': vars(args), 'q': Q, 'arms': out,
+                       'per_cohort': per_cohort, 'pass': bool(passed),
+                       'run_date': args.run_date},
                       fh, indent=1)
         print(f'wrote {args.json}', file=sys.stderr)
 
