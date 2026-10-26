@@ -105,7 +105,7 @@ def run_meta(args, argv):
 
     return {
         'git_commit': git('rev-parse', 'HEAD'),
-        'git_dirty_src': bool(git('status', '--porcelain', '--', '..')),
+        'git_dirty_src': bool(git('status', '--porcelain', '--untracked-files=no', '--', '..')),
         'command': ' '.join(argv),
         'null_ladder': args.null_ladder,
         'n_lambda_real_arm': int(len(DEFAULT_LAMBDA_GRID)),
