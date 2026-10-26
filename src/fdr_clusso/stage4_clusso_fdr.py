@@ -64,7 +64,9 @@ from ps_fdr import fdp_power                              # noqa: E402
 from clusso_ps_fdr import ClussoSelector, clusso_ps_fdr   # noqa: E402
 from clusso_select import (clusso_fit_cv, support_mask,   # noqa: E402
                            threshold_binding)
-from stage1_noise import make_cohort                      # noqa: E402
+from stage1_noise import make_cohort_full                 # noqa: E402
+from controls import (METRICS, naive_metrics, oracle_fit,    # noqa: E402
+                      set_metrics, structured_metrics, summarize)
 
 Q = 0.1
 
@@ -77,9 +79,16 @@ ARMS = {
 def one_cohort(seed, B, M, n, q_feat, sparsity, arms, q=Q):
     # The clustering happens HERE, once, and never again. Everything downstream
     # resamples subjects out of this one frozen tensor.
-    clust_X, Y, truth, clust_acc = make_cohort(n, q_feat, sparsity, seed)
+    c = make_cohort_full(n, q_feat, sparsity, seed)
+    clust_X, Y, truth, clust_acc = c['clust_X'], c['Y'], c['truth'], c['clust_acc']
 
     out = {'clust_acc': float(clust_acc), 'n_true': int(truth.sum())}
+
+    # Controls (controls.py). Naive ignores the tubule structure; the oracle
+    # sees the true latent tubules, so it is CLUSSO with no clustering error.
+    out['naive'] = naive_metrics(c['X_avg'], Y, c['beta_star'], truth)
+    out['oracle'] = structured_metrics(oracle_fit(c['X_full'], Y), Y,
+                                       c['X_full'], c['beta_star'], truth)
 
     # Baseline: CLUSSO as it ships. CV-tuned, no FDR control, one fit.
     base_fit = clusso_fit_cv(clust_X, Y, n_folds=5, rng=None, n_starts=5)
@@ -89,6 +98,8 @@ def one_cohort(seed, B, M, n, q_feat, sparsity, arms, q=Q):
                        'n_sel': int(base_mask.sum()),
                        'lam_cv': float(base_fit['lam']),
                        'thresh_binding': bool(threshold_binding(base_fit['bet']))}
+    out['baseline'].update(structured_metrics(base_fit, Y, clust_X,
+                                              c['beta_star'], truth))
 
     for arm in arms:
         sel = ClussoSelector()
@@ -110,7 +121,34 @@ def one_cohort(seed, B, M, n, q_feat, sparsity, arms, q=Q):
             'n_truncated': int(sel.n_truncated),
             'n_fixed_k_calls': int(sel.n_fixed_k_calls),
         }
+        out[arm].update(set_metrics(res['selected'], truth))
     return out
+
+
+METHOD_LABELS = [('naive', 'naive avg'), ('oracle', 'oracle (full)'),
+                 ('baseline', 'CLUSSO (bare)'), ('exact_k', 'FDR exact-k'),
+                 ('fixed_lambda', 'FDR one-lam')]
+
+
+def print_metrics(per_cohort):
+    """
+    Every method on both papers' metrics, mean then median. He et al. report
+    means, the CLUSSO paper medians, so both are printed and neither is chosen.
+    Methods a saved run predates are skipped.
+    """
+    have = [(m, lab) for m, lab in METHOD_LABELS
+            if m in per_cohort[0]]
+    table = {m: summarize([c[m] for c in per_cohort]) for m, _ in have}
+    for stat in ('mean', 'median'):
+        print(f'\n  {stat} over {len(per_cohort)} cohorts')
+        print('  ' + f'{"method":>14}' + ''.join(f'{lab:>8}' for _, lab in METRICS))
+        for m, lab in have:
+            cells = []
+            for key, _ in METRICS:
+                v = table[m][key][stat]
+                cells.append(f'{"-":>8}' if v is None else f'{v:>8.3f}')
+            print('  ' + f'{lab:>14}' + ''.join(cells))
+    return table
 
 
 def _agg(runs, key):
@@ -337,6 +375,7 @@ def main():
               f'{r["null_top"]:>9.3f} {r["exhausted_rate"]:>8.3f}')
 
     out['clust_acc'] = float(np.mean([c['clust_acc'] for c in per_cohort]))
+    out['metrics'] = print_metrics(per_cohort)
 
     # --- the gate ---------------------------------------------------------
     # Arm A is the published rule, so arm A is what gates. Arm B is reported
