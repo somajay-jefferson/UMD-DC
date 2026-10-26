@@ -66,6 +66,15 @@ DEFAULT_LAMBDA_GRID = np.geomspace(0.01, 20.0, 40)
 # lars_path gives exact breakpoints, so there is nothing to discretize. The grid
 # is our artifact for coping with CLUSSO's missing path, and its resolution sits
 # below the level the paper specifies.
+#
+# CORRECTION (2026-10-26): "the right shape" turned out not to be exactly true.
+# At full scale (stage5_reps100.json vs stage4.json, same 20 cohorts) the coarse
+# ladder lowers null_top on 19 of 20 cohorts by ~0.005 and adds one false
+# discovery on 4 of them -- exact-k FDP 0.138 -> 0.157 on those 20. A coarser
+# step overshoots k by more, so truncation picks its k from a fit at a smaller
+# lambda, which spreads selection across features and flattens the null. Small,
+# but in the anti-conservative direction. `stage4_clusso_fdr.py --null-ladder
+# fine` restores the 40-step ladder. REVIEW.md section 9.
 NULL_LAMBDA_GRID = np.geomspace(0.01, 20.0, 13)
 
 # Hardcoded inside Mainfunction_albet at line 124, applied after beta is
@@ -482,8 +491,10 @@ def clusso_support_exact_k(X, y, k, lambda_grid=None,
 
     Two consequences worth stating:
 
-      The lambda grid no longer has to be fine. Overshoot is free now, so a
-      coarser grid costs accuracy nowhere and buys fits everywhere.
+      The lambda grid no longer has to be fine for exactness. Overshoot no
+      longer changes the COUNT. It can still change WHICH k survive, and at
+      full scale a coarser grid measurably flattens the null -- see
+      NULL_LAMBDA_GRID above.
 
       Stage 2's non-monotonicity stops mattering. We never needed the map from
       lambda to support size to be invertible; we needed it to clear a bar once.
