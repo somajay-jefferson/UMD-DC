@@ -420,6 +420,69 @@ variant, not before.
 
 ---
 
+## 10. What stage 4 actually showed about arm B, and the plan for stage 5
+
+**Where:** `stage4.json` (`per_cohort`), `simulation_settings.md`
+
+Section 8 set arm B (`fixed_lambda`) up as a cheap comparison: "if they agree,
+the count-fixing device was not load-bearing." Paired over the same 20 cohorts,
+they agree on the result and **disagree on the null**:
+
+        paired, one-λ minus exact-k     mean diff    se      t      better / worse
+        FDP                              -0.009     0.030   -0.29        5 / 9
+        power                            +0.030     0.011   +2.85        6 / 0
+        |S|                              +0.25      0.53    +0.47        7 / 7
+        null_top                         -0.100     0.038   -2.66        8 / 12
+
+One-λ finds more real features, never fewer, at about a tenth of the null-arm
+cost. But its null bar is **lower** -- 0.767 against 0.867, and as low as 0.447
+on one cohort. That is the failure mode section 8 flagged: nothing pins the
+permuted arm's size, the same penalty zeroes more coefficients when there is no
+signal, the null narrows, e0 and Fdr-hat shrink, and the procedure over-selects.
+FDP did not rise here. The mechanism is visibly active anyway.
+
+**Stage 3b's reassurance did not transfer.** On the plain lasso the two nulls
+were 0.931 and 0.928 (`stage3b.json`), which is why arm B passed. On CLUSSO the
+gap is 0.10. So "arm B agrees" is now only half true, and the half that holds
+(FDP) is the half that 20 replications can't resolve well.
+
+**The headline is also weaker than the page says.** Arm A's FDP of 0.138 has a
+standard error of 0.026 over 20 cohorts. That is 1.47 standard errors above
+0.10 -- suggestive, not shown. `docs/fdr-clusso.html` says it "does not reach"
+the level. That is true of the mean and not established for the method. Leave
+the page alone until the 100-replication run below replaces the numbers.
+
+**Plan for stage 5**, against the settings table in `simulation_settings.md`:
+
+1. **100 replications of the stage 4 setting, both arms, nothing else changed**
+   -- He et al.'s count, and enough to put the FDP standard error near 0.012.
+   CPU, `--jobs 6`, coarse ladder (section 9). About 40-45 hours.
+2. Then a small grid on arm B (cheap) -- true features 3/5/10/20 of 50, crossed
+   with effect sizes scaled down until bare CLUSSO's power is around 0.7 (He et
+   al. use 0.25-0.40 with random signs). The sparsity axis is the direct test of
+   whether the null_top gap is a k/p accident. Confirm odd cells with arm A.
+3. Correlated features (He et al. AR1 0.6, Rubin's Random CLUSSO ρ=0.9) last. It
+   needs a `src/core/` generator change and the matching R change.
+
+Keep the 0.001 coefficient threshold -- it matches the paper and `src/core/`.
+Rubin's later code uses 0.01, and since the cut binds on 60% of baseline fits,
+switching would change results, not tidy them.
+
+**GPU batching was explored and shelved (2026-10-25).** A batched coordinate-
+descent `Mainfunction_albet` with sklearn's classic stopping rule reproduced
+sklearn to 1e-14 (400/400 supports identical in float64; 399/400 in float32,
+the one flip sitting at the 0.001 cut). But the lasso solves average ~400 sweeps,
+so plain NumPy batching was slower than sklearn (27 vs 17 ms/fit). A real win
+needs a compiled GPU kernel and a new dependency (numba): 1-2 days of work for an
+estimated, unmeasured speedup. Not worth it for a handful of runs. Revisit if
+stage 5's grid grows past what the CPU can do overnight.
+
+**One free speedup not yet taken:** `_canonical_starts` is rebuilt on every
+`alpha_starts` call (`clusso_select.py:122`), about 15% of null-arm time in a
+profile. Caching it changes no numbers.
+
+---
+
 ## Open questions
 
 1. ~~Is the objective-gap gate criterion defensible?~~ **Settled by measurement,
@@ -436,3 +499,5 @@ variant, not before.
    smaller violation than it sounds.
 4. **New:** is validating the R-to-Python translation worth half a day and an R
    install? See section 7. Everything else here is conditional on it.
+5. **New:** is arm B's lower null an accident of 10-of-50, or does it hold at
+   other sparsities? Stage 5 step 2 answers it. See section 10.
