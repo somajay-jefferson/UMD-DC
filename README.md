@@ -35,6 +35,7 @@ clussocode.Rproj        RStudio project file for the R sources
 | File | Purpose |
 |---|---|
 | `Mainfunction_albet.py` | Alternating optimizer: fixes `alpha`, solves sparse `beta` via lasso; fixes `beta`, solves `alpha` via OLS; repeats to convergence. `_glmnet_lasso` reimplements R `glmnet`'s centering/scaling so results match the R version exactly. |
+| `Mainfunction_albet_Structured_OLS.py` | Port of `Supplemental_Code.zip`'s `Mainfunction_albet_Structured_OLS.r`: the same alternation with plain OLS in both steps and no threshold. Random CLUSSO uses it to refit a selected feature set so the set has an MSE; `src/fdr_clusso/controls.py` uses it the same way for the PS-Fdr arms. |
 | `mat_vec_prd.py` | Tensor x vector products used in each alternation step. |
 | `K_prdu.py` | Kronecker product helper, used for the convergence check `‖β⊗α − β0⊗α0‖`. |
 | `coefficient.py` | Standalone glmnet-equivalent lasso path fitter with BIC lambda selection. A faithful port of the R `coefficient.r`, but currently **unused** — nothing in the Python codebase imports it, and the naive baseline calls sklearn's `LassoCV` directly. |
@@ -78,8 +79,9 @@ at https://somajay-jefferson.github.io/UMD-DC/fdr-clusso.html.
 - `Supplemental_Code.zip` / `Random_CLUSSO_*.R` — a related "Random CLUSSO"
   variant applied to real biopsy data (reads `ptvars.sas7bdat` /
   `tubulefeatures.sas7bdat`, outcome `eGFRatBx`). This variant and its
-  Flex-Threshold/Structured-OLS `Mainfunction_albet` variants exist only in R;
-  there is no TEPIG (tensor) equivalent.
+  Flex-Threshold `Mainfunction_albet` variant exist only in R; the
+  Structured-OLS variant is ported as `src/core/Mainfunction_albet_Structured_OLS.py`.
+  There is no TEPIG (tensor) equivalent.
 
 ## Cross-validation module
 
