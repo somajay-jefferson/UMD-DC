@@ -70,11 +70,23 @@ def make_cohort(n, q, sparsity, seed):
     """
     One clustered cohort, via core's own generator.
 
+    Returns (clust_X (P,q,n), Y (n,), true_mask (q,), clustering_accuracy).
+    `make_cohort_full` is the same draw with everything else the generator made.
+    """
+    c = make_cohort_full(n, q, sparsity, seed)
+    return c['clust_X'], c['Y'], c['truth'], c['clust_acc']
+
+
+def make_cohort_full(n, q, sparsity, seed):
+    """
+    `make_cohort`, keeping what the controls need: the naive per-subject
+    averages, the Full Information design built from the TRUE latent tubules,
+    and the true coefficients. Same seed, same draws, so a cohort here is the
+    identical cohort `make_cohort` returns.
+
     This is the single place global numpy state is used: `generate_design_matrices`
     draws from it throughout and takes no rng. Seeding here confines the impurity
     to data generation -- everything downstream of `clust_X` is pure.
-
-    Returns (clust_X (P,q,n), Y (n,), true_mask (q,), clustering_accuracy).
     """
     np.random.seed(seed)
 
@@ -93,7 +105,9 @@ def make_cohort(n, q, sparsity, seed):
             FIXED['x1'], FIXED['x2'], FIXED['sigma1'], FIXED['sigma2'],
             FIXED['sigma_r'], alpha_star, beta_star, w)
         if not no_clust:
-            return clust_X, Y, beta_star != 0, float(acc)
+            return {'clust_X': clust_X, 'Y': Y, 'truth': beta_star != 0,
+                    'clust_acc': float(acc), 'X_avg': X_avg, 'X_full': X_full,
+                    'beta_star': beta_star, 'alpha_star': alpha_star}
 
     raise RuntimeError('generate_design_matrices kept returning no_clust=True')
 
