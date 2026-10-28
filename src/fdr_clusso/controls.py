@@ -90,12 +90,57 @@ def naive_fit(X_avg, Y):
     beta_orig[zero_inds] = 0.0
     sse = float(np.sum((Y - X_avg @ beta_orig - intercept) ** 2))
     # lam on R's glmnet scale, like every other lambda this directory records
-    return {'bet': beta, 'mse': sse / len(Y), 'lam': float(avg_model.alpha_) * 2.0}
+    return {'bet': beta, 'mse': sse / len(Y), 'lam': float(avg_model.alpha_) * 2.0,
+            'beta_orig': beta_orig, 'intercept': intercept}
 
 
 def oracle_fit(X_full, Y):
     """Full Information Structured Lasso, fitted the way stage 4 fits CLUSSO."""
     return clusso_fit_cv(X_full, Y, n_folds=5, rng=None, n_starts=5)
+
+
+# --- held-out validation, as Random CLUSSO scores prediction -----------------
+#
+# Random_CLUSSO_Data_Analysis.R (Supplemental_Code.zip) and paper section 4:
+# split subjects 80/20, fit every method on the 80%, score MSE on the 20%.
+# Structured methods predict with test-centered Y and test-centered X (no
+# intercept); naive predicts raw test averages with its training intercept.
+# Cluster labels are arbitrary, so a structured fit is scored with alpha in
+# both orders and the smaller MSE kept -- the paper's "992 or 2670".
+#
+# One deliberate difference: Rubin refits Random CLUSSO's structured OLS on
+# the TEST split and scores it there, which fits coefficients to the data they
+# are scored on. The refit here is trained on the training split only.
+
+def _test_scores(mse, mse_other, Y_test):
+    var = float(np.var(Y_test))
+    return {'test_mse': float(mse), 'test_rmse': float(np.sqrt(mse)),
+            'test_r2': (1.0 - float(mse) / var) if var > 0 else None,
+            'test_mse_other_order': (None if mse_other is None
+                                     else float(mse_other))}
+
+
+def structured_test(alpha, bet, X_test, Y_test, flip=True):
+    """
+    Held-out MSE for a structured fit, Rubin's way. flip=True also scores
+    alpha reversed and keeps the smaller, for fits on CLUSTERED designs whose
+    labels mean nothing across a split. The oracle's labels are the true ones,
+    so it passes flip=False.
+    """
+    alpha = np.asarray(alpha, float)
+    bet = np.asarray(bet, float)
+    Yc = Y_test - Y_test.mean()
+    Xc = X_test - X_test.mean(axis=2, keepdims=True)
+
+    def mse(a):
+        pred = np.einsum('p,pqi,q->i', a, Xc, bet)
+        return float(np.mean((Yc - pred) ** 2))
+
+    m = mse(alpha)
+    if not flip or alpha.size != 2:
+        return _test_scores(m, None, Y_test)
+    m2 = mse(alpha[::-1])
+    return _test_scores(min(m, m2), max(m, m2), Y_test)
 
 
 def selection_metrics(mask, truth):
@@ -116,7 +161,7 @@ def selection_metrics(mask, truth):
     }
 
 
-def structured_metrics(fit, Y, X, beta_star, truth):
+def structured_metrics(fit, Y, X, beta_star, truth, test=None, flip=True):
     """
     Every metric for a structured-lasso fit (CLUSSO or the oracle). Bias and MSE
     come from core's own simulation_results, so they mean exactly what the CLUSSO
@@ -126,16 +171,22 @@ def structured_metrics(fit, Y, X, beta_star, truth):
     _, _, bias, mse = simulation_results(fit['bet'], beta_star, fit['alpha'], Y, X)
     out['bias'], out['mse'] = float(bias), float(mse)
     out['lam'] = float(fit['lam'])
+    if test is not None:
+        out.update(structured_test(fit['alpha'], fit['bet'], *test, flip=flip))
     return out
 
 
-def naive_metrics(X_avg, Y, beta_star, truth):
+def naive_metrics(X_avg, Y, beta_star, truth, test=None):
     fit = naive_fit(X_avg, Y)
     out = selection_metrics(fit['bet'] != 0, truth)
     bs = np.asarray(beta_star, dtype=float)
     out['bias'] = float(np.sum(np.abs(bs / np.sum(np.abs(bs)) - fit['bet'])))
     out['mse'] = float(fit['mse'])
     out['lam'] = fit['lam']
+    if test is not None:
+        X_te, Y_te = test
+        m = float(np.mean((Y_te - X_te @ fit['beta_orig'] - fit['intercept']) ** 2))
+        out.update(_test_scores(m, None, Y_te))
     return out
 
 
@@ -163,7 +214,7 @@ def refit_sols(X, Y, selected, n_starts=DEFAULT_N_STARTS):
     return {'alpha': best['alpha'], 'bet': bet_full}
 
 
-def refit_metrics(selected, X, Y, beta_star, truth):
+def refit_metrics(selected, X, Y, beta_star, truth, test=None):
     """A PS-Fdr arm: selection metrics from the set, bias and MSE from the refit."""
     mask = np.zeros(len(truth), dtype=bool)
     mask[np.asarray(selected, dtype=int)] = True
@@ -171,6 +222,9 @@ def refit_metrics(selected, X, Y, beta_star, truth):
     fit = refit_sols(X, Y, selected)
     _, _, bias, mse = simulation_results(fit['bet'], beta_star, fit['alpha'], Y, X)
     out['bias'], out['mse'] = float(bias), float(mse)
+    if test is not None:
+        # The refit is trained on X, Y -- the training split -- never on test.
+        out.update(structured_test(fit['alpha'], fit['bet'], *test))
     return out
 
 
@@ -178,7 +232,8 @@ def refit_metrics(selected, X, Y, beta_star, truth):
 METRICS = [('fd', 'FD'), ('fn', 'FN'), ('fdp', 'FDP'), ('power', 'power'),
            ('fd_fn', 'FD+FN'), ('tpr', 'TPR%'), ('fpr', 'FPR%'),
            ('bias', 'bias'), ('mse', 'MSE'), ('n_sel', '|S|'),
-           ('sec', 'sec')]
+           ('test_mse', 'test MSE'), ('test_rmse', 'test RMSE'),
+           ('test_r2', 'test R2'), ('sec', 'sec')]
 
 
 def summarize(records):
