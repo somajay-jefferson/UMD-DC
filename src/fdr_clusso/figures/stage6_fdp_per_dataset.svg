@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 422" width="720" height="422" role="img" aria-label="FDP per dataset, CLUSSO alone versus FDR-CLUSSO">
+<title>FDP per dataset, CLUSSO alone versus FDR-CLUSSO</title>
+<style>
+  .bg{fill:#fcfcfb} .ink{fill:#0b0b0b} .ink2{fill:#52514e} .mute{fill:#898781}
+  .grid{stroke:#e1e0d9} .axis{stroke:#c3c2b7} .s1{fill:#2a78d6} .s1l{stroke:#2a78d6}
+  .s2{fill:#eb6834} .gray{fill:#898781} .grayl{stroke:#898781} .ring{stroke:#fcfcfb}
+  .tgt{stroke:#52514e}
+  text{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-variant-numeric:tabular-nums}
+  @media (prefers-color-scheme: dark){
+    .bg{fill:#1a1a19} .ink{fill:#ffffff} .ink2{fill:#c3c2b7}
+    .grid{stroke:#2c2c2a} .axis{stroke:#383835} .s1{fill:#3987e5} .s1l{stroke:#3987e5}
+    .s2{fill:#d95926} .ring{stroke:#1a1a19} .tgt{stroke:#c3c2b7}
+  }
+</style>
+<rect class="bg" width="720" height="422" rx="8"/>
+<text class="ink" x="20" y="28" font-size="15" font-weight="600">FDP in each of the 100 datasets</text>
+<text class="ink2" x="20" y="46" font-size="12">FDR is the average of these. Any single dataset can land well above or below it.</text>
+<line class="grid" x1="56" x2="696" y1="190.0" y2="190.0" stroke-width="1"/>
+<text class="mute" x="48" y="194.0" font-size="11" text-anchor="end">0</text>
+<line class="grid" x1="56" x2="696" y1="162.0" y2="162.0" stroke-width="1"/>
+<text class="mute" x="48" y="166.0" font-size="11" text-anchor="end">10</text>
+<line class="grid" x1="56" x2="696" y1="134.0" y2="134.0" stroke-width="1"/>
+<text class="mute" x="48" y="138.0" font-size="11" text-anchor="end">20</text>
+<line class="grid" x1="56" x2="696" y1="106.0" y2="106.0" stroke-width="1"/>
+<text class="mute" x="48" y="110.0" font-size="11" text-anchor="end">30</text>
+<line class="grid" x1="56" x2="696" y1="78.0" y2="78.0" stroke-width="1"/>
+<text class="mute" x="48" y="82.0" font-size="11" text-anchor="end">40</text>
+<path class="s2" d="M57.0,190.0 V188.4 Q57.0,184.4 61.0,184.4 H88.6 Q92.6,184.4 92.6,188.4 V190.0 Z"><title>CLUSSO alone: 2 datasets with FDP in [0.00, 0.05]</title></path>
+<path class="s2" d="M94.6,190.0 V174.4 Q94.6,170.4 98.6,170.4 H126.3 Q130.3,170.4 130.3,174.4 V190.0 Z"><title>CLUSSO alone: 7 datasets with FDP in (0.05, 0.10]</title></path>
+<path class="s2" d="M132.3,190.0 V190.0 Q132.3,187.2 135.1,187.2 H165.1 Q167.9,187.2 167.9,190.0 V190.0 Z"><title>CLUSSO alone: 1 datasets with FDP in (0.10, 0.15]</title></path>
+<path class="s2" d="M169.9,190.0 V143.6 Q169.9,139.6 173.9,139.6 H201.6 Q205.6,139.6 205.6,143.6 V190.0 Z"><title>CLUSSO alone: 18 datasets with FDP in (0.15, 0.20]</title></path>
+<path class="s2" d="M207.6,190.0 V152.0 Q207.6,148.0 211.6,148.0 H239.2 Q243.2,148.0 243.2,152.0 V190.0 Z"><title>CLUSSO alone: 15 datasets with FDP in (0.20, 0.25]</title></path>
+<path class="s2" d="M245.2,190.0 V174.4 Q245.2,170.4 249.2,170.4 H276.9 Q280.9,170.4 280.9,174.4 V190.0 Z"><title>CLUSSO alone: 7 datasets with FDP in (0.25, 0.30]</title></path>
+<path class="s2" d="M282.9,190.0 V174.4 Q282.9,170.4 286.9,170.4 H314.5 Q318.5,170.4 318.5,174.4 V190.0 Z"><title>CLUSSO alone: 7 datasets with FDP in (0.30, 0.35]</title></path>
+<path class="s2" d="M320.5,190.0 V166.0 Q320.5,162.0 324.5,162.0 H352.2 Q356.2,162.0 356.2,166.0 V190.0 Z"><title>CLUSSO alone: 10 datasets with FDP in (0.35, 0.40]</title></path>
+<path class="s2" d="M358.2,190.0 V160.4 Q358.2,156.4 362.2,156.4 H389.8 Q393.8,156.4 393.8,160.4 V190.0 Z"><title>CLUSSO alone: 12 datasets with FDP in (0.40, 0.45]</title></path>
+<path class="s2" d="M395.8,190.0 V163.2 Q395.8,159.2 399.8,159.2 H427.5 Q431.5,159.2 431.5,163.2 V190.0 Z"><title>CLUSSO alone: 11 datasets with FDP in (0.45, 0.50]</title></path>
+<path class="s2" d="M433.5,190.0 V171.6 Q433.5,167.6 437.5,167.6 H465.1 Q469.1,167.6 469.1,171.6 V190.0 Z"><title>CLUSSO alone: 8 datasets with FDP in (0.50, 0.55]</title></path>
+<path class="s2" d="M471.1,190.0 V188.4 Q471.1,184.4 475.1,184.4 H502.8 Q506.8,184.4 506.8,188.4 V190.0 Z"><title>CLUSSO alone: 2 datasets with FDP in (0.55, 0.60]</title></path>
+<line class="axis" x1="56" x2="696" y1="190" y2="190" stroke-width="1"/>
+<line class="tgt" x1="131.3" x2="131.3" y1="64" y2="190" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text class="ink" x="696" y="70" font-size="13" font-weight="600" text-anchor="end">CLUSSO alone</text>
+<text class="ink2" x="696" y="86" font-size="12" text-anchor="end">mean 0.313 · at or under 0.10 in 9 · FDP 0 in 2 · above 0.20 in 72</text>
+<line class="grid" x1="56" x2="696" y1="366.0" y2="366.0" stroke-width="1"/>
+<text class="mute" x="48" y="370.0" font-size="11" text-anchor="end">0</text>
+<line class="grid" x1="56" x2="696" y1="338.0" y2="338.0" stroke-width="1"/>
+<text class="mute" x="48" y="342.0" font-size="11" text-anchor="end">10</text>
+<line class="grid" x1="56" x2="696" y1="310.0" y2="310.0" stroke-width="1"/>
+<text class="mute" x="48" y="314.0" font-size="11" text-anchor="end">20</text>
+<line class="grid" x1="56" x2="696" y1="282.0" y2="282.0" stroke-width="1"/>
+<text class="mute" x="48" y="286.0" font-size="11" text-anchor="end">30</text>
+<line class="grid" x1="56" x2="696" y1="254.0" y2="254.0" stroke-width="1"/>
+<text class="mute" x="48" y="258.0" font-size="11" text-anchor="end">40</text>
+<path class="s1" d="M57.0,366.0 V277.6 Q57.0,273.6 61.0,273.6 H88.6 Q92.6,273.6 92.6,277.6 V366.0 Z"><title>FDR-CLUSSO, paper's rule: 33 datasets with FDP in [0.00, 0.05]</title></path>
+<path class="s1" d="M94.6,366.0 V297.2 Q94.6,293.2 98.6,293.2 H126.3 Q130.3,293.2 130.3,297.2 V366.0 Z"><title>FDR-CLUSSO, paper's rule: 26 datasets with FDP in (0.05, 0.10]</title></path>
+<path class="s1" d="M132.3,366.0 V356.0 Q132.3,352.0 136.3,352.0 H163.9 Q167.9,352.0 167.9,356.0 V366.0 Z"><title>FDR-CLUSSO, paper's rule: 5 datasets with FDP in (0.10, 0.15]</title></path>
+<path class="s1" d="M169.9,366.0 V328.0 Q169.9,324.0 173.9,324.0 H201.6 Q205.6,324.0 205.6,328.0 V366.0 Z"><title>FDR-CLUSSO, paper's rule: 15 datasets with FDP in (0.15, 0.20]</title></path>
+<path class="s1" d="M207.6,366.0 V347.6 Q207.6,343.6 211.6,343.6 H239.2 Q243.2,343.6 243.2,347.6 V366.0 Z"><title>FDR-CLUSSO, paper's rule: 8 datasets with FDP in (0.20, 0.25]</title></path>
+<path class="s1" d="M245.2,366.0 V342.0 Q245.2,338.0 249.2,338.0 H276.9 Q280.9,338.0 280.9,342.0 V366.0 Z"><title>FDR-CLUSSO, paper's rule: 10 datasets with FDP in (0.25, 0.30]</title></path>
+<path class="s1" d="M282.9,366.0 V361.6 Q282.9,357.6 286.9,357.6 H314.5 Q318.5,357.6 318.5,361.6 V366.0 Z"><title>FDR-CLUSSO, paper's rule: 3 datasets with FDP in (0.30, 0.35]</title></path>
+<line class="axis" x1="56" x2="696" y1="366" y2="366" stroke-width="1"/>
+<line class="tgt" x1="131.3" x2="131.3" y1="240" y2="366" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text class="ink" x="696" y="246" font-size="13" font-weight="600" text-anchor="end">FDR-CLUSSO, paper's rule</text>
+<text class="ink2" x="696" y="262" font-size="12" text-anchor="end">mean 0.113 · at or under 0.10 in 59 · FDP 0 in 33 · above 0.20 in 21</text>
+<text class="mute" x="56.0" y="384" font-size="12" text-anchor="middle">0.0</text>
+<text class="mute" x="131.3" y="384" font-size="12" text-anchor="middle">0.1</text>
+<text class="mute" x="206.6" y="384" font-size="12" text-anchor="middle">0.2</text>
+<text class="mute" x="281.9" y="384" font-size="12" text-anchor="middle">0.3</text>
+<text class="mute" x="357.2" y="384" font-size="12" text-anchor="middle">0.4</text>
+<text class="mute" x="432.5" y="384" font-size="12" text-anchor="middle">0.5</text>
+<text class="mute" x="507.8" y="384" font-size="12" text-anchor="middle">0.6</text>
+<text class="mute" x="583.1" y="384" font-size="12" text-anchor="middle">0.7</text>
+<text class="mute" x="658.4" y="384" font-size="12" text-anchor="middle">0.8</text>
+<text class="mute" x="136.3" y="402" font-size="12">dashed line: target 0.10 · bars: number of datasets, bins of width 0.05</text>
+</svg>

@@ -396,6 +396,14 @@ there identity does matter.
 > the anti-conservative direction, which is the one that matters.
 > `stage4_clusso_fdr.py --null-ladder fine` restores the 40-step ladder, and
 > `stage6_exactk_fine_reps100.json` reruns the 100 cohorts on it. See section 11.
+>
+> **Size, settled by that rerun (2026-10-27):** over all 100 cohorts the coarse
+> ladder raises exact-k's FDP by only **0.006** (0.113 → 0.118, paired t = 2.0).
+> It lowers null_top on 92 cohorts but changes the selection on just 12. The
+> 0.138 → 0.157 jump above came from the first 20 cohorts, which are an
+> unusually hard draw: on the fine ladder they average 0.138, against 0.106 for
+> the other 80. The direction stands, but the size above overstates it. See
+> section 12.
 
 **Not a deviation from He et al.** The paper has no lambda grid -- `lars_path`
 gives exact breakpoints, so there is nothing to discretize. The grid is our
@@ -548,6 +556,34 @@ mostly a measure of design noise here, not of selection.
 
 ---
 
+## 12. The paper's rule on its own ladder, 100 replications
+
+**Where:** `stage6_exactk_fine_reps100.json` / `.log`, `stage6_report.md`, and
+the write-up with figures in `RESULTS.md`. Exact-k only, on the 40-step ladder,
+at `70c1c8c`. 1,295 minutes.
+
+        method                  mean FDP   95% CI           median   power   ≤0.10
+        CLUSSO, bare              0.313    [0.284, 0.342]     0.310   0.975     9
+        FDR-CLUSSO exact-k (40)   0.113    [0.093, 0.132]     0.091   0.933    59
+        oracle                    0.096    [0.068, 0.125]     0.000   1.000    70
+
+**The headline is now "consistent with 0.10."** The interval covers the target
+(1.23 SE above it). It's not proof of control, but it's no longer evidence of a
+miss. The gate still prints FAIL, because it reads the raw mean.
+
+**Prediction is unchanged and β gets more accurate.** R² 0.914 vs 0.913 (max
+per-cohort gap 0.011). L1 bias 0.181 → 0.159, paired t = −5.1.
+
+**Every check passed.** Controls are identical to stage 5. Cohorts 0–19 are
+identical to `stage4.json`. Exhausted rate is 0.
+
+**Public page:** `docs/fdr-clusso.html` still says FDR-CLUSSO "falls short" /
+"does not reach" 0.10, built on stage 4's 20 cohorts. That's now too strong.
+Regenerating it from this run is open question 7. Not done here, since it
+changes the live site.
+
+---
+
 ## Open questions
 
 1. ~~Is the objective-gap gate criterion defensible?~~ **Settled by measurement,
@@ -570,3 +606,9 @@ mostly a measure of design noise here, not of selection.
    ladder is measurably anti-conservative (section 9) and about 2x cheaper.
    Decide once `stage6_exactk_fine_reps100.json` shows how big the gap is over
    100 cohorts.
+   **Measured (section 12):** +0.006 FDP for 0.5x the time. Recommendation: fine
+   for anything reported, coarse opt-in for exploration.
+7. **New:** regenerate the public FDR-CLUSSO page from `stage6`? The current
+   "falls short" wording rests on 20 unrepresentative cohorts. Stage 6 has no
+   one-λ arm, so the page's arm comparison needs `stage5` (13-step) as its
+   source or has to be dropped.

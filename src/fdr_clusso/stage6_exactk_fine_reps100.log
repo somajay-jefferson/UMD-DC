@@ -1,0 +1,35 @@
+100 cohorts, n=300 q=50 sparsity=0.8, B=50 M=100, target q=0.1
+  CLUSSO inside PS-Fdr, clustering frozen once per cohort, null ladder fine (40 steps) at 70c1c8c
+
+             arm  mean FDP   power  mean |S|  FDP<=q  null top  exhaust
+   CLUSSO (bare)     0.313   0.975     14.87   0.090         -        -
+         exact_k     0.113   0.933     10.64   0.590     0.876    0.000
+
+  mean over 100 cohorts
+          method        FD        FN       FDP     power     FD+FN      TPR%      FPR%      bias       MSE       |S|       sec
+       naive avg    20.570     0.210     0.631     0.979    20.780    97.900    51.425     0.529   321.618    30.360     0.069
+   oracle (full)     1.460     0.000     0.096     1.000     1.460   100.000     3.650     0.014     0.952    11.460    12.464
+   CLUSSO (bare)     5.120     0.250     0.313     0.975     5.370    97.500    12.800     0.181   276.233    14.870    14.392
+     FDR exact-k     1.310     0.670     0.113     0.933     1.980    93.300     3.275     0.159   279.535    10.640  4548.415
+
+  median over 100 cohorts
+          method        FD        FN       FDP     power     FD+FN      TPR%      FPR%      bias       MSE       |S|       sec
+       naive avg    22.500     0.000     0.697     1.000    23.000   100.000    56.250     0.481   214.424    32.000     0.069
+   oracle (full)     0.000     0.000     0.000     1.000     0.000   100.000     0.000     0.010     0.957    10.000    12.729
+   CLUSSO (bare)     4.500     0.000     0.310     1.000     4.500   100.000    11.250     0.163   162.553    14.000    14.004
+     FDR exact-k     1.000     0.000     0.091     1.000     2.000   100.000     2.500     0.140   167.968    11.000  4507.244
+
+==============================================================================
+  Gate reads arm 'exact_k' -- the ported rule. Target q = 0.1.
+
+    FDP <= q              0.113 <= 0.1        FAIL
+    beats bare CLUSSO     0.113 <  0.313      PASS
+    selects something     power 0.933 vs 0.975 bare  PASS
+    grid not exhausted    0.0000 <= 0.02     PASS
+
+  => FAIL
+
+  cost: 12.0 CLUSSO fits per permuted-arm target
+  diagnostic: core 0.001 threshold plausibly binding on 44% of cohorts
+  clustering accuracy 1.000 (every number above is conditional on it)
+==============================================================================
