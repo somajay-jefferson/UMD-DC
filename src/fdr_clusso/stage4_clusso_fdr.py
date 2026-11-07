@@ -119,25 +119,51 @@ def run_meta(args, argv):
     }
 
 
-def one_cohort(seed, B, M, n, q_feat, sparsity, arms, q=Q, null_ladder='fine'):
+def holdout_split(n, frac, seed):
+    """
+    Random CLUSSO's split: floor(0.8 n) subjects train, the rest test, drawn
+    at random (Random_CLUSSO_Data_Analysis.R:94-95). Seeded from the cohort
+    seed so a cohort always splits the same way.
+    """
+    rng = np.random.default_rng([seed, 802])
+    n_train = int(np.floor((1.0 - frac) * n))
+    tr = np.sort(rng.choice(n, size=n_train, replace=False))
+    te = np.setdiff1d(np.arange(n), tr)
+    return tr, te
+
+
+def one_cohort(seed, B, M, n, q_feat, sparsity, arms, q=Q, null_ladder='fine',
+               holdout=0.0):
     # The clustering happens HERE, once, and never again. Everything downstream
-    # resamples subjects out of this one frozen tensor.
+    # resamples subjects out of this one frozen tensor. With --holdout the split
+    # comes AFTER clustering, as in Rubin's code: the clustering sees every
+    # subject, the fits see only the training split.
     c = make_cohort_full(n, q_feat, sparsity, seed)
     clust_X, Y, truth, clust_acc = c['clust_X'], c['Y'], c['truth'], c['clust_acc']
+    X_avg, X_full = c['X_avg'], c['X_full']
+    tests = {'clust': None, 'avg': None, 'full': None}
+    if holdout > 0:
+        tr, te = holdout_split(n, holdout, seed)
+        tests = {'clust': (clust_X[:, :, te], Y[te]), 'avg': (X_avg[te], Y[te]),
+                 'full': (X_full[:, :, te], Y[te])}
+        clust_X, X_avg, X_full, Y = clust_X[:, :, tr], X_avg[tr], X_full[:, :, tr], Y[tr]
 
-    out = {'clust_acc': float(clust_acc), 'n_true': int(truth.sum())}
+    out = {'clust_acc': float(clust_acc), 'n_true': int(truth.sum()),
+           'n_train': int(Y.size)}
 
     # Controls (controls.py). Naive ignores the tubule structure; the oracle
     # sees the true latent tubules, so it is CLUSSO with no clustering error.
     # `sec` is fit time only, scoring excluded, as Rubin's tic/toc pairs time it.
     t0 = time.perf_counter()
-    out['naive'] = naive_metrics(c['X_avg'], Y, c['beta_star'], truth)
+    out['naive'] = naive_metrics(X_avg, Y, c['beta_star'], truth, test=tests['avg'])
     out['naive']['sec'] = time.perf_counter() - t0
 
     t0 = time.perf_counter()
-    oracle = oracle_fit(c['X_full'], Y)
+    oracle = oracle_fit(X_full, Y)
     sec = time.perf_counter() - t0
-    out['oracle'] = structured_metrics(oracle, Y, c['X_full'], c['beta_star'], truth)
+    # The oracle's cluster labels are the true ones, so no label flip on test.
+    out['oracle'] = structured_metrics(oracle, Y, X_full, c['beta_star'], truth,
+                                       test=tests['full'], flip=False)
     out['oracle']['sec'] = sec
 
     # Baseline: CLUSSO as it ships. CV-tuned, no FDR control, one fit.
@@ -151,7 +177,8 @@ def one_cohort(seed, B, M, n, q_feat, sparsity, arms, q=Q, null_ladder='fine'):
                        'lam_cv': float(base_fit['lam']),
                        'thresh_binding': bool(threshold_binding(base_fit['bet']))}
     out['baseline'].update(structured_metrics(base_fit, Y, clust_X,
-                                              c['beta_star'], truth))
+                                              c['beta_star'], truth,
+                                              test=tests['clust']))
     out['baseline']['sec'] = base_sec
 
     for arm in arms:
@@ -179,7 +206,7 @@ def one_cohort(seed, B, M, n, q_feat, sparsity, arms, q=Q, null_ladder='fine'):
         # Random CLUSSO's device: structured OLS on the selected set only, so a
         # method that returns a set still has a bias and an MSE.
         out[arm].update(refit_metrics(res['selected'], clust_X, Y,
-                                      c['beta_star'], truth))
+                                      c['beta_star'], truth, test=tests['clust']))
         out[arm]['sec'] = sec
         out[arm]['lam'] = out[arm]['lam_star']
     return out
@@ -339,6 +366,10 @@ def main():
     ap.add_argument('--q-features', type=int, default=50)
     ap.add_argument('--sparsity', type=float, default=0.8)
     ap.add_argument('--arm', choices=('a', 'b', 'both'), default='both')
+    ap.add_argument('--holdout', type=float, default=0.0,
+                    help='hold out this share of subjects as a test set, '
+                         "Random CLUSSO's way (0.2 = their 80/20). 0 keeps "
+                         'the in-sample-only behavior of every run before it')
     ap.add_argument('--null-ladder', choices=tuple(NULL_LADDERS), default='fine',
                     help="permuted arm's lambda ladder: 'fine' (the real arm's "
                          "40 steps, the default: closest to He et al.'s exact-k "
@@ -412,7 +443,8 @@ def main():
     else:
         per_cohort = Parallel(n_jobs=args.jobs, verbose=10)(
             delayed(one_cohort)(s, args.B, args.M, args.n, args.q_features,
-                                args.sparsity, arms, null_ladder=args.null_ladder)
+                                args.sparsity, arms, null_ladder=args.null_ladder,
+                                holdout=args.holdout)
             for s in seeds)
         meta['finished'] = time.strftime('%Y-%m-%dT%H:%M:%S%z')
         meta['wall_minutes'] = round((time.perf_counter() - t_start) / 60.0, 1)
