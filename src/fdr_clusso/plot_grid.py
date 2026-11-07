@@ -73,6 +73,13 @@ def load_runs(paths):
     """
     cells = defaultdict(dict)       # (q, rho, n) -> method -> list of dicts
     source = {}
+    # A figure is one data design. core's generator and the Random CLUSSO
+    # design both have rho = 0 cells, and mixing them would silently plot two
+    # different simulations as one line.
+    designs = {json.load(open(p))['args'].get('design', 'clusso') for p in paths}
+    if len(designs) > 1:
+        sys.exit(f'refusing to mix data designs in one figure: {sorted(designs)}. '
+                 'Plot each design separately.')
     for p in paths:
         d = json.load(open(p))
         a = d['args']
