@@ -30,7 +30,8 @@ sys.path.insert(0, os.path.join(_HERE, '..', 'fdr'))
 
 from ps_fdr import ps_fdr                                   # noqa: E402
 
-from clusso_select import (DEFAULT_LAMBDA_GRID, DEFAULT_N_STARTS,  # noqa: E402
+from clusso_select import (BETA_THRESH, DEFAULT_LAMBDA_GRID,      # noqa: E402
+                           DEFAULT_N_STARTS,
                            NULL_LAMBDA_GRID, clusso_cv_lambda,
                            clusso_support_at_lambda,
                            clusso_support_at_least_k, clusso_support_cv,
@@ -61,7 +62,7 @@ class ClussoSelector:
     """
 
     def __init__(self, lambda_grid=None, n_starts=DEFAULT_N_STARTS, tau=0.0,
-                 n_folds=5, null_lambda_grid=None):
+                 n_folds=5, null_lambda_grid=None, thresh=BETA_THRESH):
         self.lambda_grid = (DEFAULT_LAMBDA_GRID if lambda_grid is None
                             else np.asarray(lambda_grid, dtype=float))
         # The permuted arm walks a COARSER ladder than the real arm by default.
@@ -76,6 +77,8 @@ class ClussoSelector:
         self.n_starts = n_starts
         self.tau = tau
         self.n_folds = n_folds
+        # Coefficient cut, applied identically on the real and permuted arms.
+        self.thresh = float(thresh)
 
         # Tallies over every permuted-arm fit this selector performs.
         self.n_fixed_k_calls = 0
@@ -93,29 +96,31 @@ class ClussoSelector:
     def cv_lambda(self, X, y, n_folds, random_state):
         return clusso_cv_lambda(to_clusso(X), y, lambda_grid=self.lambda_grid,
                                 n_folds=self.n_folds, rng=None,
-                                n_starts=self.n_starts)
+                                n_starts=self.n_starts, thresh=self.thresh)
 
     def at_lambda(self, X, y, lam):
         self.total_fits += 1
         return clusso_support_at_lambda(to_clusso(X), y, lam,
-                                        n_starts=self.n_starts, tau=self.tau)
+                                        n_starts=self.n_starts, tau=self.tau,
+                                        thresh=self.thresh)
 
     def support_cv(self, X, y, n_folds, random_state):
         return clusso_support_cv(to_clusso(X), y, lambda_grid=self.lambda_grid,
                                  n_folds=self.n_folds, rng=None,
-                                 n_starts=self.n_starts, tau=self.tau)
+                                 n_starts=self.n_starts, tau=self.tau,
+                                 thresh=self.thresh)
 
     def support_fixed_k(self, X, y, k, rule):
         if rule == 'exact':
             mask, info = clusso_support_exact_k(
                 to_clusso(X), y, k, lambda_grid=self.null_lambda_grid,
-                n_starts=self.n_starts, tau=self.tau)
+                n_starts=self.n_starts, tau=self.tau, thresh=self.thresh)
             if info['k_before_truncation'] > int(k):
                 self.n_truncated += 1
         elif rule == 'atleast':
             mask, info = clusso_support_at_least_k(
                 to_clusso(X), y, k, lambda_grid=self.null_lambda_grid,
-                n_starts=self.n_starts, tau=self.tau)
+                n_starts=self.n_starts, tau=self.tau, thresh=self.thresh)
         else:
             raise ValueError(
                 f"null_rule={rule!r} has no CLUSSO counterpart; "

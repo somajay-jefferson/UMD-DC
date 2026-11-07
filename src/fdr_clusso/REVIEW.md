@@ -598,6 +598,14 @@ changes the live site.
    knowing that adding the parameter with default 0.001 would change no existing
    result -- it exposes a knob rather than altering a translation -- so it is a
    smaller violation than it sounds.
+   **Threshold half decided (2026-11-07):** `core`'s `Mainfunction_albet` and
+   `slasso_mse` now take `thresh`, ported from the Random CLUSSO R version
+   (`Supplemental_Code.zip`), with core's default still 0.001 (clussocode.zip
+   parity). The FDR-CLUSSO pipeline defaults to **0.01**, the Random CLUSSO
+   paper's value for all four of its methods, applied to every method here
+   (CLUSSO, oracle, naive, both PS-Fdr arms). `--thresh 0.001` reproduces every
+   earlier run exactly (225/225 fields on a quick run). Every run before this
+   used 0.001. The `_score_fold` question is unchanged.
 4. **New:** is validating the R-to-Python translation worth half a day and an R
    install? See section 7. Everything else here is conditional on it.
 5. **New:** is arm B's lower null an accident of 10-of-50, or does it hold at

@@ -63,7 +63,7 @@ sys.path.insert(0, os.path.join(_HERE, '..', 'fdr'))
 from ps_fdr import fdp_power                              # noqa: E402
 
 from clusso_ps_fdr import ClussoSelector, clusso_ps_fdr   # noqa: E402
-from clusso_select import (DEFAULT_LAMBDA_GRID,           # noqa: E402
+from clusso_select import (BETA_THRESH, DEFAULT_LAMBDA_GRID,  # noqa: E402
                            DEFAULT_N_STARTS, NULL_LAMBDA_GRID,
                            clusso_fit_cv, support_mask, threshold_binding)
 from stage1_noise import make_cohort_full                 # noqa: E402
@@ -109,6 +109,7 @@ def run_meta(args, argv):
         'git_dirty_src': bool(git('status', '--porcelain', '--untracked-files=no', '--', '..')),
         'command': ' '.join(argv),
         'null_ladder': args.null_ladder,
+        'beta_thresh': float(args.thresh),
         'n_lambda_real_arm': int(len(DEFAULT_LAMBDA_GRID)),
         'n_lambda_null_arm': int(len(NULL_LADDERS[args.null_ladder])),
         'n_starts': int(DEFAULT_N_STARTS),
@@ -133,7 +134,7 @@ def holdout_split(n, frac, seed):
 
 
 def one_cohort(seed, B, M, n, q_feat, sparsity, arms, q=Q, null_ladder='fine',
-               holdout=0.0):
+               holdout=0.0, thresh=BETA_THRESH):
     # The clustering happens HERE, once, and never again. Everything downstream
     # resamples subjects out of this one frozen tensor. With --holdout the split
     # comes AFTER clustering, as in Rubin's code: the clustering sees every
@@ -155,11 +156,12 @@ def one_cohort(seed, B, M, n, q_feat, sparsity, arms, q=Q, null_ladder='fine',
     # sees the true latent tubules, so it is CLUSSO with no clustering error.
     # `sec` is fit time only, scoring excluded, as Rubin's tic/toc pairs time it.
     t0 = time.perf_counter()
-    out['naive'] = naive_metrics(X_avg, Y, c['beta_star'], truth, test=tests['avg'])
+    out['naive'] = naive_metrics(X_avg, Y, c['beta_star'], truth, test=tests['avg'],
+                                 thresh=thresh)
     out['naive']['sec'] = time.perf_counter() - t0
 
     t0 = time.perf_counter()
-    oracle = oracle_fit(X_full, Y)
+    oracle = oracle_fit(X_full, Y, thresh=thresh)
     sec = time.perf_counter() - t0
     # The oracle's cluster labels are the true ones, so no label flip on test.
     out['oracle'] = structured_metrics(oracle, Y, X_full, c['beta_star'], truth,
@@ -168,21 +170,24 @@ def one_cohort(seed, B, M, n, q_feat, sparsity, arms, q=Q, null_ladder='fine',
 
     # Baseline: CLUSSO as it ships. CV-tuned, no FDR control, one fit.
     t0 = time.perf_counter()
-    base_fit = clusso_fit_cv(clust_X, Y, n_folds=5, rng=None, n_starts=5)
+    base_fit = clusso_fit_cv(clust_X, Y, n_folds=5, rng=None, n_starts=5,
+                             thresh=thresh)
     base_sec = time.perf_counter() - t0
     base_mask = support_mask(base_fit['bet'])
     b_fdp, b_pw = fdp_power(np.flatnonzero(base_mask), truth)
     out['baseline'] = {'fdp': float(b_fdp), 'power': float(b_pw),
                        'n_sel': int(base_mask.sum()),
                        'lam_cv': float(base_fit['lam']),
-                       'thresh_binding': bool(threshold_binding(base_fit['bet']))}
+                       'thresh_binding': bool(threshold_binding(base_fit['bet'],
+                                                                thresh=thresh))}
     out['baseline'].update(structured_metrics(base_fit, Y, clust_X,
                                               c['beta_star'], truth,
                                               test=tests['clust']))
     out['baseline']['sec'] = base_sec
 
     for arm in arms:
-        sel = ClussoSelector(null_lambda_grid=NULL_LADDERS[null_ladder])
+        sel = ClussoSelector(null_lambda_grid=NULL_LADDERS[null_ladder],
+                             thresh=thresh)
         t0 = time.perf_counter()
         res, sel = clusso_ps_fdr(clust_X, Y, q=q, B=B, M=M, seed=seed,
                                  selector=sel, **ARMS[arm])
@@ -339,7 +344,7 @@ def results_html(out, per_cohort, args, arms):
         <math><mi>k</mi></math> in the tens. Clustering accuracy was
         %(acc).3f, so this says nothing about what freezing costs when the
         clustering is wrong &mdash; the GMM simply got it right every time. And
-        core&rsquo;s hardcoded 0.001 coefficient cut was plausibly deciding the
+        the %(thresh)g coefficient cut was plausibly deciding the
         support on %(bind).0f%% of replications, which is the first thing to rule
         out before trusting the gap between %(afdp).3f and 0.10.
       </p>
@@ -354,6 +359,7 @@ def results_html(out, per_cohort, args, arms):
         'strip': strip, 'exh': a['exhausted_rate'], 'agree': agree,
         'kmed': kmed, 'kp': kmed / float(args.q_features),
         'acc': out['clust_acc'], 'bind': b['thresh_binding'] * 100,
+        'thresh': float(getattr(args, 'thresh', 0.001)),
     }
 
 
@@ -370,6 +376,11 @@ def main():
                     help='hold out this share of subjects as a test set, '
                          "Random CLUSSO's way (0.2 = their 80/20). 0 keeps "
                          'the in-sample-only behavior of every run before it')
+    ap.add_argument('--thresh', type=float, default=BETA_THRESH,
+                    help='coefficient cut after L1-normalisation, for every '
+                         "method. Default 0.01, the Random CLUSSO paper's value; "
+                         "0.001 reproduces runs before 2026-11-07 (core's own "
+                         'default, from clussocode.zip)')
     ap.add_argument('--null-ladder', choices=tuple(NULL_LADDERS), default='fine',
                     help="permuted arm's lambda ladder: 'fine' (the real arm's "
                          "40 steps, the default: closest to He et al.'s exact-k "
@@ -435,6 +446,9 @@ def main():
                 setattr(args, k, v)
         arms = [a for a in ARMS if a in per_cohort[0]]
         args.run_date = args.run_date or saved.get('run_date')
+        if 'thresh' not in saved['args']:
+            # Saved before --thresh existed: those runs used core's fixed 0.001.
+            args.thresh = 0.001
         # The saved run's own record, never this invocation's: a re-report
         # must not relabel what ran.
         meta = saved.get('meta', {'note': 'saved before run metadata existed'})
@@ -444,7 +458,7 @@ def main():
         per_cohort = Parallel(n_jobs=args.jobs, verbose=10)(
             delayed(one_cohort)(s, args.B, args.M, args.n, args.q_features,
                                 args.sparsity, arms, null_ladder=args.null_ladder,
-                                holdout=args.holdout)
+                                holdout=args.holdout, thresh=args.thresh)
             for s in seeds)
         meta['finished'] = time.strftime('%Y-%m-%dT%H:%M:%S%z')
         meta['wall_minutes'] = round((time.perf_counter() - t_start) / 60.0, 1)
@@ -531,7 +545,7 @@ def main():
         print('    for CLUSSO. Divergence measures how much it was doing.')
 
     print(f'\n  cost: {a["mean_fits"]:.1f} CLUSSO fits per permuted-arm target')
-    print(f'  diagnostic: core 0.001 threshold plausibly binding on '
+    print(f'  diagnostic: {args.thresh:g} coefficient cut plausibly binding on '
           f'{b["thresh_binding"]:.0%} of cohorts')
     print(f'  clustering accuracy {out["clust_acc"]:.3f} '
           f'(every number above is conditional on it)')
