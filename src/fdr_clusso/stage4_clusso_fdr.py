@@ -82,8 +82,9 @@ ARMS = {
 # which is what the permuted arm walked until commit 4992ca8 and what stage4.json
 # ran on. 'coarse' is the 13-step NULL_LAMBDA_GRID adopted there. stage5_reps100
 # showed coarse is NOT output-identical: it lowers null_top slightly and adds
-# false discoveries on a few cohorts. REVIEW.md section 9.
-NULL_LADDERS = {'coarse': NULL_LAMBDA_GRID, 'fine': DEFAULT_LAMBDA_GRID}
+# false discoveries on a few cohorts. REVIEW.md section 9. Since 2026-11-07
+# 'fine' is the default, as the closer match to He et al.'s exact-k rule.
+NULL_LADDERS ={'coarse': NULL_LAMBDA_GRID, 'fine': DEFAULT_LAMBDA_GRID}
 
 
 def run_meta(args, argv):
@@ -118,7 +119,7 @@ def run_meta(args, argv):
     }
 
 
-def one_cohort(seed, B, M, n, q_feat, sparsity, arms, q=Q, null_ladder='coarse'):
+def one_cohort(seed, B, M, n, q_feat, sparsity, arms, q=Q, null_ladder='fine'):
     # The clustering happens HERE, once, and never again. Everything downstream
     # resamples subjects out of this one frozen tensor.
     c = make_cohort_full(n, q_feat, sparsity, seed)
@@ -338,10 +339,12 @@ def main():
     ap.add_argument('--q-features', type=int, default=50)
     ap.add_argument('--sparsity', type=float, default=0.8)
     ap.add_argument('--arm', choices=('a', 'b', 'both'), default='both')
-    ap.add_argument('--null-ladder', choices=tuple(NULL_LADDERS), default='coarse',
-                    help="permuted arm's lambda ladder: 'coarse' (13 steps, the "
-                         "default since 4992ca8) or 'fine' (the real arm's 40, "
-                         'what stage4.json ran on)')
+    ap.add_argument('--null-ladder', choices=tuple(NULL_LADDERS), default='fine',
+                    help="permuted arm's lambda ladder: 'fine' (the real arm's "
+                         "40 steps, the default: closest to He et al.'s exact-k "
+                         "rule, which uses the lasso's exact path) or 'coarse' "
+                         '(13 steps, about 2x faster but +0.006 FDP over 100 '
+                         'cohorts; for quick exploring). REVIEW.md section 9')
     # -1 is joblib's "every LOGICAL core", which oversubscribes SMT siblings.
     # Measured on a Ryzen 5 5600 (6 physical / 12 logical): 12 workers ran each
     # fit 2.5x slower than 4 and bought only ~16% total throughput, because this
