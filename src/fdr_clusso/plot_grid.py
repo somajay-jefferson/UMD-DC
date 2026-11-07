@@ -28,13 +28,17 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 
 # Method key in per_cohort -> (label, css class, dashed?, marker). Fixed order
 # and fixed color per method, whichever methods a run happens to contain.
+# Legend order follows the Random CLUSSO paper's (CLUSSO, Random CLUSSO,
+# Naive, Full Information), with FDR-CLUSSO in Random CLUSSO's slot. Naive is
+# dotted and Full Information dashed, as there. Colors stay fixed per method.
 METHODS = [
-    ('exact_k', "FDR-CLUSSO (paper's rule)", 's1', False, 'circle'),
     ('baseline', 'CLUSSO', 's2', False, 'square'),
-    ('naive', 'Naive', 's3', True, 'diamond'),
-    ('oracle', 'Full information (oracle)', 's4', True, 'triangle'),
+    ('exact_k', 'FDR-CLUSSO', 's1', False, 'circle'),
+    ('naive', 'Naive', 's3', 'dot', 'diamond'),
+    ('oracle', 'Full Information', 's4', True, 'triangle'),
     ('fixed_lambda', 'FDR-CLUSSO one-λ', 's5', False, 'circle-open'),
 ]
+DEFAULT_METHODS = ['baseline', 'exact_k', 'naive', 'oracle']
 
 # Metric key -> (title, y label, fixed y range or None, scale factor).
 # TPR/FPR as percents, like the paper. MSE prefers held-out when a run has it.
@@ -146,13 +150,17 @@ def nice_max(v):
     return 10 * e
 
 
-def figure(cells, metric, stat, n_axis):
-    qs = sorted({k[0] for k in cells})
-    rhos = sorted({k[1] for k in cells})
+def figure(cells, metric, stat, n_axis, methods=DEFAULT_METHODS,
+           q_rows=None, rho_cols=None):
+    # Rows and columns default to what exists; pass the full layout to see a
+    # partial grid in its final shape, with unfinished cells marked 'not run'.
+    qs = sorted(q_rows) if q_rows else sorted({k[0] for k in cells})
+    rhos = sorted(rho_cols) if rho_cols else sorted({k[1] for k in cells})
     title, ylab, yfix, _ = METRICS[metric]
     pw, ph, gx, gy = 230, 150, 34, 58
     left, top = 64, 92
-    present = [m for m in METHODS if any(m[0] in cells[k] for k in cells)]
+    present = [m for m in METHODS if m[0] in methods
+               and any(m[0] in cells[k] for k in cells)]
     W = max(left + len(rhos) * (pw + gx) + 10, 640)
     H = top + len(qs) * (ph + gy) + 30 + 20 * len(present)
     nmin, nmax = n_axis
@@ -185,7 +193,9 @@ def figure(cells, metric, stat, n_axis):
                     lab = f'{t:g}' if abs(t) < 1e4 else f'{t:.0e}'
                     b.append(f'<text class="mute" x="{px - 6}" y="{Y(t) + 4:.1f}" '
                              f'font-size="10" text-anchor="end">{lab}</text>')
-            for t in sorted({nmin, nmax} | {k[2] for k in cells}):
+            # Even ticks across the axis, as in the paper (200, 400, ..., 1000).
+            step = 200 if nmax - nmin >= 600 else max(20, (nmax - nmin) // 5)
+            for t in range(nmin, nmax + 1, step):
                 b.append(f'<text class="mute" x="{X(t):.1f}" y="{py + ph + 14}" font-size="10" '
                          f'text-anchor="middle">{t}</text>')
             b.append(f'<rect class="frame" x="{px}" y="{py}" width="{pw}" height="{ph}" stroke-width="1"/>')
@@ -211,7 +221,7 @@ def figure(cells, metric, stat, n_axis):
                 if len(pts) > 1:
                     d = ' '.join(f'{"M" if i == 0 else "L"}{X(n):.1f},{Y(v):.1f}'
                                  for i, (n, v, _) in enumerate(pts))
-                    dash = ' stroke-dasharray="5 4"' if dashed else ''
+                    dash = {'dot': ' stroke-dasharray="1 4" stroke-linecap="round"', True: ' stroke-dasharray="6 4"'}.get(dashed, '')
                     b.append(f'<path class="{cls} ln" d="{d}" stroke-width="2"{dash}/>')
                 for n, v, r in pts:
                     b.append(marker(shape, X(n), Y(v), cls,
@@ -222,7 +232,7 @@ def figure(cells, metric, stat, n_axis):
     ly = top + len(qs) * (ph + gy) + 4
     for i, (m, lab, cls, dashed, shape) in enumerate(present):
         y = ly + 20 * i
-        dash = ' stroke-dasharray="5 4"' if dashed else ''
+        dash = {'dot': ' stroke-dasharray="1 4" stroke-linecap="round"', True: ' stroke-dasharray="6 4"'}.get(dashed, '')
         b.append(f'<line class="{cls}" x1="{left}" x2="{left + 30}" y1="{y}" y2="{y}" stroke-width="2"{dash}/>')
         b.append(marker(shape, left + 15, y, cls, lab))
         b.append(f'<text class="ink2" x="{left + 40}" y="{y + 4}" font-size="12">{lab}</text>')
@@ -246,6 +256,14 @@ def main():
     ap.add_argument('--n-axis', type=int, nargs=2, default=(200, 1000),
                     help="x range; the paper's is 200-1000")
     ap.add_argument('--metrics', nargs='+', default=list(METRICS))
+    ap.add_argument('--q-rows', type=int, nargs='+', default=None,
+                    help="force the panel rows, e.g. 20 50 100 (the paper's)")
+    ap.add_argument('--rho-cols', type=float, nargs='+', default=None,
+                    help="force the panel columns, e.g. 0 0.3 0.6 0.9")
+    ap.add_argument('--methods', nargs='+', default=DEFAULT_METHODS,
+                    choices=[m[0] for m in METHODS],
+                    help="lines to draw; default mirrors the paper's four, "
+                         "with FDR-CLUSSO in Random CLUSSO's slot")
     args = ap.parse_args()
 
     paths = sorted({p for g in args.runs for p in glob.glob(g)})
@@ -257,7 +275,9 @@ def main():
           + ', '.join(f'q={k[0]} rho={k[1]:g} n={k[2]}' for k in sorted(cells)))
     for metric in args.metrics:
         path = os.path.join(args.out, f'grid_{metric}.svg')
-        open(path, 'w', encoding='utf-8').write(figure(cells, metric, args.stat, args.n_axis))
+        open(path, 'w', encoding='utf-8').write(figure(cells, metric, args.stat, args.n_axis,
+                                                      args.methods, args.q_rows,
+                                                      args.rho_cols))
         print(f'  wrote {path}')
 
 
