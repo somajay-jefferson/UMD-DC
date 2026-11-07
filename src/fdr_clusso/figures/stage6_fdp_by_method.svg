@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 336" width="720" height="336" role="img" aria-label="False discovery proportion by method">
+<title>False discovery proportion by method</title>
+<style>
+  .bg{fill:#fcfcfb} .ink{fill:#0b0b0b} .ink2{fill:#52514e} .mute{fill:#898781}
+  .grid{stroke:#e1e0d9} .axis{stroke:#c3c2b7} .s1{fill:#2a78d6} .s1l{stroke:#2a78d6}
+  .s2{fill:#eb6834} .gray{fill:#898781} .grayl{stroke:#898781} .ring{stroke:#fcfcfb}
+  .tgt{stroke:#52514e}
+  text{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-variant-numeric:tabular-nums}
+  @media (prefers-color-scheme: dark){
+    .bg{fill:#1a1a19} .ink{fill:#ffffff} .ink2{fill:#c3c2b7}
+    .grid{stroke:#2c2c2a} .axis{stroke:#383835} .s1{fill:#3987e5} .s1l{stroke:#3987e5}
+    .s2{fill:#d95926} .ring{stroke:#1a1a19} .tgt{stroke:#c3c2b7}
+  }
+</style>
+<rect class="bg" width="720" height="336" rx="8"/>
+<text class="ink" x="20" y="28" font-size="15" font-weight="600">False discovery proportion by method, mean and 95% interval (100 datasets)</text>
+<line class="grid" x1="250.0" x2="250.0" y1="48" y2="276" stroke-width="1"/>
+<text class="mute" x="250.0" y="294" font-size="12" text-anchor="middle">0.0</text>
+<line class="grid" x1="307.1" x2="307.1" y1="48" y2="276" stroke-width="1"/>
+<text class="mute" x="307.1" y="294" font-size="12" text-anchor="middle">0.1</text>
+<line class="grid" x1="364.3" x2="364.3" y1="48" y2="276" stroke-width="1"/>
+<text class="mute" x="364.3" y="294" font-size="12" text-anchor="middle">0.2</text>
+<line class="grid" x1="421.4" x2="421.4" y1="48" y2="276" stroke-width="1"/>
+<text class="mute" x="421.4" y="294" font-size="12" text-anchor="middle">0.3</text>
+<line class="grid" x1="478.6" x2="478.6" y1="48" y2="276" stroke-width="1"/>
+<text class="mute" x="478.6" y="294" font-size="12" text-anchor="middle">0.4</text>
+<line class="grid" x1="535.7" x2="535.7" y1="48" y2="276" stroke-width="1"/>
+<text class="mute" x="535.7" y="294" font-size="12" text-anchor="middle">0.5</text>
+<line class="grid" x1="592.9" x2="592.9" y1="48" y2="276" stroke-width="1"/>
+<text class="mute" x="592.9" y="294" font-size="12" text-anchor="middle">0.6</text>
+<line class="grid" x1="650.0" x2="650.0" y1="48" y2="276" stroke-width="1"/>
+<text class="mute" x="650.0" y="294" font-size="12" text-anchor="middle">0.7</text>
+<line class="tgt" x1="307.1" x2="307.1" y1="42" y2="280" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text class="ink2" x="312.1" y="40" font-size="12">target 0.10</text>
+<text class="ink2" x="236" y="70" font-size="13" font-weight="400" text-anchor="end">Naive averaging</text>
+<line class="grayl" x1="593.5" x2="627.9" y1="66" y2="66" stroke-width="2" stroke-linecap="round"/>
+<circle class="gray ring" cx="610.7" cy="66" r="5" stroke-width="2"><title>Naive averaging: mean 0.631, 95% interval [0.601, 0.661]</title></circle>
+<text class="ink2" x="636.9" y="70" font-size="12" font-weight="400">0.631</text>
+<text class="ink2" x="236" y="108" font-size="13" font-weight="400" text-anchor="end">CLUSSO alone</text>
+<line class="grayl" x1="412.6" x2="445.1" y1="104" y2="104" stroke-width="2" stroke-linecap="round"/>
+<circle class="gray ring" cx="428.9" cy="104" r="5" stroke-width="2"><title>CLUSSO alone: mean 0.313, 95% interval [0.284, 0.342]</title></circle>
+<text class="ink2" x="454.1" y="108" font-size="12" font-weight="400">0.313</text>
+<text class="ink2" x="236" y="146" font-size="13" font-weight="400" text-anchor="end">FDR-CLUSSO, 13-step ladder</text>
+<line class="grayl" x1="306.2" x2="329.1" y1="142" y2="142" stroke-width="2" stroke-linecap="round"/>
+<circle class="gray ring" cx="317.7" cy="142" r="5" stroke-width="2"><title>FDR-CLUSSO, 13-step ladder: mean 0.118, 95% interval [0.098, 0.138]</title></circle>
+<text class="ink2" x="338.1" y="146" font-size="12" font-weight="400">0.118</text>
+<text class="ink2" x="236" y="184" font-size="13" font-weight="400" text-anchor="end">FDR-CLUSSO one-λ, 13-step</text>
+<line class="grayl" x1="302.3" x2="331.5" y1="180" y2="180" stroke-width="2" stroke-linecap="round"/>
+<circle class="gray ring" cx="316.9" cy="180" r="5" stroke-width="2"><title>FDR-CLUSSO one-λ, 13-step: mean 0.117, 95% interval [0.092, 0.143]</title></circle>
+<text class="ink2" x="340.5" y="184" font-size="12" font-weight="400">0.117</text>
+<text class="ink" x="236" y="222" font-size="13" font-weight="600" text-anchor="end">FDR-CLUSSO, paper's rule (40-step)</text>
+<line class="s1l" x1="302.9" x2="325.7" y1="218" y2="218" stroke-width="2" stroke-linecap="round"/>
+<circle class="s1 ring" cx="314.3" cy="218" r="5" stroke-width="2"><title>FDR-CLUSSO, paper's rule (40-step): mean 0.113, 95% interval [0.093, 0.132]</title></circle>
+<text class="ink" x="334.7" y="222" font-size="12" font-weight="600">0.113</text>
+<text class="ink2" x="236" y="260" font-size="13" font-weight="400" text-anchor="end">Oracle (true tubules)</text>
+<line class="grayl" x1="288.9" x2="321.1" y1="256" y2="256" stroke-width="2" stroke-linecap="round"/>
+<circle class="gray ring" cx="305.0" cy="256" r="5" stroke-width="2"><title>Oracle (true tubules): mean 0.096, 95% interval [0.068, 0.125]</title></circle>
+<text class="ink2" x="330.1" y="260" font-size="12" font-weight="400">0.096</text>
+<text class="mute" x="250" y="324" font-size="12">FDP = share of a method’s picks that are not real. Read with power: picking less always lowers it.</text>
+</svg>

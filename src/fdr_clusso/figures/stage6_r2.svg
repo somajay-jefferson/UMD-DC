@@ -1,0 +1,153 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 460" width="460" height="460" role="img" aria-label="R squared per dataset, CLUSSO alone versus FDR-CLUSSO">
+<title>R squared per dataset, CLUSSO alone versus FDR-CLUSSO</title>
+<style>
+  .bg{fill:#fcfcfb} .ink{fill:#0b0b0b} .ink2{fill:#52514e} .mute{fill:#898781}
+  .grid{stroke:#e1e0d9} .axis{stroke:#c3c2b7} .s1{fill:#2a78d6} .s1l{stroke:#2a78d6}
+  .s2{fill:#eb6834} .gray{fill:#898781} .grayl{stroke:#898781} .ring{stroke:#fcfcfb}
+  .tgt{stroke:#52514e}
+  text{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-variant-numeric:tabular-nums}
+  @media (prefers-color-scheme: dark){
+    .bg{fill:#1a1a19} .ink{fill:#ffffff} .ink2{fill:#c3c2b7}
+    .grid{stroke:#2c2c2a} .axis{stroke:#383835} .s1{fill:#3987e5} .s1l{stroke:#3987e5}
+    .s2{fill:#d95926} .ring{stroke:#1a1a19} .tgt{stroke:#c3c2b7}
+  }
+</style>
+<rect class="bg" width="460" height="460" rx="8"/>
+<text class="ink" x="20" y="28" font-size="15" font-weight="600">Prediction is unchanged: R² per dataset</text>
+<text class="ink2" x="20" y="46" font-size="12">Each dot is one dataset. On the diagonal = identical fit. Largest gap 0.011.</text>
+<line class="grid" x1="64.0" x2="64.0" y1="64" y2="404" stroke-width="1"/>
+<line class="grid" x1="64" x2="436" y1="404.0" y2="404.0" stroke-width="1"/>
+<text class="mute" x="64.0" y="420" font-size="11" text-anchor="middle">0.86</text>
+<text class="mute" x="56" y="408.0" font-size="11" text-anchor="end">0.86</text>
+<line class="grid" x1="117.1" x2="117.1" y1="64" y2="404" stroke-width="1"/>
+<line class="grid" x1="64" x2="436" y1="355.4" y2="355.4" stroke-width="1"/>
+<text class="mute" x="117.1" y="420" font-size="11" text-anchor="middle">0.88</text>
+<text class="mute" x="56" y="359.4" font-size="11" text-anchor="end">0.88</text>
+<line class="grid" x1="170.3" x2="170.3" y1="64" y2="404" stroke-width="1"/>
+<line class="grid" x1="64" x2="436" y1="306.9" y2="306.9" stroke-width="1"/>
+<text class="mute" x="170.3" y="420" font-size="11" text-anchor="middle">0.90</text>
+<text class="mute" x="56" y="310.9" font-size="11" text-anchor="end">0.90</text>
+<line class="grid" x1="223.4" x2="223.4" y1="64" y2="404" stroke-width="1"/>
+<line class="grid" x1="64" x2="436" y1="258.3" y2="258.3" stroke-width="1"/>
+<text class="mute" x="223.4" y="420" font-size="11" text-anchor="middle">0.92</text>
+<text class="mute" x="56" y="262.3" font-size="11" text-anchor="end">0.92</text>
+<line class="grid" x1="276.6" x2="276.6" y1="64" y2="404" stroke-width="1"/>
+<line class="grid" x1="64" x2="436" y1="209.7" y2="209.7" stroke-width="1"/>
+<text class="mute" x="276.6" y="420" font-size="11" text-anchor="middle">0.94</text>
+<text class="mute" x="56" y="213.7" font-size="11" text-anchor="end">0.94</text>
+<line class="grid" x1="329.7" x2="329.7" y1="64" y2="404" stroke-width="1"/>
+<line class="grid" x1="64" x2="436" y1="161.1" y2="161.1" stroke-width="1"/>
+<text class="mute" x="329.7" y="420" font-size="11" text-anchor="middle">0.96</text>
+<text class="mute" x="56" y="165.1" font-size="11" text-anchor="end">0.96</text>
+<line class="grid" x1="382.9" x2="382.9" y1="64" y2="404" stroke-width="1"/>
+<line class="grid" x1="64" x2="436" y1="112.6" y2="112.6" stroke-width="1"/>
+<text class="mute" x="382.9" y="420" font-size="11" text-anchor="middle">0.98</text>
+<text class="mute" x="56" y="116.6" font-size="11" text-anchor="end">0.98</text>
+<line class="grid" x1="436.0" x2="436.0" y1="64" y2="404" stroke-width="1"/>
+<line class="grid" x1="64" x2="436" y1="64.0" y2="64.0" stroke-width="1"/>
+<text class="mute" x="436.0" y="420" font-size="11" text-anchor="middle">1.00</text>
+<text class="mute" x="56" y="68.0" font-size="11" text-anchor="end">1.00</text>
+<line class="tgt" x1="64.0" y1="404.0" x2="436.0" y2="64.0" stroke-width="1.5" stroke-dasharray="4 3"/>
+<circle class="s1 ring" cx="149.1" cy="340.9" r="4" stroke-width="2"><title>dataset 0: CLUSSO alone 0.892, FDR-CLUSSO 0.886</title></circle>
+<circle class="s1 ring" cx="192.1" cy="286.6" r="4" stroke-width="2"><title>dataset 1: CLUSSO alone 0.908, FDR-CLUSSO 0.908</title></circle>
+<circle class="s1 ring" cx="120.2" cy="342.4" r="4" stroke-width="2"><title>dataset 2: CLUSSO alone 0.881, FDR-CLUSSO 0.885</title></circle>
+<circle class="s1 ring" cx="301.4" cy="191.0" r="4" stroke-width="2"><title>dataset 3: CLUSSO alone 0.949, FDR-CLUSSO 0.948</title></circle>
+<circle class="s1 ring" cx="146.2" cy="329.3" r="4" stroke-width="2"><title>dataset 4: CLUSSO alone 0.891, FDR-CLUSSO 0.891</title></circle>
+<circle class="s1 ring" cx="180.0" cy="300.3" r="4" stroke-width="2"><title>dataset 5: CLUSSO alone 0.904, FDR-CLUSSO 0.903</title></circle>
+<circle class="s1 ring" cx="283.2" cy="205.7" r="4" stroke-width="2"><title>dataset 6: CLUSSO alone 0.942, FDR-CLUSSO 0.942</title></circle>
+<circle class="s1 ring" cx="207.1" cy="272.0" r="4" stroke-width="2"><title>dataset 7: CLUSSO alone 0.914, FDR-CLUSSO 0.914</title></circle>
+<circle class="s1 ring" cx="141.1" cy="331.2" r="4" stroke-width="2"><title>dataset 8: CLUSSO alone 0.889, FDR-CLUSSO 0.890</title></circle>
+<circle class="s1 ring" cx="176.1" cy="303.4" r="4" stroke-width="2"><title>dataset 9: CLUSSO alone 0.902, FDR-CLUSSO 0.901</title></circle>
+<circle class="s1 ring" cx="274.4" cy="213.1" r="4" stroke-width="2"><title>dataset 10: CLUSSO alone 0.939, FDR-CLUSSO 0.939</title></circle>
+<circle class="s1 ring" cx="263.1" cy="223.0" r="4" stroke-width="2"><title>dataset 11: CLUSSO alone 0.935, FDR-CLUSSO 0.935</title></circle>
+<circle class="s1 ring" cx="280.4" cy="205.3" r="4" stroke-width="2"><title>dataset 12: CLUSSO alone 0.941, FDR-CLUSSO 0.942</title></circle>
+<circle class="s1 ring" cx="192.6" cy="286.7" r="4" stroke-width="2"><title>dataset 13: CLUSSO alone 0.908, FDR-CLUSSO 0.908</title></circle>
+<circle class="s1 ring" cx="182.7" cy="295.3" r="4" stroke-width="2"><title>dataset 14: CLUSSO alone 0.905, FDR-CLUSSO 0.905</title></circle>
+<circle class="s1 ring" cx="299.1" cy="192.0" r="4" stroke-width="2"><title>dataset 15: CLUSSO alone 0.948, FDR-CLUSSO 0.947</title></circle>
+<circle class="s1 ring" cx="266.6" cy="218.2" r="4" stroke-width="2"><title>dataset 16: CLUSSO alone 0.936, FDR-CLUSSO 0.936</title></circle>
+<circle class="s1 ring" cx="141.0" cy="355.8" r="4" stroke-width="2"><title>dataset 17: CLUSSO alone 0.889, FDR-CLUSSO 0.880</title></circle>
+<circle class="s1 ring" cx="168.4" cy="308.1" r="4" stroke-width="2"><title>dataset 18: CLUSSO alone 0.899, FDR-CLUSSO 0.899</title></circle>
+<circle class="s1 ring" cx="198.7" cy="285.0" r="4" stroke-width="2"><title>dataset 19: CLUSSO alone 0.911, FDR-CLUSSO 0.909</title></circle>
+<circle class="s1 ring" cx="229.9" cy="245.0" r="4" stroke-width="2"><title>dataset 20: CLUSSO alone 0.922, FDR-CLUSSO 0.925</title></circle>
+<circle class="s1 ring" cx="132.6" cy="347.5" r="4" stroke-width="2"><title>dataset 21: CLUSSO alone 0.886, FDR-CLUSSO 0.883</title></circle>
+<circle class="s1 ring" cx="174.2" cy="307.2" r="4" stroke-width="2"><title>dataset 22: CLUSSO alone 0.901, FDR-CLUSSO 0.900</title></circle>
+<circle class="s1 ring" cx="168.3" cy="309.0" r="4" stroke-width="2"><title>dataset 23: CLUSSO alone 0.899, FDR-CLUSSO 0.899</title></circle>
+<circle class="s1 ring" cx="153.0" cy="314.7" r="4" stroke-width="2"><title>dataset 24: CLUSSO alone 0.893, FDR-CLUSSO 0.897</title></circle>
+<circle class="s1 ring" cx="211.9" cy="283.9" r="4" stroke-width="2"><title>dataset 25: CLUSSO alone 0.916, FDR-CLUSSO 0.909</title></circle>
+<circle class="s1 ring" cx="210.1" cy="271.2" r="4" stroke-width="2"><title>dataset 26: CLUSSO alone 0.915, FDR-CLUSSO 0.915</title></circle>
+<circle class="s1 ring" cx="222.6" cy="270.9" r="4" stroke-width="2"><title>dataset 27: CLUSSO alone 0.920, FDR-CLUSSO 0.915</title></circle>
+<circle class="s1 ring" cx="162.6" cy="315.0" r="4" stroke-width="2"><title>dataset 28: CLUSSO alone 0.897, FDR-CLUSSO 0.897</title></circle>
+<circle class="s1 ring" cx="241.8" cy="245.6" r="4" stroke-width="2"><title>dataset 29: CLUSSO alone 0.927, FDR-CLUSSO 0.925</title></circle>
+<circle class="s1 ring" cx="201.6" cy="290.3" r="4" stroke-width="2"><title>dataset 30: CLUSSO alone 0.912, FDR-CLUSSO 0.907</title></circle>
+<circle class="s1 ring" cx="195.4" cy="283.7" r="4" stroke-width="2"><title>dataset 31: CLUSSO alone 0.909, FDR-CLUSSO 0.910</title></circle>
+<circle class="s1 ring" cx="193.3" cy="281.2" r="4" stroke-width="2"><title>dataset 32: CLUSSO alone 0.909, FDR-CLUSSO 0.911</title></circle>
+<circle class="s1 ring" cx="300.7" cy="197.5" r="4" stroke-width="2"><title>dataset 33: CLUSSO alone 0.949, FDR-CLUSSO 0.945</title></circle>
+<circle class="s1 ring" cx="185.1" cy="293.4" r="4" stroke-width="2"><title>dataset 34: CLUSSO alone 0.906, FDR-CLUSSO 0.906</title></circle>
+<circle class="s1 ring" cx="164.1" cy="315.1" r="4" stroke-width="2"><title>dataset 35: CLUSSO alone 0.898, FDR-CLUSSO 0.897</title></circle>
+<circle class="s1 ring" cx="234.9" cy="249.7" r="4" stroke-width="2"><title>dataset 36: CLUSSO alone 0.924, FDR-CLUSSO 0.924</title></circle>
+<circle class="s1 ring" cx="227.3" cy="251.8" r="4" stroke-width="2"><title>dataset 37: CLUSSO alone 0.921, FDR-CLUSSO 0.923</title></circle>
+<circle class="s1 ring" cx="278.5" cy="209.6" r="4" stroke-width="2"><title>dataset 38: CLUSSO alone 0.941, FDR-CLUSSO 0.940</title></circle>
+<circle class="s1 ring" cx="233.6" cy="247.3" r="4" stroke-width="2"><title>dataset 39: CLUSSO alone 0.924, FDR-CLUSSO 0.925</title></circle>
+<circle class="s1 ring" cx="162.4" cy="318.8" r="4" stroke-width="2"><title>dataset 40: CLUSSO alone 0.897, FDR-CLUSSO 0.895</title></circle>
+<circle class="s1 ring" cx="263.6" cy="224.1" r="4" stroke-width="2"><title>dataset 41: CLUSSO alone 0.935, FDR-CLUSSO 0.934</title></circle>
+<circle class="s1 ring" cx="254.5" cy="228.7" r="4" stroke-width="2"><title>dataset 42: CLUSSO alone 0.932, FDR-CLUSSO 0.932</title></circle>
+<circle class="s1 ring" cx="190.5" cy="286.6" r="4" stroke-width="2"><title>dataset 43: CLUSSO alone 0.908, FDR-CLUSSO 0.908</title></circle>
+<circle class="s1 ring" cx="194.5" cy="288.0" r="4" stroke-width="2"><title>dataset 44: CLUSSO alone 0.909, FDR-CLUSSO 0.908</title></circle>
+<circle class="s1 ring" cx="276.9" cy="209.5" r="4" stroke-width="2"><title>dataset 45: CLUSSO alone 0.940, FDR-CLUSSO 0.940</title></circle>
+<circle class="s1 ring" cx="177.8" cy="296.4" r="4" stroke-width="2"><title>dataset 46: CLUSSO alone 0.903, FDR-CLUSSO 0.904</title></circle>
+<circle class="s1 ring" cx="100.8" cy="363.1" r="4" stroke-width="2"><title>dataset 47: CLUSSO alone 0.874, FDR-CLUSSO 0.877</title></circle>
+<circle class="s1 ring" cx="238.3" cy="241.0" r="4" stroke-width="2"><title>dataset 48: CLUSSO alone 0.926, FDR-CLUSSO 0.927</title></circle>
+<circle class="s1 ring" cx="151.4" cy="331.4" r="4" stroke-width="2"><title>dataset 49: CLUSSO alone 0.893, FDR-CLUSSO 0.890</title></circle>
+<circle class="s1 ring" cx="158.1" cy="316.0" r="4" stroke-width="2"><title>dataset 50: CLUSSO alone 0.895, FDR-CLUSSO 0.896</title></circle>
+<circle class="s1 ring" cx="200.5" cy="285.5" r="4" stroke-width="2"><title>dataset 51: CLUSSO alone 0.911, FDR-CLUSSO 0.909</title></circle>
+<circle class="s1 ring" cx="198.3" cy="279.3" r="4" stroke-width="2"><title>dataset 52: CLUSSO alone 0.911, FDR-CLUSSO 0.911</title></circle>
+<circle class="s1 ring" cx="197.3" cy="285.5" r="4" stroke-width="2"><title>dataset 53: CLUSSO alone 0.910, FDR-CLUSSO 0.909</title></circle>
+<circle class="s1 ring" cx="238.0" cy="252.7" r="4" stroke-width="2"><title>dataset 54: CLUSSO alone 0.925, FDR-CLUSSO 0.922</title></circle>
+<circle class="s1 ring" cx="191.2" cy="299.9" r="4" stroke-width="2"><title>dataset 55: CLUSSO alone 0.908, FDR-CLUSSO 0.903</title></circle>
+<circle class="s1 ring" cx="180.7" cy="303.0" r="4" stroke-width="2"><title>dataset 56: CLUSSO alone 0.904, FDR-CLUSSO 0.902</title></circle>
+<circle class="s1 ring" cx="240.2" cy="244.0" r="4" stroke-width="2"><title>dataset 57: CLUSSO alone 0.926, FDR-CLUSSO 0.926</title></circle>
+<circle class="s1 ring" cx="216.9" cy="274.2" r="4" stroke-width="2"><title>dataset 58: CLUSSO alone 0.918, FDR-CLUSSO 0.913</title></circle>
+<circle class="s1 ring" cx="233.5" cy="245.6" r="4" stroke-width="2"><title>dataset 59: CLUSSO alone 0.924, FDR-CLUSSO 0.925</title></circle>
+<circle class="s1 ring" cx="277.6" cy="211.2" r="4" stroke-width="2"><title>dataset 60: CLUSSO alone 0.940, FDR-CLUSSO 0.939</title></circle>
+<circle class="s1 ring" cx="150.8" cy="320.3" r="4" stroke-width="2"><title>dataset 61: CLUSSO alone 0.893, FDR-CLUSSO 0.894</title></circle>
+<circle class="s1 ring" cx="283.2" cy="203.4" r="4" stroke-width="2"><title>dataset 62: CLUSSO alone 0.942, FDR-CLUSSO 0.943</title></circle>
+<circle class="s1 ring" cx="285.3" cy="200.8" r="4" stroke-width="2"><title>dataset 63: CLUSSO alone 0.943, FDR-CLUSSO 0.944</title></circle>
+<circle class="s1 ring" cx="218.9" cy="263.2" r="4" stroke-width="2"><title>dataset 64: CLUSSO alone 0.918, FDR-CLUSSO 0.918</title></circle>
+<circle class="s1 ring" cx="282.2" cy="200.3" r="4" stroke-width="2"><title>dataset 65: CLUSSO alone 0.942, FDR-CLUSSO 0.944</title></circle>
+<circle class="s1 ring" cx="155.2" cy="347.0" r="4" stroke-width="2"><title>dataset 66: CLUSSO alone 0.894, FDR-CLUSSO 0.883</title></circle>
+<circle class="s1 ring" cx="263.2" cy="220.0" r="4" stroke-width="2"><title>dataset 67: CLUSSO alone 0.935, FDR-CLUSSO 0.936</title></circle>
+<circle class="s1 ring" cx="180.5" cy="287.8" r="4" stroke-width="2"><title>dataset 68: CLUSSO alone 0.904, FDR-CLUSSO 0.908</title></circle>
+<circle class="s1 ring" cx="230.9" cy="248.1" r="4" stroke-width="2"><title>dataset 69: CLUSSO alone 0.923, FDR-CLUSSO 0.924</title></circle>
+<circle class="s1 ring" cx="175.0" cy="306.8" r="4" stroke-width="2"><title>dataset 70: CLUSSO alone 0.902, FDR-CLUSSO 0.900</title></circle>
+<circle class="s1 ring" cx="183.1" cy="300.1" r="4" stroke-width="2"><title>dataset 71: CLUSSO alone 0.905, FDR-CLUSSO 0.903</title></circle>
+<circle class="s1 ring" cx="174.1" cy="302.1" r="4" stroke-width="2"><title>dataset 72: CLUSSO alone 0.901, FDR-CLUSSO 0.902</title></circle>
+<circle class="s1 ring" cx="122.3" cy="366.1" r="4" stroke-width="2"><title>dataset 73: CLUSSO alone 0.882, FDR-CLUSSO 0.876</title></circle>
+<circle class="s1 ring" cx="207.7" cy="268.1" r="4" stroke-width="2"><title>dataset 74: CLUSSO alone 0.914, FDR-CLUSSO 0.916</title></circle>
+<circle class="s1 ring" cx="205.3" cy="275.4" r="4" stroke-width="2"><title>dataset 75: CLUSSO alone 0.913, FDR-CLUSSO 0.913</title></circle>
+<circle class="s1 ring" cx="244.5" cy="237.8" r="4" stroke-width="2"><title>dataset 76: CLUSSO alone 0.928, FDR-CLUSSO 0.928</title></circle>
+<circle class="s1 ring" cx="171.1" cy="309.8" r="4" stroke-width="2"><title>dataset 77: CLUSSO alone 0.900, FDR-CLUSSO 0.899</title></circle>
+<circle class="s1 ring" cx="171.1" cy="313.6" r="4" stroke-width="2"><title>dataset 78: CLUSSO alone 0.900, FDR-CLUSSO 0.897</title></circle>
+<circle class="s1 ring" cx="167.7" cy="305.8" r="4" stroke-width="2"><title>dataset 79: CLUSSO alone 0.899, FDR-CLUSSO 0.900</title></circle>
+<circle class="s1 ring" cx="210.6" cy="273.6" r="4" stroke-width="2"><title>dataset 80: CLUSSO alone 0.915, FDR-CLUSSO 0.914</title></circle>
+<circle class="s1 ring" cx="195.2" cy="287.9" r="4" stroke-width="2"><title>dataset 81: CLUSSO alone 0.909, FDR-CLUSSO 0.908</title></circle>
+<circle class="s1 ring" cx="233.5" cy="257.0" r="4" stroke-width="2"><title>dataset 82: CLUSSO alone 0.924, FDR-CLUSSO 0.921</title></circle>
+<circle class="s1 ring" cx="248.5" cy="234.6" r="4" stroke-width="2"><title>dataset 83: CLUSSO alone 0.929, FDR-CLUSSO 0.930</title></circle>
+<circle class="s1 ring" cx="211.1" cy="272.8" r="4" stroke-width="2"><title>dataset 84: CLUSSO alone 0.915, FDR-CLUSSO 0.914</title></circle>
+<circle class="s1 ring" cx="199.6" cy="281.5" r="4" stroke-width="2"><title>dataset 85: CLUSSO alone 0.911, FDR-CLUSSO 0.910</title></circle>
+<circle class="s1 ring" cx="221.9" cy="255.7" r="4" stroke-width="2"><title>dataset 86: CLUSSO alone 0.919, FDR-CLUSSO 0.921</title></circle>
+<circle class="s1 ring" cx="221.6" cy="263.2" r="4" stroke-width="2"><title>dataset 87: CLUSSO alone 0.919, FDR-CLUSSO 0.918</title></circle>
+<circle class="s1 ring" cx="298.1" cy="186.6" r="4" stroke-width="2"><title>dataset 88: CLUSSO alone 0.948, FDR-CLUSSO 0.950</title></circle>
+<circle class="s1 ring" cx="158.9" cy="321.4" r="4" stroke-width="2"><title>dataset 89: CLUSSO alone 0.896, FDR-CLUSSO 0.894</title></circle>
+<circle class="s1 ring" cx="171.6" cy="302.8" r="4" stroke-width="2"><title>dataset 90: CLUSSO alone 0.901, FDR-CLUSSO 0.902</title></circle>
+<circle class="s1 ring" cx="214.7" cy="274.7" r="4" stroke-width="2"><title>dataset 91: CLUSSO alone 0.917, FDR-CLUSSO 0.913</title></circle>
+<circle class="s1 ring" cx="192.2" cy="284.1" r="4" stroke-width="2"><title>dataset 92: CLUSSO alone 0.908, FDR-CLUSSO 0.909</title></circle>
+<circle class="s1 ring" cx="224.4" cy="263.1" r="4" stroke-width="2"><title>dataset 93: CLUSSO alone 0.920, FDR-CLUSSO 0.918</title></circle>
+<circle class="s1 ring" cx="210.5" cy="277.6" r="4" stroke-width="2"><title>dataset 94: CLUSSO alone 0.915, FDR-CLUSSO 0.912</title></circle>
+<circle class="s1 ring" cx="185.9" cy="290.5" r="4" stroke-width="2"><title>dataset 95: CLUSSO alone 0.906, FDR-CLUSSO 0.907</title></circle>
+<circle class="s1 ring" cx="200.1" cy="278.7" r="4" stroke-width="2"><title>dataset 96: CLUSSO alone 0.911, FDR-CLUSSO 0.912</title></circle>
+<circle class="s1 ring" cx="295.4" cy="186.5" r="4" stroke-width="2"><title>dataset 97: CLUSSO alone 0.947, FDR-CLUSSO 0.950</title></circle>
+<circle class="s1 ring" cx="262.2" cy="231.0" r="4" stroke-width="2"><title>dataset 98: CLUSSO alone 0.935, FDR-CLUSSO 0.931</title></circle>
+<circle class="s1 ring" cx="141.2" cy="330.9" r="4" stroke-width="2"><title>dataset 99: CLUSSO alone 0.889, FDR-CLUSSO 0.890</title></circle>
+<text class="ink2" x="250.0" y="446" font-size="12" text-anchor="middle">R², CLUSSO alone</text>
+<text class="ink2" x="18" y="234.0" font-size="12" text-anchor="middle" transform="rotate(-90 18 234.0)">R², FDR-CLUSSO</text>
+</svg>
