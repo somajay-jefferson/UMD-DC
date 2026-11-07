@@ -78,12 +78,13 @@ def c1_fit_is_passthrough():
     P, q = X.shape[0], X.shape[1]
     a0, b0 = np.ones(P), np.ones(q)
 
-    for lam in (0.05, 0.5, 3.0):
-        mine = clusso_fit(X, y, lam, alpha_init=a0, beta_init=b0)
-        core = Mainfunction_albet(X, y, a0, b0, lam)
-        assert np.array_equal(mine['alpha'], core['alpha']), f'alpha differs at lam={lam}'
-        assert np.array_equal(mine['bet'], core['bet']), f'bet differs at lam={lam}'
-    return 'identical alpha and bet at 3 lambdas'
+    for th in (0.001, 0.01):        # core's default and the pipeline's
+        for lam in (0.05, 0.5, 3.0):
+            mine = clusso_fit(X, y, lam, alpha_init=a0, beta_init=b0, thresh=th)
+            core = Mainfunction_albet(X, y, a0, b0, lam, thresh=th)
+            assert np.array_equal(mine['alpha'], core['alpha']),                 f'alpha differs at lam={lam} thresh={th}'
+            assert np.array_equal(mine['bet'], core['bet']),                 f'bet differs at lam={lam} thresh={th}'
+    return 'identical alpha and bet at 3 lambdas x 2 thresholds'
 
 
 def c2_score_fold_matches_slasso_mse():
@@ -105,8 +106,10 @@ def c2_score_fold_matches_slasso_mse():
         tr = np.setdiff1d(all_idx, te)
         lam = 0.4
 
-        core = slasso_mse(X[:, :, tr], y[tr], X[:, :, te], y[te], a0, b0, lam)
-        fit = clusso_fit(X[:, :, tr], y[tr], lam, alpha_init=a0, beta_init=b0)
+        core = slasso_mse(X[:, :, tr], y[tr], X[:, :, te], y[te], a0, b0, lam,
+                          thresh=0.01)
+        fit = clusso_fit(X[:, :, tr], y[tr], lam, alpha_init=a0, beta_init=b0,
+                         thresh=0.01)
         mine = _score_fold(X[:, :, te], y[te], fit['alpha'], fit['bet'])
 
         worst = max(worst, abs(core - mine))
@@ -131,9 +134,9 @@ def c3_cv_loop_matches_core_scoring():
         manual = np.mean([
             slasso_mse(X[:, :, np.setdiff1d(all_idx, f)],
                        y[np.setdiff1d(all_idx, f)],
-                       X[:, :, f], y[f], a0, b0, lam)
+                       X[:, :, f], y[f], a0, b0, lam, thresh=0.01)
             for f in folds])
-        mine = cv_mse(X, y, lam, folds, n_starts=1)
+        mine = cv_mse(X, y, lam, folds, n_starts=1, thresh=0.01)
         assert np.isclose(manual, mine, rtol=0, atol=1e-12), (
             f'lam={lam}: manual={manual!r} mine={mine!r}')
 

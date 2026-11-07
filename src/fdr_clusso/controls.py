@@ -46,14 +46,15 @@ sys.path.insert(0, os.path.join(_HERE, '..', 'core'))
 from CLUSSO_Functions_Project1_6_16_23 import simulation_results  # noqa: E402
 from Mainfunction_albet_Structured_OLS import Mainfunction_albet_OLS  # noqa: E402
 
-from clusso_select import (DEFAULT_N_STARTS, alpha_starts,         # noqa: E402
+from clusso_select import (BETA_THRESH, DEFAULT_N_STARTS,         # noqa: E402
+                           alpha_starts,
                            clusso_fit_cv, support_mask)
 
 
-def naive_fit(X_avg, Y):
+def naive_fit(X_avg, Y, thresh=BETA_THRESH):
     """
     Core's naive averaging control, verbatim in logic. Returns the
-    L1-normalised, 0.001-cut beta (what TPR/FPR/bias read) and the in-sample
+    L1-normalised, `thresh`-cut beta (what TPR/FPR/bias read) and the in-sample
     MSE on the original scale (what core reports).
     """
     n_subj = len(Y)
@@ -84,7 +85,9 @@ def naive_fit(X_avg, Y):
 
     l1 = np.sum(np.abs(beta_orig))
     beta = beta_orig / l1 if l1 > 0 else beta_orig.copy()
-    zero_inds = np.abs(beta) < 0.001
+    # core's naive block cuts at 0.001; `thresh` lets every method share one cut,
+    # as the Random CLUSSO paper applies 0.01 to all four of its methods.
+    zero_inds = np.abs(beta) < thresh
     beta[zero_inds] = 0.0
 
     beta_orig[zero_inds] = 0.0
@@ -94,9 +97,10 @@ def naive_fit(X_avg, Y):
             'beta_orig': beta_orig, 'intercept': intercept}
 
 
-def oracle_fit(X_full, Y):
+def oracle_fit(X_full, Y, thresh=BETA_THRESH):
     """Full Information Structured Lasso, fitted the way stage 4 fits CLUSSO."""
-    return clusso_fit_cv(X_full, Y, n_folds=5, rng=None, n_starts=5)
+    return clusso_fit_cv(X_full, Y, n_folds=5, rng=None, n_starts=5,
+                         thresh=thresh)
 
 
 # --- held-out validation, as Random CLUSSO scores prediction -----------------
@@ -176,8 +180,8 @@ def structured_metrics(fit, Y, X, beta_star, truth, test=None, flip=True):
     return out
 
 
-def naive_metrics(X_avg, Y, beta_star, truth, test=None):
-    fit = naive_fit(X_avg, Y)
+def naive_metrics(X_avg, Y, beta_star, truth, test=None, thresh=BETA_THRESH):
+    fit = naive_fit(X_avg, Y, thresh=thresh)
     out = selection_metrics(fit['bet'] != 0, truth)
     bs = np.asarray(beta_star, dtype=float)
     out['bias'] = float(np.sum(np.abs(bs / np.sum(np.abs(bs)) - fit['bet'])))

@@ -77,10 +77,13 @@ DEFAULT_LAMBDA_GRID = np.geomspace(0.01, 20.0, 40)
 # fine` restores the 40-step ladder. REVIEW.md section 9.
 NULL_LAMBDA_GRID = np.geomspace(0.01, 20.0, 13)
 
-# Hardcoded inside Mainfunction_albet at line 124, applied after beta is
-# L1-normalised at line 104. Repeated here only for the threshold_binding
-# diagnostic -- we cannot change it without editing src/core/.
-CORE_BETA_THRESH = 0.001
+# The post-normalisation coefficient cut, passed through to core's
+# Mainfunction_albet. core keeps clussocode.zip's 0.001 as its own default
+# (R parity); the FDR-CLUSSO pipeline uses 0.01, the Random CLUSSO paper's
+# value for all four of its methods (Rubin et al. 2026, section 3.2), adopted
+# 2026-11-07. Every function below takes `thresh`, so a run can choose.
+BETA_THRESH = 0.01
+CORE_BETA_THRESH = 0.001    # core's own default, kept for reference
 
 # Number of deterministic starts the selection rules use by default.
 #
@@ -168,7 +171,7 @@ def alpha_starts(P, n_starts=1):
     return [s.copy() for s in pool[:n_starts]]
 
 
-def clusso_fit(X, y, lam, alpha_init=None, beta_init=None):
+def clusso_fit(X, y, lam, alpha_init=None, beta_init=None, thresh=BETA_THRESH):
     """
     One CLUSSO fit. Deterministic: same arguments in, same result out, always.
 
@@ -194,7 +197,8 @@ def clusso_fit(X, y, lam, alpha_init=None, beta_init=None):
     if beta_init is None:
         beta_init = np.ones(q)
 
-    fit = Mainfunction_albet(X, y, alpha_init, beta_init, float(lam))
+    fit = Mainfunction_albet(X, y, alpha_init, beta_init, float(lam),
+                             thresh=float(thresh))
     return {'alpha': fit['alpha'], 'bet': fit['bet'], 'lam': float(lam)}
 
 
@@ -218,18 +222,18 @@ def clusso_objective(X, y, alpha, bet, lam):
     return float(resid @ resid + float(lam) * np.sum(np.abs(bet)))
 
 
-def clusso_fit_multistart(X, y, lam, n_starts=1):
+def clusso_fit_multistart(X, y, lam, n_starts=1, thresh=BETA_THRESH):
     """
     Fit from each deterministic start and keep the lowest objective. Ties go to
     the earlier start, so the result is a pure function of (X, y, lam, n_starts).
     """
     if n_starts <= 1:
-        return clusso_fit(X, y, lam)
+        return clusso_fit(X, y, lam, thresh=thresh)
 
     P = np.asarray(X).shape[0]
     best, best_obj = None, np.inf
     for a0 in alpha_starts(P, n_starts):
-        fit = clusso_fit(X, y, lam, alpha_init=a0)
+        fit = clusso_fit(X, y, lam, alpha_init=a0, thresh=thresh)
         obj = clusso_objective(X, y, fit['alpha'], fit['bet'], lam)
         if obj < best_obj:
             best, best_obj = fit, obj
@@ -298,7 +302,7 @@ def _score_fold(X_test, Y_test, alpha_hat, beta_hat):
     return float(sse / n_test)
 
 
-def cv_mse(X, y, lam, folds, n_starts=1):
+def cv_mse(X, y, lam, folds, n_starts=1, thresh=BETA_THRESH):
     """
     Mean held-out MSE at one lambda, over pre-built folds.
 
@@ -324,15 +328,17 @@ def cv_mse(X, y, lam, folds, n_starts=1):
             # the behaviour the R port defines
             out[k] = slasso_mse(X_tr, y_tr, X_te, y_te,
                                 np.ones(X.shape[0]), np.ones(X.shape[1]),
-                                float(lam))
+                                float(lam), thresh=float(thresh))
         else:
-            fit = clusso_fit_multistart(X_tr, y_tr, lam, n_starts=n_starts)
+            fit = clusso_fit_multistart(X_tr, y_tr, lam, n_starts=n_starts,
+                                        thresh=thresh)
             out[k] = _score_fold(X_te, y_te, fit['alpha'], fit['bet'])
 
     return float(out.mean())
 
 
-def clusso_fit_cv(X, y, lambda_grid=None, n_folds=5, rng=None, n_starts=1):
+def clusso_fit_cv(X, y, lambda_grid=None, n_folds=5, rng=None, n_starts=1,
+                  thresh=BETA_THRESH):
     """
     CV-tuned CLUSSO. Folds are built once and shared across the whole grid, then
     the winner is refit on all subjects.
@@ -347,10 +353,11 @@ def clusso_fit_cv(X, y, lambda_grid=None, n_folds=5, rng=None, n_starts=1):
                                                                       dtype=float)
 
     folds = make_folds(X.shape[2], n_folds=n_folds, rng=rng)
-    mse = np.array([cv_mse(X, y, lam, folds, n_starts=n_starts) for lam in grid])
+    mse = np.array([cv_mse(X, y, lam, folds, n_starts=n_starts, thresh=thresh)
+                    for lam in grid])
 
     lam = float(grid[int(np.argmin(mse))])
-    fit = clusso_fit_multistart(X, y, lam, n_starts=n_starts)
+    fit = clusso_fit_multistart(X, y, lam, n_starts=n_starts, thresh=thresh)
     fit['mse'] = mse
     fit['folds'] = folds
     return fit
@@ -379,9 +386,9 @@ def support_mask(bet, tau=0.0):
     return bet > max(float(tau), 0.0)
 
 
-def threshold_binding(bet, factor=2.0):
+def threshold_binding(bet, factor=2.0, thresh=BETA_THRESH):
     """
-    True when core's hardcoded 0.001 cut is plausibly deciding the support
+    True when the coefficient cut (`thresh`) is plausibly deciding the support
     rather than the lasso being the thing that zeroed coefficients.
 
     Worth logging because the cut interacts badly with the L1 normalisation: the
@@ -393,7 +400,7 @@ def threshold_binding(bet, factor=2.0):
     nz = nz[nz > 0]
     if nz.size == 0:
         return False
-    return bool(nz.min() < factor * CORE_BETA_THRESH)
+    return bool(nz.min() < factor * float(thresh))
 
 
 # ---------------------------------------------------------------------------
@@ -401,17 +408,18 @@ def threshold_binding(bet, factor=2.0):
 # ---------------------------------------------------------------------------
 
 def clusso_support_cv(X, y, lambda_grid=None, n_folds=5, rng=None,
-                      n_starts=DEFAULT_N_STARTS, tau=0.0):
+                      n_starts=DEFAULT_N_STARTS, tau=0.0, thresh=BETA_THRESH):
     """
     Real-arm rule: CV-tuned CLUSSO, keep whatever it kept. Returns a (q,) bool.
     """
     fit = clusso_fit_cv(X, y, lambda_grid=lambda_grid, n_folds=n_folds,
-                        rng=rng, n_starts=n_starts)
+                        rng=rng, n_starts=n_starts, thresh=thresh)
     return support_mask(fit['bet'], tau=tau)
 
 
 def clusso_support_at_least_k(X, y, k, lambda_grid=None,
-                              n_starts=DEFAULT_N_STARTS, tau=0.0):
+                              n_starts=DEFAULT_N_STARTS, tau=0.0,
+                              thresh=BETA_THRESH):
     """
     Permuted-arm rule: a support of size >= k.
 
@@ -457,7 +465,7 @@ def clusso_support_at_least_k(X, y, k, lambda_grid=None,
     n_fits = 0
 
     for lam in np.sort(grid)[::-1]:          # sparse -> dense
-        fit = clusso_fit_multistart(X, y, lam, n_starts=n_starts)
+        fit = clusso_fit_multistart(X, y, lam, n_starts=n_starts, thresh=thresh)
         n_fits += 1
         mask = support_mask(fit['bet'], tau=tau)
 
@@ -474,7 +482,8 @@ def clusso_support_at_least_k(X, y, k, lambda_grid=None,
 
 
 def clusso_support_exact_k(X, y, k, lambda_grid=None,
-                           n_starts=DEFAULT_N_STARTS, tau=0.0):
+                           n_starts=DEFAULT_N_STARTS, tau=0.0,
+                           thresh=BETA_THRESH):
     """
     Permuted-arm rule: a support of size EXACTLY k.
 
@@ -508,7 +517,8 @@ def clusso_support_exact_k(X, y, k, lambda_grid=None,
     AFTER truncation), ``k_before_truncation``, ``exhausted`` and ``n_fits``.
     """
     mask, info = clusso_support_at_least_k(X, y, k, lambda_grid=lambda_grid,
-                                           n_starts=n_starts, tau=tau)
+                                           n_starts=n_starts, tau=tau,
+                                           thresh=thresh)
     k = int(k)
     bet = np.abs(np.asarray(info['bet'], dtype=float).ravel())
     n_before = int(mask.sum())
@@ -516,7 +526,7 @@ def clusso_support_exact_k(X, y, k, lambda_grid=None,
     if n_before > k:
         sel = np.flatnonzero(mask)
         # Stable sort, deliberately. `bet` is L1-normalised and then hard-cut at
-        # 0.001 inside Mainfunction_albet, which piles surviving coefficients up
+        # `thresh` inside Mainfunction_albet, which piles surviving coefficients up
         # near the threshold and makes exact ties plausible. An unstable sort
         # would break those ties on array order rather than on the data, and the
         # selection rule has to be a pure function of the data -- that is the
@@ -535,7 +545,7 @@ def clusso_support_exact_k(X, y, k, lambda_grid=None,
 
 
 def clusso_cv_lambda(X, y, lambda_grid=None, n_folds=5, rng=None,
-                     n_starts=DEFAULT_N_STARTS):
+                     n_starts=DEFAULT_N_STARTS, thresh=BETA_THRESH):
     """
     The penalty CV picks on this data, and nothing else.
 
@@ -547,14 +557,15 @@ def clusso_cv_lambda(X, y, lambda_grid=None, n_folds=5, rng=None,
     matches what stages 1 and 2 already do.
     """
     fit = clusso_fit_cv(X, y, lambda_grid=lambda_grid, n_folds=n_folds,
-                        rng=rng, n_starts=n_starts)
+                        rng=rng, n_starts=n_starts, thresh=thresh)
     return float(fit['lam'])
 
 
-def clusso_support_at_lambda(X, y, lam, n_starts=DEFAULT_N_STARTS, tau=0.0):
+def clusso_support_at_lambda(X, y, lam, n_starts=DEFAULT_N_STARTS, tau=0.0,
+                             thresh=BETA_THRESH):
     """
     Support at a penalty fixed from outside -- no tuning, no scan, no target
     size. One fit. Mirrors ``ps_fdr.lasso_support_at_lambda``.
     """
-    fit = clusso_fit_multistart(X, y, lam, n_starts=n_starts)
+    fit = clusso_fit_multistart(X, y, lam, n_starts=n_starts, thresh=thresh)
     return support_mask(fit['bet'], tau=tau)

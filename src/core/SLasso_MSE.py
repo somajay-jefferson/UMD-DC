@@ -11,7 +11,8 @@ import numpy as np
 from Mainfunction_albet import Mainfunction_albet
 
 
-def slasso_mse(X_train, Y_train, X_test, Y_test, alpha_init, beta_init, lam):
+def slasso_mse(X_train, Y_train, X_test, Y_test, alpha_init, beta_init, lam,
+               thresh=0.001):
     """
     Fit the structured lasso on the training subjects, then score it on the
     held-out subjects.
@@ -38,7 +39,8 @@ def slasso_mse(X_train, Y_train, X_test, Y_test, alpha_init, beta_init, lam):
     -------
     float : mean squared error over the test subjects
     """
-    fit = Mainfunction_albet(X_train, Y_train, alpha_init, beta_init, lam)
+    fit = Mainfunction_albet(X_train, Y_train, alpha_init, beta_init, lam,
+                             thresh=thresh)
     alpha_hat = fit['alpha']
     beta_hat = fit['bet']
 
@@ -100,7 +102,7 @@ def CV_make_folds(n_train):
     return folds
 
 
-def lambda_CV_mse(X_train, Y_train, alpha_init, beta_init, lam):
+def lambda_CV_mse(X_train, Y_train, alpha_init, beta_init, lam, thresh=0.001):
     """
     Five-fold cross-validated MSE for one regularisation parameter.
 
@@ -139,7 +141,7 @@ def lambda_CV_mse(X_train, Y_train, alpha_init, beta_init, lam):
         mse_vec[k] = slasso_mse(
             X_train[:, :, train_idx], Y_train[train_idx],
             X_train[:, :, test_idx], Y_train[test_idx],
-            alpha_init, beta_init, lam
+            alpha_init, beta_init, lam, thresh=thresh
         )
 
     return float(mse_vec.mean())
