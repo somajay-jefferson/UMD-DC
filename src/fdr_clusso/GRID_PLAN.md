@@ -35,7 +35,7 @@ change
 | tubule noise σ_R², outcome noise σ² | 1, 1 | 1, 1 | ✅ |
 | cluster weights w | {0.2, …, 0.8} | {0.2, …, 0.8} | ✅ |
 | clustering | GMM, 2 clusters | GMM, 2 clusters, frozen once per dataset | ✅ |
-| **λ grid** | {0.1, …, 1, 1.5, …, 5}, 5-fold CV | 0.01–20, 40 log steps, 5-fold CV | 🔴 #2 |
+| **λ grid** | {0.1, …, 0.9, 1, 1.5, …, 5} (18 values), 5-fold CV | `--lambda-grid paper` (default in `run_grid.py`); permuted-arm ladder stays our 40 steps | ✅ #2 done |
 | **coefficient threshold** | **0.01** | **0.01** (`--thresh`, default since #16; core keeps 0.001 for R parity) | ✅ #3 done |
 | starts per fit | one random start | 5 fixed starts | keep ours (REVIEW §1: random starts make the selection rule non-deterministic) |
 | **replications** | **250** | any (`--reps`); 100 so far | 🟡 cost, see below |
@@ -45,6 +45,26 @@ change
 | held-out MSE | real data only: 80/20 split, both cluster-label orders | `--holdout 0.2`, same protocol; refit trained on the training split only | 🟡 |
 | methods | Random CLUSSO, CLUSSO, naive, Full Information | CLUSSO, naive, Full Information, **FDR-CLUSSO** (exact-k, one-λ) | Random CLUSSO 🔴 #4 |
 | extra settings | within-cluster mean variation (n=500, q=50, ρ=0.6); real-data-like design (Table S2) | — | 🔴 #1 (first); second needs NEPTUNE/CureGN data |
+
+## Evaluation metrics: theirs vs ours (audited 2026-11-07)
+
+From the paper's §3.2 and `Random_CLUSSO_Functions_Simulate_Real_Data.R`.
+
+| metric | Random CLUSSO paper | ours | match |
+|---|---|---|---|
+| TPR | share of nonzero β entries estimated nonzero | `tpr`: TP / real × 100 | ✅ |
+| FPR | share of zero β entries estimated nonzero | `fpr`: FP / null × 100 | ✅ |
+| bias | ‖β̂ − β‖₁ after L1-normalising both | core's `simulation_results` (normalises β; β̂ already normalised) | ✅ |
+| MSE | in-sample: train on all subjects, predict all | in-sample by default (`--holdout 0`) | ✅ |
+| MSE for a set-only method | refit structured OLS on the selected set (Random CLUSSO) | same refit for the PS-Fdr arms (`controls.refit_metrics`) | ✅ |
+| coefficient cut | 0.01, all methods | 0.01, all methods (#16) | ✅ |
+| CV grid | 18 values, 0.1–5 | `--lambda-grid paper` | ✅ |
+| λ-on-grid-edge check | "expand the grid if the ones selected are on the boundary" | `lam_at_edge` per fit; the run prints the rate | ✅ |
+| time | seconds per method, includes its CV | `sec`, fit time including CV | ✅ |
+| summary | **median** over 250 reps; **time as mean** (their text; their Fig 5 caption says median) | `plot_grid.py`: median, time as mean | ✅ |
+| starts per fit | one random start | 5 fixed starts | deliberate (REVIEW §1) |
+| replications | 250 | `--reps` | 🟡 cost |
+| extra, ours | — | FDP, FD, FN, FD+FN (He et al.) | added |
 
 ## What needs to change, in order
 
@@ -57,7 +77,7 @@ change
 - New args: `--design`, `--rho`. `run_grid.py` gets a `--rho` list. `plot_grid.py` already places runs by `args.rho`.
 - **Effort:** small to medium. **Check needed:** at ρ = 0, the port's summary statistics should match core's generator with the constants swapped.
 
-**#2. A `--lambda-grid paper` option.**
+**#2. A `--lambda-grid paper` option. ✅ Done.** It drives CV only; the permuted arm keeps its own ladder. The original plan follows.
 - This threads their 14-value grid into `clusso_fit_cv`, `oracle_fit` and `ClussoSelector`.
 - With `--null-ladder fine`, the permuted arm uses the same grid.
 - **Effort:** small.

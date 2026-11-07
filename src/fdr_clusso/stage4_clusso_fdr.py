@@ -85,7 +85,16 @@ ARMS = {
 # showed coarse is NOT output-identical: it lowers null_top slightly and adds
 # false discoveries on a few cohorts. REVIEW.md section 9. Since 2026-11-07
 # 'fine' is the default, as the closer match to He et al.'s exact-k rule.
-NULL_LADDERS ={'coarse': NULL_LAMBDA_GRID, 'fine': DEFAULT_LAMBDA_GRID}
+NULL_LADDERS = {'coarse': NULL_LAMBDA_GRID, 'fine': DEFAULT_LAMBDA_GRID}
+
+# The grid CV picks lambda from, for CLUSSO, the oracle and PS-Fdr's real arm.
+# 'paper' is the Random CLUSSO paper's (section 3.2 and its R code:
+# c(seq(0.1, 1, 0.1), seq(1.5, 5, 0.5)), 18 values). The permuted arm's ladder
+# is separate (--null-ladder): it is our device for He et al.'s exact-k rule,
+# and a grid that stops at 0.1 could leave it unable to reach k.
+LAMBDA_GRIDS = {'default': DEFAULT_LAMBDA_GRID,
+                'paper': np.round(np.r_[np.arange(1, 11) / 10.0,
+                                        np.arange(3, 11) / 2.0], 10)}
 
 
 def run_meta(args, argv):
@@ -112,6 +121,8 @@ def run_meta(args, argv):
         'null_ladder': args.null_ladder,
         'design': args.design,
         'rho': float(args.rho),
+        'lambda_grid': args.lambda_grid,
+        'n_lambda_cv_grid': int(len(LAMBDA_GRIDS[args.lambda_grid])),
         'beta_thresh': float(args.thresh),
         'n_lambda_real_arm': int(len(DEFAULT_LAMBDA_GRID)),
         'n_lambda_null_arm': int(len(NULL_LADDERS[args.null_ladder])),
@@ -137,7 +148,8 @@ def holdout_split(n, frac, seed):
 
 
 def one_cohort(seed, B, M, n, q_feat, sparsity, arms, q=Q, null_ladder='fine',
-               holdout=0.0, thresh=BETA_THRESH, design='clusso', rho=0.0):
+               holdout=0.0, thresh=BETA_THRESH, design='clusso', rho=0.0,
+               lambda_grid='default'):
     # The clustering happens HERE, once, and never again. Everything downstream
     # resamples subjects out of this one frozen tensor. With --holdout the split
     # comes AFTER clustering, as in Rubin's code: the clustering sees every
@@ -171,17 +183,21 @@ def one_cohort(seed, B, M, n, q_feat, sparsity, arms, q=Q, null_ladder='fine',
     out['naive']['sec'] = time.perf_counter() - t0
 
     t0 = time.perf_counter()
-    oracle = oracle_fit(X_full, Y, thresh=thresh)
+    grid = LAMBDA_GRIDS[lambda_grid]
+    oracle = oracle_fit(X_full, Y, thresh=thresh, lambda_grid=grid)
     sec = time.perf_counter() - t0
     # The oracle's cluster labels are the true ones, so no label flip on test.
     out['oracle'] = structured_metrics(oracle, Y, X_full, c['beta_star'], truth,
                                        test=tests['full'], flip=False)
     out['oracle']['sec'] = sec
+    # The Random CLUSSO paper (section 3.2) checks that CV's lambda is never on
+    # the grid's edge, and says to widen the grid if it is.
+    out['oracle']['lam_at_edge'] = bool(oracle['lam'] in (grid.min(), grid.max()))
 
     # Baseline: CLUSSO as it ships. CV-tuned, no FDR control, one fit.
     t0 = time.perf_counter()
-    base_fit = clusso_fit_cv(clust_X, Y, n_folds=5, rng=None, n_starts=5,
-                             thresh=thresh)
+    base_fit = clusso_fit_cv(clust_X, Y, lambda_grid=grid, n_folds=5, rng=None,
+                             n_starts=5, thresh=thresh)
     base_sec = time.perf_counter() - t0
     base_mask = support_mask(base_fit['bet'])
     b_fdp, b_pw = fdp_power(np.flatnonzero(base_mask), truth)
@@ -194,9 +210,11 @@ def one_cohort(seed, B, M, n, q_feat, sparsity, arms, q=Q, null_ladder='fine',
                                               c['beta_star'], truth,
                                               test=tests['clust']))
     out['baseline']['sec'] = base_sec
+    out['baseline']['lam_at_edge'] = bool(base_fit['lam'] in (grid.min(), grid.max()))
 
     for arm in arms:
-        sel = ClussoSelector(null_lambda_grid=NULL_LADDERS[null_ladder],
+        sel = ClussoSelector(lambda_grid=grid,
+                             null_lambda_grid=NULL_LADDERS[null_ladder],
                              thresh=thresh)
         t0 = time.perf_counter()
         res, sel = clusso_ps_fdr(clust_X, Y, q=q, B=B, M=M, seed=seed,
@@ -417,6 +435,11 @@ def main():
     ap.add_argument('--rho', type=float, default=0.0,
                     help="feature correlation among the real features; design "
                          "'random_clusso' only (the paper uses 0, .3, .6, .9)")
+    ap.add_argument('--lambda-grid', choices=('default', 'paper'), default='default',
+                    help="grid CV picks lambda from: 'default' (0.01-20, 40 log "
+                         "steps, every run before 2026-11) or 'paper' (the "
+                         "Random CLUSSO paper's 18 values, 0.1-5). The "
+                         "permuted arm's ladder is --null-ladder, separately")
     ap.add_argument('--arm', choices=('a', 'b', 'both'), default='both')
     ap.add_argument('--holdout', type=float, default=0.0,
                     help='hold out this share of subjects as a test set, '
@@ -511,7 +534,8 @@ def main():
             delayed(one_cohort)(s, args.B, args.M, args.n, args.q_features,
                                 args.sparsity, arms, null_ladder=args.null_ladder,
                                 holdout=args.holdout, thresh=args.thresh,
-                                design=args.design, rho=args.rho)
+                                design=args.design, rho=args.rho,
+                                lambda_grid=args.lambda_grid)
             for s in seeds)
         meta['finished'] = time.strftime('%Y-%m-%dT%H:%M:%S%z')
         meta['wall_minutes'] = round((time.perf_counter() - t_start) / 60.0, 1)
@@ -598,6 +622,14 @@ def main():
         print('    for CLUSSO. Divergence measures how much it was doing.')
 
     print(f'\n  cost: {a["mean_fits"]:.1f} CLUSSO fits per permuted-arm target')
+    # Only for runs that recorded it -- an older file must not read as 0%.
+    edge = {m: np.mean([c[m]['lam_at_edge'] for c in per_cohort])
+            for m in ('baseline', 'oracle')
+            if m in per_cohort[0] and 'lam_at_edge' in per_cohort[0][m]}
+    if edge:
+        print('  diagnostic: CV lambda on the grid edge for '
+              + ', '.join(f'{m} {v:.0%}' for m, v in edge.items())
+              + ' of cohorts (the paper widens the grid if this happens)')
     print(f'  diagnostic: {args.thresh:g} coefficient cut plausibly binding on '
           f'{b["thresh_binding"]:.0%} of cohorts')
     print(f'  clustering accuracy {out["clust_acc"]:.3f} '
