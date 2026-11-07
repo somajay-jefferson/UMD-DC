@@ -49,7 +49,7 @@ def _glmnet_lasso(X, y, lam):
     return model.coef_ / X_scale
 
 
-def Mainfunction_albet(X_tr, Y_tr, alpha, bet, lam):
+def Mainfunction_albet(X_tr, Y_tr, alpha, bet, lam, thresh=0.001):
     """
     Estimate alpha and beta by alternating structured lasso.
 
@@ -65,6 +65,10 @@ def Mainfunction_albet(X_tr, Y_tr, alpha, bet, lam):
     alpha : (p,)  non-zero initial vector
     bet   : (q,)  non-zero initial vector
     lam   : fixed regularisation parameter (R glmnet scale)
+    thresh: coefficients below this after L1-normalisation are zeroed.
+            Default 0.001 is clussocode.zip's hardcoded value; the Random
+            CLUSSO version (Supplemental_Code.zip, Mainfunction_albet.r)
+            takes it as an argument and uses 0.01.
 
     Returns
     -------
@@ -119,9 +123,10 @@ def Mainfunction_albet(X_tr, Y_tr, alpha, bet, lam):
 
         dif = float(np.linalg.norm(K_prdu(bet, alpha) - K_prdu(bet0, alpha0)))
 
-    # Zero out very small coefficients (after L1-normalisation)
-    alpha[np.abs(alpha) < 0.001] = 0.0
-    bet[np.abs(bet)     < 0.001] = 0.0
+    # Zero out very small coefficients (after L1-normalisation); `thresh`
+    # mirrors the Random CLUSSO R version, default 0.001 as in clussocode.zip
+    alpha[np.abs(alpha) < thresh] = 0.0
+    bet[np.abs(bet)     < thresh] = 0.0
     alpha = nr_alpha * alpha      # restore original scale
 
     return {'alpha': alpha, 'bet': bet}
