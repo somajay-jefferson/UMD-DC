@@ -67,6 +67,7 @@ from clusso_select import (BETA_THRESH, DEFAULT_LAMBDA_GRID,  # noqa: E402
                            DEFAULT_N_STARTS, NULL_LAMBDA_GRID,
                            clusso_fit_cv, support_mask, threshold_binding)
 from stage1_noise import make_cohort_full                 # noqa: E402
+import random_clusso_design                                # noqa: E402
 from controls import (METRICS, naive_metrics, oracle_fit,    # noqa: E402
                       refit_metrics, structured_metrics, summarize)
 
@@ -109,6 +110,8 @@ def run_meta(args, argv):
         'git_dirty_src': bool(git('status', '--porcelain', '--untracked-files=no', '--', '..')),
         'command': ' '.join(argv),
         'null_ladder': args.null_ladder,
+        'design': args.design,
+        'rho': float(args.rho),
         'beta_thresh': float(args.thresh),
         'n_lambda_real_arm': int(len(DEFAULT_LAMBDA_GRID)),
         'n_lambda_null_arm': int(len(NULL_LADDERS[args.null_ladder])),
@@ -134,12 +137,19 @@ def holdout_split(n, frac, seed):
 
 
 def one_cohort(seed, B, M, n, q_feat, sparsity, arms, q=Q, null_ladder='fine',
-               holdout=0.0, thresh=BETA_THRESH):
+               holdout=0.0, thresh=BETA_THRESH, design='clusso', rho=0.0):
     # The clustering happens HERE, once, and never again. Everything downstream
     # resamples subjects out of this one frozen tensor. With --holdout the split
     # comes AFTER clustering, as in Rubin's code: the clustering sees every
     # subject, the fits see only the training split.
-    c = make_cohort_full(n, q_feat, sparsity, seed)
+    # design 'clusso': core's generator, independent features (every run
+    # before 2026-11). 'random_clusso': the Random CLUSSO paper's design --
+    # correlated features (rho) on the middle 40%, which are the real ones,
+    # beta = 3; `sparsity` does not apply there. random_clusso_design.py.
+    if design == 'random_clusso':
+        c = random_clusso_design.generate(n, q_feat, rho, seed)
+    else:
+        c = make_cohort_full(n, q_feat, sparsity, seed)
     clust_X, Y, truth, clust_acc = c['clust_X'], c['Y'], c['truth'], c['clust_acc']
     X_avg, X_full = c['X_avg'], c['X_full']
     tests = {'clust': None, 'avg': None, 'full': None}
@@ -397,7 +407,16 @@ def main():
     ap.add_argument('--M', type=int, default=100)
     ap.add_argument('--n', type=int, default=300)
     ap.add_argument('--q-features', type=int, default=50)
-    ap.add_argument('--sparsity', type=float, default=0.8)
+    ap.add_argument('--sparsity', type=float, default=0.8,
+                    help="share of zero coefficients, design 'clusso' only")
+    ap.add_argument('--design', choices=('clusso', 'random_clusso'),
+                    default='clusso',
+                    help="'clusso' = core's generator, independent features "
+                         "(every run before 2026-11); 'random_clusso' = the "
+                         'Random CLUSSO paper design, correlated real features')
+    ap.add_argument('--rho', type=float, default=0.0,
+                    help="feature correlation among the real features; design "
+                         "'random_clusso' only (the paper uses 0, .3, .6, .9)")
     ap.add_argument('--arm', choices=('a', 'b', 'both'), default='both')
     ap.add_argument('--holdout', type=float, default=0.0,
                     help='hold out this share of subjects as a test set, '
@@ -454,8 +473,14 @@ def main():
     from joblib import Parallel, delayed
 
     seeds = [args.seed + i for i in range(args.reps)]
-    print(f'{args.reps} cohorts, n={args.n} q={args.q_features} '
-          f'sparsity={args.sparsity}, B={args.B} M={args.M}, target q={Q}')
+    design = getattr(args, 'design', 'clusso')
+    if design == 'clusso' and getattr(args, 'rho', 0.0) != 0.0:
+        sys.exit("--rho needs --design random_clusso: core's generator has no "
+                 'feature correlation')
+    shape = (f'design random_clusso, rho={args.rho:g}' if design == 'random_clusso'
+             else f'design clusso, sparsity={args.sparsity}')
+    print(f'{args.reps} cohorts, n={args.n} q={args.q_features} {shape}, '
+          f'B={args.B} M={args.M}, target q={Q}')
     if not args.from_json:
         print(f'  CLUSSO inside PS-Fdr, clustering frozen once per cohort, '
               f'null ladder {args.null_ladder} ({meta["n_lambda_null_arm"]} '
@@ -485,7 +510,8 @@ def main():
         per_cohort = Parallel(n_jobs=args.jobs, verbose=10)(
             delayed(one_cohort)(s, args.B, args.M, args.n, args.q_features,
                                 args.sparsity, arms, null_ladder=args.null_ladder,
-                                holdout=args.holdout, thresh=args.thresh)
+                                holdout=args.holdout, thresh=args.thresh,
+                                design=args.design, rho=args.rho)
             for s in seeds)
         meta['finished'] = time.strftime('%Y-%m-%dT%H:%M:%S%z')
         meta['wall_minutes'] = round((time.perf_counter() - t_start) / 60.0, 1)

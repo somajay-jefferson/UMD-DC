@@ -26,17 +26,17 @@ change
 |---|---|---|---|
 | **n** | 200, 300, 400, 500, 1000 | any (`--n`) | ✅ |
 | **q** (features) | 20, 50, 100 | any (`--q-features`) | ✅ |
-| **ρ** (feature correlation) | 0, 0.3, 0.6, 0.9 | **none: independent features only** | 🔴 #1 |
-| latent tubule matrix X* | matrix-normal: means (5, 10), row cov diag(1, 3), column cov with an exchangeable-ρ block on the middle 40% | independent normals: N(2, 1), N(5, 3) | 🔴 #1 |
-| **which features are real** | **fixed:** the middle 40% (the correlated block) | **random positions**, 20% (`--sparsity 0.8`) | 🔴 #1 |
-| **β on real features** | **3** for all | random from {1, 2, 3, 4} | 🔴 #1 |
+| **ρ** (feature correlation) | 0, 0.3, 0.6, 0.9 | `--design random_clusso --rho` | 🟡 #1 done |
+| latent tubule matrix X* | matrix-normal: means (5, 10), row cov diag(1, 3), column cov with an exchangeable-ρ block on the middle 40% | same, with `--design random_clusso` (default design: independent N(2, 1), N(5, 3)) | 🟡 #1 done |
+| **which features are real** | **fixed:** the middle 40% (the correlated block) | same, with `--design random_clusso` (default: random positions, `--sparsity`) | 🟡 #1 done |
+| **β on real features** | **3** for all | same, with `--design random_clusso` (default: random from {1, …, 4}) | 🟡 #1 done |
 | α | {1, 2, 3, 4} | {1, 2, 3, 4} | ✅ |
-| tubules per subject | mean 100, var 5 | mean 40, var 5 | 🔴 #1 (it's a constant in `stage1_noise.FIXED`) |
+| tubules per subject | mean 100, var 5 | mean 100 with `--design random_clusso` (default design: mean 40) | 🟡 #1 done |
 | tubule noise σ_R², outcome noise σ² | 1, 1 | 1, 1 | ✅ |
 | cluster weights w | {0.2, …, 0.8} | {0.2, …, 0.8} | ✅ |
 | clustering | GMM, 2 clusters | GMM, 2 clusters, frozen once per dataset | ✅ |
 | **λ grid** | {0.1, …, 1, 1.5, …, 5}, 5-fold CV | 0.01–20, 40 log steps, 5-fold CV | 🔴 #2 |
-| **coefficient threshold** | **0.01** | 0.001, hardcoded in `src/core/Mainfunction_albet.py` | 🔴 #3 |
+| **coefficient threshold** | **0.01** | **0.01** (`--thresh`, default since #16; core keeps 0.001 for R parity) | ✅ #3 done |
 | starts per fit | one random start | 5 fixed starts | keep ours (REVIEW §1: random starts make the selection rule non-deterministic) |
 | **replications** | **250** | any (`--reps`); 100 so far | 🟡 cost, see below |
 | summary | median (time: mean) | `plot_grid.py --stat median` (default) | ✅ |
@@ -48,7 +48,7 @@ change
 
 ## What needs to change, in order
 
-**#1. Their data generator, behind a `--design random_clusso` flag (unlocks the ρ columns).**
+**#1. Their data generator, behind a `--design random_clusso` flag (unlocks the ρ columns). ✅ Done:** `random_clusso_design.py`, wired into `stage4_clusso_fdr.py` (`--design`, `--rho`) and `run_grid.py` (`--design`, `--rho` list; default `random_clusso`). Checks: the correlated block correlates at exactly ρ; at ρ = 0 it matches core's generator. The original plan follows.
 - This is a port of `generate.data` in `Supplemental_Code.zip/Random_CLUSSO_non_mainfunctions.R`.
 - It's smaller than it looks. Their generator is the same as core's except for one draw: each subject's latent 2 × q matrix comes from a matrix normal instead of independent normals.
   - At ρ = 0 the two are the same distribution, just with different constants.
@@ -63,7 +63,7 @@ change
 - **Effort:** small.
 - **Risk:** their grid tops out at λ = 5. Our permuted arm needs a λ sparse enough to land under k, so check `exhausted_rate` on a quick run before trusting it.
 
-**#3. The 0.01 coefficient threshold.**
+**#3. The 0.01 coefficient threshold. ✅ Done in #16:** `--thresh`, default 0.01 for the whole pipeline; core keeps 0.001 as its own default. The original reasoning follows.
 - 0.001 is hardcoded inside core's `Mainfunction_albet`. Matching theirs means a parameter in `src/core/`, which is REVIEW open question 3. Default 0.001 would change no existing result.
 - It matters. The stage 4 and 5 runs found the cut plausibly deciding bare CLUSSO's support on 44–60% of cohorts (REVIEW §6 has the mechanism), so 0.01 will change TPR/FPR, especially for CLUSSO.
 - **Decision needed:** edit core, or plot with ours and say so on the figures.
