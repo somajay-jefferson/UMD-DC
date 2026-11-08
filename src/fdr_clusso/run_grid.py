@@ -27,7 +27,7 @@ def cell_name(n, q, rho, a):
     # rho for Random CLUSSO's (whose real features are fixed at 40%).
     shape = (f'rc_rho{rho:g}' if a.design == 'random_clusso'
              else f'cl_s{a.sparsity:g}')
-    lg = '_lgpaper' if a.lambda_grid == 'paper' else ''
+    lg = {'default': '', 'paper': '_lgpaper', 'paper_wide': '_lgwide'}[a.lambda_grid]
     return (f'grid_n{n}_q{q}_{shape}_t{a.thresh:g}{lg}_{arm}_{a.null_ladder}'
             f'_B{a.B}M{a.M}_r{a.reps}{hold}')
 
@@ -44,9 +44,11 @@ def main():
                     help="feature correlation(s); the paper's are 0 0.3 0.6 0.9")
     ap.add_argument('--sparsity', type=float, default=0.8,
                     help="design 'clusso' only")
-    ap.add_argument('--lambda-grid', choices=('default', 'paper'), default='paper',
+    ap.add_argument('--lambda-grid', choices=('default', 'paper', 'paper_wide'),
+                    default='paper_wide',
                     help="CV grid for lambda; 'paper' = the Random CLUSSO "
-                         "paper's 18 values (0.1-5)")
+                         "paper's 18 values (0.1-5), 'paper_wide' = those plus "
+                         "6-100, since CV often sat on 5 (REVIEW.md section 13)")
     ap.add_argument('--thresh', type=float, default=0.01,
                     help="coefficient cut; 0.01 is the Random CLUSSO paper's")
     ap.add_argument('--reps', type=int, default=50)
