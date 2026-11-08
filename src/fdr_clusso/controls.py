@@ -97,10 +97,10 @@ def naive_fit(X_avg, Y, thresh=BETA_THRESH):
             'beta_orig': beta_orig, 'intercept': intercept}
 
 
-def oracle_fit(X_full, Y, thresh=BETA_THRESH):
+def oracle_fit(X_full, Y, thresh=BETA_THRESH, lambda_grid=None):
     """Full Information Structured Lasso, fitted the way stage 4 fits CLUSSO."""
-    return clusso_fit_cv(X_full, Y, n_folds=5, rng=None, n_starts=5,
-                         thresh=thresh)
+    return clusso_fit_cv(X_full, Y, lambda_grid=lambda_grid, n_folds=5,
+                         rng=None, n_starts=5, thresh=thresh)
 
 
 # --- held-out validation, as Random CLUSSO scores prediction -----------------

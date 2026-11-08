@@ -44,7 +44,7 @@ METRICS = {
     'fdp': ('False discovery proportion', 'FDP', (0, 1), 1.0),
     'bias': ('Bias of β̂ (L1, both normalized)', 'Bias', None, 1.0),
     'mse': ('Prediction MSE', 'MSE', None, 1.0),
-    'sec': ('Time per method', 'minutes', None, 1 / 60.0),
+    'sec': ('Time per method (mean, as in the paper)', 'minutes', None, 1 / 60.0),
 }
 
 STYLE = """<style>
@@ -113,7 +113,11 @@ def value(records, metric, stat):
     if not v or any(x is None for x in v):
         return None, k
     a = np.asarray(v, float) * METRICS[metric][3]
-    return float(np.median(a) if stat == 'median' else np.mean(a)), k
+    # The Random CLUSSO paper reports medians for every metric EXCEPT time,
+    # which it reports as a mean (section 3.2; its Fig 5 caption says median,
+    # contradicting its own text -- we follow the text).
+    use_mean = stat == 'mean' or metric == 'sec'
+    return float(np.mean(a) if use_mean else np.median(a)), k
 
 
 def marker(shape, x, y, cls, tip):
