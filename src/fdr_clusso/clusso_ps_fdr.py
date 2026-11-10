@@ -26,7 +26,7 @@ import sys
 import numpy as np
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(_HERE, '..', 'fdr'))
+sys.path.insert(0, os.path.join(_HERE, '..', '..', 'ps_fdr', 'python'))
 
 from ps_fdr import ps_fdr                                   # noqa: E402
 

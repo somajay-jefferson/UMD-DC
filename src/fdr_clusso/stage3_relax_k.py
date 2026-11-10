@@ -56,7 +56,7 @@ import warnings
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                '..', 'fdr'))
+                                '..', '..', 'ps_fdr', 'python'))
 
 from ps_fdr import (_standardize, fdp_power, lasso_support_fixed_k,  # noqa: E402
                     ps_fdr)

@@ -55,7 +55,7 @@ import sys
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                '..', 'fdr'))
+                                '..', '..', 'ps_fdr', 'python'))
 
 from ps_fdr import fdp_power, ps_fdr                       # noqa: E402
 from PS_Fdr_Data_Example import BETA_STAR, make_data       # noqa: E402
