@@ -20,14 +20,20 @@ implementation it was ported from.
 
 ```
 docs/       GitHub Pages site (served from master /docs)
+papers/     Reference papers (PDFs) and our summaries of them
 src/
   core/     Core CLUSSO: alternating structured lasso on (cluster, feature) matrices
   tepig/    TEPIG extension: tensor model on (cluster, feature, slide) data
   fdr/      PS-Fdr: false discovery control for penalized selection (He et al. 2018)
-Random_CLUSSO_*.R      "Random CLUSSO" variant applied to real biopsy data (R only)
-clussocode.zip          Clean R reference implementation, mirrors src/core/ 1:1
-Supplemental_Code.zip   Adjacent R codebase for Random CLUSSO real-data analysis
-clussocode.Rproj        RStudio project file for the R sources
+  fdr_clusso/  PS-Fdr composed with CLUSSO: scripts at the top level,
+               run outputs and figures in results/, write-ups in notes/
+r/
+  Random_CLUSSO_*.R      "Random CLUSSO" variant applied to real biopsy data (R only)
+  clussocode.zip         Clean R reference implementation, mirrors src/core/ 1:1
+  Supplemental_Code.zip  Adjacent R codebase for Random CLUSSO real-data analysis
+  clussocode.Rproj       RStudio project file for the R sources
+external/
+  TEPIG/    Alec's TEPIG codebase, kept as he wrote it (has its own README)
 ```
 
 ### `src/core/` — CLUSSO
@@ -72,11 +78,11 @@ at https://somajay-jefferson.github.io/UMD-DC/fdr-clusso.html.
 
 ### R implementation
 
-- `clussocode.zip` — clean R reference implementation matching `src/core/`
+- `r/clussocode.zip` — clean R reference implementation matching `src/core/`
   file-for-file (`Mainfunction_albet.r`, `coefficient.r`, `K_prdu.r`,
   `mat_vec_prd.r`, `SLasso_MSE.R`, `CLUSSO_Functions_Project1_6_16_23.R`,
   `CLUSSO_Data_Example.R`).
-- `Supplemental_Code.zip` / `Random_CLUSSO_*.R` — a related "Random CLUSSO"
+- `r/Supplemental_Code.zip` / `r/Random_CLUSSO_*.R` — a related "Random CLUSSO"
   variant applied to real biopsy data (reads `ptvars.sas7bdat` /
   `tubulefeatures.sas7bdat`, outcome `eGFRatBx`). This variant and its
   Flex-Threshold `Mainfunction_albet` variant exist only in R; the
