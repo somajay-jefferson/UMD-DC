@@ -35,7 +35,7 @@ change
 | tubule noise σ_R², outcome noise σ² | 1, 1 | 1, 1 | ✅ |
 | cluster weights w | {0.2, …, 0.8} | {0.2, …, 0.8} | ✅ |
 | clustering | GMM, 2 clusters | GMM, 2 clusters, frozen once per dataset | ✅ |
-| **λ grid** | {0.1, …, 0.9, 1, 1.5, …, 5} (18 values), 5-fold CV | `--lambda-grid paper` (default in `run_grid.py`); permuted-arm ladder stays our 40 steps | ✅ #2 done |
+| **λ grid** | {0.1, …, 0.9, 1, 1.5, …, 5} (18 values), 5-fold CV | `--lambda-grid paper`; `run_grid.py` defaults to `paper_wide` (adds 6–100, because CV sat on 5 in 40/108 preview fits, REVIEW §13); permuted-arm ladder stays our 40 steps | 🟡 widened |
 | **coefficient threshold** | **0.01** | **0.01** (`--thresh`, default since #16; core keeps 0.001 for R parity) | ✅ #3 done |
 | starts per fit | one random start | 5 fixed starts | keep ours (REVIEW §1: random starts make the selection rule non-deterministic) |
 | **replications** | **250** | any (`--reps`); 100 so far | 🟡 cost, see below |
@@ -58,7 +58,7 @@ From the paper's §3.2 and `Random_CLUSSO_Functions_Simulate_Real_Data.R`.
 | MSE | in-sample: train on all subjects, predict all | in-sample by default (`--holdout 0`) | ✅ |
 | MSE for a set-only method | refit structured OLS on the selected set (Random CLUSSO) | same refit for the PS-Fdr arms (`controls.refit_metrics`) | ✅ |
 | coefficient cut | 0.01, all methods | 0.01, all methods (#16) | ✅ |
-| CV grid | 18 values, 0.1–5 | `--lambda-grid paper` | ✅ |
+| CV grid | 18 values, 0.1–5 | `--lambda-grid paper`, or `paper_wide` (default in `run_grid.py`, their rule applied) | 🟡 |
 | λ-on-grid-edge check | "expand the grid if the ones selected are on the boundary" | `lam_at_edge` per fit; the run prints the rate | ✅ |
 | time | seconds per method, includes its CV | `sec`, fit time including CV | ✅ |
 | summary | **median** over 250 reps; **time as mean** (their text; their Fig 5 caption says median) | `plot_grid.py`: median, time as mean | ✅ |

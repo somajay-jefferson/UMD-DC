@@ -1,0 +1,389 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1130 826" width="1130" height="826" role="img" aria-label="Prediction MSE">
+<title>Prediction MSE</title>
+<style>
+  .bg{fill:#fcfcfb} .ink{fill:#0b0b0b} .ink2{fill:#52514e} .mute{fill:#898781}
+  .grid{stroke:#e1e0d9} .axis{stroke:#c3c2b7} .frame{fill:none;stroke:#c3c2b7}
+  .s1{fill:#2a78d6;stroke:#2a78d6} .s2{fill:#eb6834;stroke:#eb6834}
+  .s3{fill:#1baf7a;stroke:#1baf7a} .s4{fill:#eda100;stroke:#eda100}
+  .s5{fill:#e87ba4;stroke:#e87ba4} .ln{fill:none} .ring{stroke:#fcfcfb}
+  .tgt{stroke:#52514e}
+  text{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-variant-numeric:tabular-nums}
+  @media (prefers-color-scheme: dark){
+    .bg{fill:#1a1a19} .ink{fill:#ffffff} .ink2{fill:#c3c2b7}
+    .grid{stroke:#2c2c2a} .axis{stroke:#383835} .frame{stroke:#383835}
+    .s1{fill:#3987e5;stroke:#3987e5} .s2{fill:#d95926;stroke:#d95926}
+    .s3{fill:#199e70;stroke:#199e70} .s4{fill:#c98500;stroke:#c98500}
+    .s5{fill:#d55181;stroke:#d55181} .ring{stroke:#1a1a19} .tgt{stroke:#c3c2b7}
+  }
+</style>
+<rect class="bg" width="1130" height="826" rx="8"/>
+<text class="ink" x="20" y="28" font-size="15" font-weight="600">Prediction MSE</text>
+<text class="ink2" x="20" y="46" font-size="12">Median over replications per cell. x = n (subjects).</text>
+<text class="ink2" x="20" y="62" font-size="12">Panels: rows q (features), columns ρ (feature correlation). In-sample MSE, as in the paper.</text>
+<text class="ink2" x="179.0" y="84" font-size="12" text-anchor="middle">ρ = 0, q = 20</text>
+<line class="grid" x1="64" x2="294" y1="242.0" y2="242.0" stroke-width="1"/>
+<text class="mute" x="58" y="246.0" font-size="10" text-anchor="end">0</text>
+<line class="grid" x1="64" x2="294" y1="204.5" y2="204.5" stroke-width="1"/>
+<text class="mute" x="58" y="208.5" font-size="10" text-anchor="end">125</text>
+<line class="grid" x1="64" x2="294" y1="167.0" y2="167.0" stroke-width="1"/>
+<text class="mute" x="58" y="171.0" font-size="10" text-anchor="end">250</text>
+<line class="grid" x1="64" x2="294" y1="129.5" y2="129.5" stroke-width="1"/>
+<text class="mute" x="58" y="133.5" font-size="10" text-anchor="end">375</text>
+<line class="grid" x1="64" x2="294" y1="92.0" y2="92.0" stroke-width="1"/>
+<text class="mute" x="58" y="96.0" font-size="10" text-anchor="end">500</text>
+<text class="mute" x="64.0" y="256" font-size="10" text-anchor="middle">200</text>
+<text class="mute" x="121.5" y="256" font-size="10" text-anchor="middle">400</text>
+<text class="mute" x="179.0" y="256" font-size="10" text-anchor="middle">600</text>
+<text class="mute" x="236.5" y="256" font-size="10" text-anchor="middle">800</text>
+<text class="mute" x="294.0" y="256" font-size="10" text-anchor="middle">1000</text>
+<rect class="frame" x="64" y="92" width="230" height="150" stroke-width="1"/>
+<path class="s2 ln" d="M64.0,208.2 L92.8,207.3 L150.2,208.0" stroke-width="2"/>
+<rect class="s2 ring" x="60.0" y="204.2" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=20, ρ=0, n=200: 112.7 (3 reps)</title></rect>
+<rect class="s2 ring" x="88.8" y="203.3" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=20, ρ=0, n=300: 115.6 (3 reps)</title></rect>
+<rect class="s2 ring" x="146.2" y="204.0" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=20, ρ=0, n=500: 113.2 (3 reps)</title></rect>
+<path class="s1 ln" d="M64.0,157.3 L92.8,207.0 L150.2,207.8" stroke-width="2"/>
+<circle class="s1 ring" cx="64.0" cy="157.3" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=20, ρ=0, n=200: 282.2 (3 reps)</title></circle>
+<circle class="s1 ring" cx="92.8" cy="207.0" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=20, ρ=0, n=300: 116.5 (3 reps)</title></circle>
+<circle class="s1 ring" cx="150.2" cy="207.8" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=20, ρ=0, n=500: 113.9 (3 reps)</title></circle>
+<path class="s3 ln" d="M64.0,192.8 L92.8,191.6 L150.2,200.7" stroke-width="2" stroke-dasharray="1 4" stroke-linecap="round"/>
+<path class="s3 ring" stroke-width="1.5" d="M64.0,187.8 L69.0,192.8 L64.0,197.8 L59.0,192.8 Z"><title>Naive, q=20, ρ=0, n=200: 164.2 (3 reps)</title></path>
+<path class="s3 ring" stroke-width="1.5" d="M92.8,186.6 L97.8,191.6 L92.8,196.6 L87.8,191.6 Z"><title>Naive, q=20, ρ=0, n=300: 168.1 (3 reps)</title></path>
+<path class="s3 ring" stroke-width="1.5" d="M150.2,195.7 L155.2,200.7 L150.2,205.7 L145.2,200.7 Z"><title>Naive, q=20, ρ=0, n=500: 137.8 (3 reps)</title></path>
+<path class="s4 ln" d="M64.0,241.7 L92.8,241.7 L150.2,241.7" stroke-width="2" stroke-dasharray="6 4"/>
+<path class="s4 ring" stroke-width="1.5" d="M64.0,236.7 L69.0,245.7 L59.0,245.7 Z"><title>Full Information, q=20, ρ=0, n=200: 0.9055 (3 reps)</title></path>
+<path class="s4 ring" stroke-width="1.5" d="M92.8,236.7 L97.8,245.7 L87.8,245.7 Z"><title>Full Information, q=20, ρ=0, n=300: 1.054 (3 reps)</title></path>
+<path class="s4 ring" stroke-width="1.5" d="M150.2,236.7 L155.2,245.7 L145.2,245.7 Z"><title>Full Information, q=20, ρ=0, n=500: 0.8674 (3 reps)</title></path>
+<text class="ink2" x="443.0" y="84" font-size="12" text-anchor="middle">ρ = 0.3, q = 20</text>
+<line class="grid" x1="328" x2="558" y1="242.0" y2="242.0" stroke-width="1"/>
+<line class="grid" x1="328" x2="558" y1="204.5" y2="204.5" stroke-width="1"/>
+<line class="grid" x1="328" x2="558" y1="167.0" y2="167.0" stroke-width="1"/>
+<line class="grid" x1="328" x2="558" y1="129.5" y2="129.5" stroke-width="1"/>
+<line class="grid" x1="328" x2="558" y1="92.0" y2="92.0" stroke-width="1"/>
+<text class="mute" x="328.0" y="256" font-size="10" text-anchor="middle">200</text>
+<text class="mute" x="385.5" y="256" font-size="10" text-anchor="middle">400</text>
+<text class="mute" x="443.0" y="256" font-size="10" text-anchor="middle">600</text>
+<text class="mute" x="500.5" y="256" font-size="10" text-anchor="middle">800</text>
+<text class="mute" x="558.0" y="256" font-size="10" text-anchor="middle">1000</text>
+<rect class="frame" x="328" y="92" width="230" height="150" stroke-width="1"/>
+<path class="s2 ln" d="M328.0,206.2 L356.8,206.9 L414.2,207.5" stroke-width="2"/>
+<rect class="s2 ring" x="324.0" y="202.2" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=20, ρ=0.3, n=200: 119.2 (3 reps)</title></rect>
+<rect class="s2 ring" x="352.8" y="202.9" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=20, ρ=0.3, n=300: 117.1 (3 reps)</title></rect>
+<rect class="s2 ring" x="410.2" y="203.5" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=20, ρ=0.3, n=500: 115.1 (3 reps)</title></rect>
+<path class="s1 ln" d="M328.0,206.1 L356.8,206.4 L414.2,207.5" stroke-width="2"/>
+<circle class="s1 ring" cx="328.0" cy="206.1" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=20, ρ=0.3, n=200: 119.6 (3 reps)</title></circle>
+<circle class="s1 ring" cx="356.8" cy="206.4" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=20, ρ=0.3, n=300: 118.5 (3 reps)</title></circle>
+<circle class="s1 ring" cx="414.2" cy="207.5" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=20, ρ=0.3, n=500: 115.1 (3 reps)</title></circle>
+<path class="s3 ln" d="M328.0,186.1 L356.8,194.8 L414.2,191.0" stroke-width="2" stroke-dasharray="1 4" stroke-linecap="round"/>
+<path class="s3 ring" stroke-width="1.5" d="M328.0,181.1 L333.0,186.1 L328.0,191.1 L323.0,186.1 Z"><title>Naive, q=20, ρ=0.3, n=200: 186.3 (3 reps)</title></path>
+<path class="s3 ring" stroke-width="1.5" d="M356.8,189.8 L361.8,194.8 L356.8,199.8 L351.8,194.8 Z"><title>Naive, q=20, ρ=0.3, n=300: 157.3 (3 reps)</title></path>
+<path class="s3 ring" stroke-width="1.5" d="M414.2,186.0 L419.2,191.0 L414.2,196.0 L409.2,191.0 Z"><title>Naive, q=20, ρ=0.3, n=500: 170.1 (3 reps)</title></path>
+<path class="s4 ln" d="M328.0,241.7 L356.8,241.7 L414.2,241.7" stroke-width="2" stroke-dasharray="6 4"/>
+<path class="s4 ring" stroke-width="1.5" d="M328.0,236.7 L333.0,245.7 L323.0,245.7 Z"><title>Full Information, q=20, ρ=0.3, n=200: 0.8976 (3 reps)</title></path>
+<path class="s4 ring" stroke-width="1.5" d="M356.8,236.7 L361.8,245.7 L351.8,245.7 Z"><title>Full Information, q=20, ρ=0.3, n=300: 1.055 (3 reps)</title></path>
+<path class="s4 ring" stroke-width="1.5" d="M414.2,236.7 L419.2,245.7 L409.2,245.7 Z"><title>Full Information, q=20, ρ=0.3, n=500: 0.8674 (3 reps)</title></path>
+<text class="ink2" x="707.0" y="84" font-size="12" text-anchor="middle">ρ = 0.6, q = 20</text>
+<line class="grid" x1="592" x2="822" y1="242.0" y2="242.0" stroke-width="1"/>
+<line class="grid" x1="592" x2="822" y1="204.5" y2="204.5" stroke-width="1"/>
+<line class="grid" x1="592" x2="822" y1="167.0" y2="167.0" stroke-width="1"/>
+<line class="grid" x1="592" x2="822" y1="129.5" y2="129.5" stroke-width="1"/>
+<line class="grid" x1="592" x2="822" y1="92.0" y2="92.0" stroke-width="1"/>
+<text class="mute" x="592.0" y="256" font-size="10" text-anchor="middle">200</text>
+<text class="mute" x="649.5" y="256" font-size="10" text-anchor="middle">400</text>
+<text class="mute" x="707.0" y="256" font-size="10" text-anchor="middle">600</text>
+<text class="mute" x="764.5" y="256" font-size="10" text-anchor="middle">800</text>
+<text class="mute" x="822.0" y="256" font-size="10" text-anchor="middle">1000</text>
+<rect class="frame" x="592" y="92" width="230" height="150" stroke-width="1"/>
+<path class="s2 ln" d="M592.0,204.8 L620.8,206.2 L678.2,206.8" stroke-width="2"/>
+<rect class="s2 ring" x="588.0" y="200.8" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=20, ρ=0.6, n=200: 123.9 (3 reps)</title></rect>
+<rect class="s2 ring" x="616.8" y="202.2" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=20, ρ=0.6, n=300: 119.2 (3 reps)</title></rect>
+<rect class="s2 ring" x="674.2" y="202.8" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=20, ρ=0.6, n=500: 117.3 (3 reps)</title></rect>
+<path class="s1 ln" d="M592.0,204.6 L620.8,206.2 L678.2,206.8" stroke-width="2"/>
+<circle class="s1 ring" cx="592.0" cy="204.6" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=20, ρ=0.6, n=200: 124.6 (3 reps)</title></circle>
+<circle class="s1 ring" cx="620.8" cy="206.2" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=20, ρ=0.6, n=300: 119.2 (3 reps)</title></circle>
+<circle class="s1 ring" cx="678.2" cy="206.8" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=20, ρ=0.6, n=500: 117.3 (3 reps)</title></circle>
+<path class="s3 ln" d="M592.0,173.4 L620.8,182.7 L678.2,176.1" stroke-width="2" stroke-dasharray="1 4" stroke-linecap="round"/>
+<path class="s3 ring" stroke-width="1.5" d="M592.0,168.4 L597.0,173.4 L592.0,178.4 L587.0,173.4 Z"><title>Naive, q=20, ρ=0.6, n=200: 228.5 (3 reps)</title></path>
+<path class="s3 ring" stroke-width="1.5" d="M620.8,177.7 L625.8,182.7 L620.8,187.7 L615.8,182.7 Z"><title>Naive, q=20, ρ=0.6, n=300: 197.6 (3 reps)</title></path>
+<path class="s3 ring" stroke-width="1.5" d="M678.2,171.1 L683.2,176.1 L678.2,181.1 L673.2,176.1 Z"><title>Naive, q=20, ρ=0.6, n=500: 219.6 (3 reps)</title></path>
+<path class="s4 ln" d="M592.0,241.7 L620.8,241.7 L678.2,241.7" stroke-width="2" stroke-dasharray="6 4"/>
+<path class="s4 ring" stroke-width="1.5" d="M592.0,236.7 L597.0,245.7 L587.0,245.7 Z"><title>Full Information, q=20, ρ=0.6, n=200: 0.8993 (3 reps)</title></path>
+<path class="s4 ring" stroke-width="1.5" d="M620.8,236.7 L625.8,245.7 L615.8,245.7 Z"><title>Full Information, q=20, ρ=0.6, n=300: 1.055 (3 reps)</title></path>
+<path class="s4 ring" stroke-width="1.5" d="M678.2,236.7 L683.2,245.7 L673.2,245.7 Z"><title>Full Information, q=20, ρ=0.6, n=500: 0.8671 (3 reps)</title></path>
+<text class="ink2" x="971.0" y="84" font-size="12" text-anchor="middle">ρ = 0.9, q = 20</text>
+<line class="grid" x1="856" x2="1086" y1="242.0" y2="242.0" stroke-width="1"/>
+<line class="grid" x1="856" x2="1086" y1="204.5" y2="204.5" stroke-width="1"/>
+<line class="grid" x1="856" x2="1086" y1="167.0" y2="167.0" stroke-width="1"/>
+<line class="grid" x1="856" x2="1086" y1="129.5" y2="129.5" stroke-width="1"/>
+<line class="grid" x1="856" x2="1086" y1="92.0" y2="92.0" stroke-width="1"/>
+<text class="mute" x="856.0" y="256" font-size="10" text-anchor="middle">200</text>
+<text class="mute" x="913.5" y="256" font-size="10" text-anchor="middle">400</text>
+<text class="mute" x="971.0" y="256" font-size="10" text-anchor="middle">600</text>
+<text class="mute" x="1028.5" y="256" font-size="10" text-anchor="middle">800</text>
+<text class="mute" x="1086.0" y="256" font-size="10" text-anchor="middle">1000</text>
+<rect class="frame" x="856" y="92" width="230" height="150" stroke-width="1"/>
+<path class="s2 ln" d="M856.0,203.9 L884.8,205.9 L942.2,206.0" stroke-width="2"/>
+<rect class="s2 ring" x="852.0" y="199.9" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=20, ρ=0.9, n=200: 127 (3 reps)</title></rect>
+<rect class="s2 ring" x="880.8" y="201.9" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=20, ρ=0.9, n=300: 120.3 (3 reps)</title></rect>
+<rect class="s2 ring" x="938.2" y="202.0" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=20, ρ=0.9, n=500: 120.1 (3 reps)</title></rect>
+<path class="s1 ln" d="M856.0,201.0 L884.8,205.6 L942.2,205.7" stroke-width="2"/>
+<circle class="s1 ring" cx="856.0" cy="201.0" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=20, ρ=0.9, n=200: 136.6 (3 reps)</title></circle>
+<circle class="s1 ring" cx="884.8" cy="205.6" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=20, ρ=0.9, n=300: 121.5 (3 reps)</title></circle>
+<circle class="s1 ring" cx="942.2" cy="205.7" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=20, ρ=0.9, n=500: 121.2 (3 reps)</title></circle>
+<path class="s3 ln" d="M856.0,167.7 L884.8,173.2 L942.2,161.8" stroke-width="2" stroke-dasharray="1 4" stroke-linecap="round"/>
+<path class="s3 ring" stroke-width="1.5" d="M856.0,162.7 L861.0,167.7 L856.0,172.7 L851.0,167.7 Z"><title>Naive, q=20, ρ=0.9, n=200: 247.7 (3 reps)</title></path>
+<path class="s3 ring" stroke-width="1.5" d="M884.8,168.2 L889.8,173.2 L884.8,178.2 L879.8,173.2 Z"><title>Naive, q=20, ρ=0.9, n=300: 229.2 (3 reps)</title></path>
+<path class="s3 ring" stroke-width="1.5" d="M942.2,156.8 L947.2,161.8 L942.2,166.8 L937.2,161.8 Z"><title>Naive, q=20, ρ=0.9, n=500: 267.3 (3 reps)</title></path>
+<path class="s4 ln" d="M856.0,241.7 L884.8,241.7 L942.2,241.7" stroke-width="2" stroke-dasharray="6 4"/>
+<path class="s4 ring" stroke-width="1.5" d="M856.0,236.7 L861.0,245.7 L851.0,245.7 Z"><title>Full Information, q=20, ρ=0.9, n=200: 0.897 (3 reps)</title></path>
+<path class="s4 ring" stroke-width="1.5" d="M884.8,236.7 L889.8,245.7 L879.8,245.7 Z"><title>Full Information, q=20, ρ=0.9, n=300: 1.053 (3 reps)</title></path>
+<path class="s4 ring" stroke-width="1.5" d="M942.2,236.7 L947.2,245.7 L937.2,245.7 Z"><title>Full Information, q=20, ρ=0.9, n=500: 0.8668 (3 reps)</title></path>
+<text class="ink2" x="16" y="167.0" font-size="12" text-anchor="middle" transform="rotate(-90 16 167.0)">MSE</text>
+<text class="ink2" x="179.0" y="292" font-size="12" text-anchor="middle">ρ = 0, q = 50</text>
+<line class="grid" x1="64" x2="294" y1="450.0" y2="450.0" stroke-width="1"/>
+<text class="mute" x="58" y="454.0" font-size="10" text-anchor="end">0</text>
+<line class="grid" x1="64" x2="294" y1="412.5" y2="412.5" stroke-width="1"/>
+<text class="mute" x="58" y="416.5" font-size="10" text-anchor="end">1250</text>
+<line class="grid" x1="64" x2="294" y1="375.0" y2="375.0" stroke-width="1"/>
+<text class="mute" x="58" y="379.0" font-size="10" text-anchor="end">2500</text>
+<line class="grid" x1="64" x2="294" y1="337.5" y2="337.5" stroke-width="1"/>
+<text class="mute" x="58" y="341.5" font-size="10" text-anchor="end">3750</text>
+<line class="grid" x1="64" x2="294" y1="300.0" y2="300.0" stroke-width="1"/>
+<text class="mute" x="58" y="304.0" font-size="10" text-anchor="end">5000</text>
+<text class="mute" x="64.0" y="464" font-size="10" text-anchor="middle">200</text>
+<text class="mute" x="121.5" y="464" font-size="10" text-anchor="middle">400</text>
+<text class="mute" x="179.0" y="464" font-size="10" text-anchor="middle">600</text>
+<text class="mute" x="236.5" y="464" font-size="10" text-anchor="middle">800</text>
+<text class="mute" x="294.0" y="464" font-size="10" text-anchor="middle">1000</text>
+<rect class="frame" x="64" y="300" width="230" height="150" stroke-width="1"/>
+<path class="s2 ln" d="M64.0,432.4 L92.8,429.5 L150.2,427.0" stroke-width="2"/>
+<rect class="s2 ring" x="60.0" y="428.4" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=50, ρ=0, n=200: 585.4 (3 reps)</title></rect>
+<rect class="s2 ring" x="88.8" y="425.5" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=50, ρ=0, n=300: 683.9 (3 reps)</title></rect>
+<rect class="s2 ring" x="146.2" y="423.0" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=50, ρ=0, n=500: 765.3 (3 reps)</title></rect>
+<path class="s1 ln" d="M64.0,426.4 L92.8,427.3 L150.2,426.7" stroke-width="2"/>
+<circle class="s1 ring" cx="64.0" cy="426.4" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=50, ρ=0, n=200: 786.6 (3 reps)</title></circle>
+<circle class="s1 ring" cx="92.8" cy="427.3" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=50, ρ=0, n=300: 756.5 (3 reps)</title></circle>
+<circle class="s1 ring" cx="150.2" cy="426.7" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=50, ρ=0, n=500: 777.3 (3 reps)</title></circle>
+<path class="s3 ln" d="M64.0,392.8 L92.8,348.3 L150.2,343.1" stroke-width="2" stroke-dasharray="1 4" stroke-linecap="round"/>
+<path class="s3 ring" stroke-width="1.5" d="M64.0,387.8 L69.0,392.8 L64.0,397.8 L59.0,392.8 Z"><title>Naive, q=50, ρ=0, n=200: 1905 (3 reps)</title></path>
+<path class="s3 ring" stroke-width="1.5" d="M92.8,343.3 L97.8,348.3 L92.8,353.3 L87.8,348.3 Z"><title>Naive, q=50, ρ=0, n=300: 3390 (3 reps)</title></path>
+<path class="s3 ring" stroke-width="1.5" d="M150.2,338.1 L155.2,343.1 L150.2,348.1 L145.2,343.1 Z"><title>Naive, q=50, ρ=0, n=500: 3564 (3 reps)</title></path>
+<path class="s4 ln" d="M64.0,450.0 L92.8,450.0 L150.2,450.0" stroke-width="2" stroke-dasharray="6 4"/>
+<path class="s4 ring" stroke-width="1.5" d="M64.0,445.0 L69.0,454.0 L59.0,454.0 Z"><title>Full Information, q=50, ρ=0, n=200: 0.8613 (3 reps)</title></path>
+<path class="s4 ring" stroke-width="1.5" d="M92.8,445.0 L97.8,454.0 L87.8,454.0 Z"><title>Full Information, q=50, ρ=0, n=300: 0.9277 (3 reps)</title></path>
+<path class="s4 ring" stroke-width="1.5" d="M150.2,445.0 L155.2,454.0 L145.2,454.0 Z"><title>Full Information, q=50, ρ=0, n=500: 0.9912 (3 reps)</title></path>
+<text class="ink2" x="443.0" y="292" font-size="12" text-anchor="middle">ρ = 0.3, q = 50</text>
+<line class="grid" x1="328" x2="558" y1="450.0" y2="450.0" stroke-width="1"/>
+<line class="grid" x1="328" x2="558" y1="412.5" y2="412.5" stroke-width="1"/>
+<line class="grid" x1="328" x2="558" y1="375.0" y2="375.0" stroke-width="1"/>
+<line class="grid" x1="328" x2="558" y1="337.5" y2="337.5" stroke-width="1"/>
+<line class="grid" x1="328" x2="558" y1="300.0" y2="300.0" stroke-width="1"/>
+<text class="mute" x="328.0" y="464" font-size="10" text-anchor="middle">200</text>
+<text class="mute" x="385.5" y="464" font-size="10" text-anchor="middle">400</text>
+<text class="mute" x="443.0" y="464" font-size="10" text-anchor="middle">600</text>
+<text class="mute" x="500.5" y="464" font-size="10" text-anchor="middle">800</text>
+<text class="mute" x="558.0" y="464" font-size="10" text-anchor="middle">1000</text>
+<rect class="frame" x="328" y="300" width="230" height="150" stroke-width="1"/>
+<path class="s2 ln" d="M328.0,431.0 L356.8,426.6 L414.2,426.2" stroke-width="2"/>
+<rect class="s2 ring" x="324.0" y="427.0" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=50, ρ=0.3, n=200: 634.1 (3 reps)</title></rect>
+<rect class="s2 ring" x="352.8" y="422.6" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=50, ρ=0.3, n=300: 779.1 (3 reps)</title></rect>
+<rect class="s2 ring" x="410.2" y="422.2" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=50, ρ=0.3, n=500: 791.7 (3 reps)</title></rect>
+<path class="s1 ln" d="M328.0,423.5 L356.8,424.1 L414.2,426.3" stroke-width="2"/>
+<circle class="s1 ring" cx="328.0" cy="423.5" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=50, ρ=0.3, n=200: 882.2 (3 reps)</title></circle>
+<circle class="s1 ring" cx="356.8" cy="424.1" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=50, ρ=0.3, n=300: 863.8 (3 reps)</title></circle>
+<circle class="s1 ring" cx="414.2" cy="426.3" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=50, ρ=0.3, n=500: 790.4 (3 reps)</title></circle>
+<path class="s3 ln" d="M328.0,398.9 L356.8,407.9 L414.2,389.1" stroke-width="2" stroke-dasharray="1 4" stroke-linecap="round"/>
+<path class="s3 ring" stroke-width="1.5" d="M328.0,393.9 L333.0,398.9 L328.0,403.9 L323.0,398.9 Z"><title>Naive, q=50, ρ=0.3, n=200: 1703 (3 reps)</title></path>
+<path class="s3 ring" stroke-width="1.5" d="M356.8,402.9 L361.8,407.9 L356.8,412.9 L351.8,407.9 Z"><title>Naive, q=50, ρ=0.3, n=300: 1404 (3 reps)</title></path>
+<path class="s3 ring" stroke-width="1.5" d="M414.2,384.1 L419.2,389.1 L414.2,394.1 L409.2,389.1 Z"><title>Naive, q=50, ρ=0.3, n=500: 2031 (3 reps)</title></path>
+<path class="s4 ln" d="M328.0,450.0 L356.8,450.0 L414.2,450.0" stroke-width="2" stroke-dasharray="6 4"/>
+<path class="s4 ring" stroke-width="1.5" d="M328.0,445.0 L333.0,454.0 L323.0,454.0 Z"><title>Full Information, q=50, ρ=0.3, n=200: 0.9007 (3 reps)</title></path>
+<path class="s4 ring" stroke-width="1.5" d="M356.8,445.0 L361.8,454.0 L351.8,454.0 Z"><title>Full Information, q=50, ρ=0.3, n=300: 1.013 (3 reps)</title></path>
+<path class="s4 ring" stroke-width="1.5" d="M414.2,445.0 L419.2,454.0 L409.2,454.0 Z"><title>Full Information, q=50, ρ=0.3, n=500: 0.9904 (3 reps)</title></path>
+<text class="ink2" x="707.0" y="292" font-size="12" text-anchor="middle">ρ = 0.6, q = 50</text>
+<line class="grid" x1="592" x2="822" y1="450.0" y2="450.0" stroke-width="1"/>
+<line class="grid" x1="592" x2="822" y1="412.5" y2="412.5" stroke-width="1"/>
+<line class="grid" x1="592" x2="822" y1="375.0" y2="375.0" stroke-width="1"/>
+<line class="grid" x1="592" x2="822" y1="337.5" y2="337.5" stroke-width="1"/>
+<line class="grid" x1="592" x2="822" y1="300.0" y2="300.0" stroke-width="1"/>
+<text class="mute" x="592.0" y="464" font-size="10" text-anchor="middle">200</text>
+<text class="mute" x="649.5" y="464" font-size="10" text-anchor="middle">400</text>
+<text class="mute" x="707.0" y="464" font-size="10" text-anchor="middle">600</text>
+<text class="mute" x="764.5" y="464" font-size="10" text-anchor="middle">800</text>
+<text class="mute" x="822.0" y="464" font-size="10" text-anchor="middle">1000</text>
+<rect class="frame" x="592" y="300" width="230" height="150" stroke-width="1"/>
+<path class="s2 ln" d="M592.0,430.6 L620.8,425.1 L678.2,425.6" stroke-width="2"/>
+<rect class="s2 ring" x="588.0" y="426.6" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=50, ρ=0.6, n=200: 647.7 (3 reps)</title></rect>
+<rect class="s2 ring" x="616.8" y="421.1" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=50, ρ=0.6, n=300: 828.7 (3 reps)</title></rect>
+<rect class="s2 ring" x="674.2" y="421.6" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=50, ρ=0.6, n=500: 813.4 (3 reps)</title></rect>
+<path class="s1 ln" d="M592.0,425.2 L620.8,421.3 L678.2,424.3" stroke-width="2"/>
+<circle class="s1 ring" cx="592.0" cy="425.2" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=50, ρ=0.6, n=200: 825 (3 reps)</title></circle>
+<circle class="s1 ring" cx="620.8" cy="421.3" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=50, ρ=0.6, n=300: 955.1 (3 reps)</title></circle>
+<circle class="s1 ring" cx="678.2" cy="424.3" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=50, ρ=0.6, n=500: 856.4 (3 reps)</title></circle>
+<path class="s3 ln" d="M592.0,377.6 L620.8,405.0 L678.2,396.3" stroke-width="2" stroke-dasharray="1 4" stroke-linecap="round"/>
+<path class="s3 ring" stroke-width="1.5" d="M592.0,372.6 L597.0,377.6 L592.0,382.6 L587.0,377.6 Z"><title>Naive, q=50, ρ=0.6, n=200: 2414 (3 reps)</title></path>
+<path class="s3 ring" stroke-width="1.5" d="M620.8,400.0 L625.8,405.0 L620.8,410.0 L615.8,405.0 Z"><title>Naive, q=50, ρ=0.6, n=300: 1500 (3 reps)</title></path>
+<path class="s3 ring" stroke-width="1.5" d="M678.2,391.3 L683.2,396.3 L678.2,401.3 L673.2,396.3 Z"><title>Naive, q=50, ρ=0.6, n=500: 1791 (3 reps)</title></path>
+<path class="s4 ln" d="M592.0,450.0 L620.8,450.0 L678.2,450.0" stroke-width="2" stroke-dasharray="6 4"/>
+<path class="s4 ring" stroke-width="1.5" d="M592.0,445.0 L597.0,454.0 L587.0,454.0 Z"><title>Full Information, q=50, ρ=0.6, n=200: 0.8765 (3 reps)</title></path>
+<path class="s4 ring" stroke-width="1.5" d="M620.8,445.0 L625.8,454.0 L615.8,454.0 Z"><title>Full Information, q=50, ρ=0.6, n=300: 0.9421 (3 reps)</title></path>
+<path class="s4 ring" stroke-width="1.5" d="M678.2,445.0 L683.2,454.0 L673.2,454.0 Z"><title>Full Information, q=50, ρ=0.6, n=500: 0.9906 (3 reps)</title></path>
+<text class="ink2" x="971.0" y="292" font-size="12" text-anchor="middle">ρ = 0.9, q = 50</text>
+<line class="grid" x1="856" x2="1086" y1="450.0" y2="450.0" stroke-width="1"/>
+<line class="grid" x1="856" x2="1086" y1="412.5" y2="412.5" stroke-width="1"/>
+<line class="grid" x1="856" x2="1086" y1="375.0" y2="375.0" stroke-width="1"/>
+<line class="grid" x1="856" x2="1086" y1="337.5" y2="337.5" stroke-width="1"/>
+<line class="grid" x1="856" x2="1086" y1="300.0" y2="300.0" stroke-width="1"/>
+<text class="mute" x="856.0" y="464" font-size="10" text-anchor="middle">200</text>
+<text class="mute" x="913.5" y="464" font-size="10" text-anchor="middle">400</text>
+<text class="mute" x="971.0" y="464" font-size="10" text-anchor="middle">600</text>
+<text class="mute" x="1028.5" y="464" font-size="10" text-anchor="middle">800</text>
+<text class="mute" x="1086.0" y="464" font-size="10" text-anchor="middle">1000</text>
+<rect class="frame" x="856" y="300" width="230" height="150" stroke-width="1"/>
+<path class="s2 ln" d="M856.0,430.5 L884.8,423.8 L942.2,425.7" stroke-width="2"/>
+<rect class="s2 ring" x="852.0" y="426.5" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=50, ρ=0.9, n=200: 650.4 (3 reps)</title></rect>
+<rect class="s2 ring" x="880.8" y="419.8" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=50, ρ=0.9, n=300: 873.3 (3 reps)</title></rect>
+<rect class="s2 ring" x="938.2" y="421.7" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=50, ρ=0.9, n=500: 810.1 (3 reps)</title></rect>
+<path class="s1 ln" d="M856.0,425.5 L884.8,419.4 L942.2,423.2" stroke-width="2"/>
+<circle class="s1 ring" cx="856.0" cy="425.5" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=50, ρ=0.9, n=200: 818.2 (3 reps)</title></circle>
+<circle class="s1 ring" cx="884.8" cy="419.4" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=50, ρ=0.9, n=300: 1021 (3 reps)</title></circle>
+<circle class="s1 ring" cx="942.2" cy="423.2" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=50, ρ=0.9, n=500: 891.9 (3 reps)</title></circle>
+<path class="s3 ln" d="M856.0,406.1 L884.8,380.6 L942.2,392.7" stroke-width="2" stroke-dasharray="1 4" stroke-linecap="round"/>
+<path class="s3 ring" stroke-width="1.5" d="M856.0,401.1 L861.0,406.1 L856.0,411.1 L851.0,406.1 Z"><title>Naive, q=50, ρ=0.9, n=200: 1464 (3 reps)</title></path>
+<path class="s3 ring" stroke-width="1.5" d="M884.8,375.6 L889.8,380.6 L884.8,385.6 L879.8,380.6 Z"><title>Naive, q=50, ρ=0.9, n=300: 2312 (3 reps)</title></path>
+<path class="s3 ring" stroke-width="1.5" d="M942.2,387.7 L947.2,392.7 L942.2,397.7 L937.2,392.7 Z"><title>Naive, q=50, ρ=0.9, n=500: 1909 (3 reps)</title></path>
+<path class="s4 ln" d="M856.0,450.0 L884.8,450.0 L942.2,450.0" stroke-width="2" stroke-dasharray="6 4"/>
+<path class="s4 ring" stroke-width="1.5" d="M856.0,445.0 L861.0,454.0 L851.0,454.0 Z"><title>Full Information, q=50, ρ=0.9, n=200: 0.8226 (3 reps)</title></path>
+<path class="s4 ring" stroke-width="1.5" d="M884.8,445.0 L889.8,454.0 L879.8,454.0 Z"><title>Full Information, q=50, ρ=0.9, n=300: 0.9179 (3 reps)</title></path>
+<path class="s4 ring" stroke-width="1.5" d="M942.2,445.0 L947.2,454.0 L937.2,454.0 Z"><title>Full Information, q=50, ρ=0.9, n=500: 0.9726 (3 reps)</title></path>
+<text class="ink2" x="16" y="375.0" font-size="12" text-anchor="middle" transform="rotate(-90 16 375.0)">MSE</text>
+<text class="ink2" x="179.0" y="500" font-size="12" text-anchor="middle">ρ = 0, q = 100</text>
+<line class="grid" x1="64" x2="294" y1="658.0" y2="658.0" stroke-width="1"/>
+<text class="mute" x="58" y="662.0" font-size="10" text-anchor="end">0</text>
+<line class="grid" x1="64" x2="294" y1="620.5" y2="620.5" stroke-width="1"/>
+<text class="mute" x="58" y="624.5" font-size="10" text-anchor="end">5e+04</text>
+<line class="grid" x1="64" x2="294" y1="583.0" y2="583.0" stroke-width="1"/>
+<text class="mute" x="58" y="587.0" font-size="10" text-anchor="end">1e+05</text>
+<line class="grid" x1="64" x2="294" y1="545.5" y2="545.5" stroke-width="1"/>
+<text class="mute" x="58" y="549.5" font-size="10" text-anchor="end">2e+05</text>
+<line class="grid" x1="64" x2="294" y1="508.0" y2="508.0" stroke-width="1"/>
+<text class="mute" x="58" y="512.0" font-size="10" text-anchor="end">2e+05</text>
+<text class="mute" x="64.0" y="672" font-size="10" text-anchor="middle">200</text>
+<text class="mute" x="121.5" y="672" font-size="10" text-anchor="middle">400</text>
+<text class="mute" x="179.0" y="672" font-size="10" text-anchor="middle">600</text>
+<text class="mute" x="236.5" y="672" font-size="10" text-anchor="middle">800</text>
+<text class="mute" x="294.0" y="672" font-size="10" text-anchor="middle">1000</text>
+<rect class="frame" x="64" y="508" width="230" height="150" stroke-width="1"/>
+<path class="s2 ln" d="M64.0,656.3 L92.8,656.2 L150.2,656.2" stroke-width="2"/>
+<rect class="s2 ring" x="60.0" y="652.3" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=100, ρ=0, n=200: 2287 (3 reps)</title></rect>
+<rect class="s2 ring" x="88.8" y="652.2" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=100, ρ=0, n=300: 2375 (3 reps)</title></rect>
+<rect class="s2 ring" x="146.2" y="652.2" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=100, ρ=0, n=500: 2382 (3 reps)</title></rect>
+<path class="s1 ln" d="M64.0,651.6 L92.8,650.1 L150.2,655.2" stroke-width="2"/>
+<circle class="s1 ring" cx="64.0" cy="651.6" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=100, ρ=0, n=200: 8519 (3 reps)</title></circle>
+<circle class="s1 ring" cx="92.8" cy="650.1" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=100, ρ=0, n=300: 1.059e+04 (3 reps)</title></circle>
+<circle class="s1 ring" cx="150.2" cy="655.2" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=100, ρ=0, n=500: 3736 (3 reps)</title></circle>
+<path class="s3 ln" d="M64.0,636.8 L92.8,630.3 L150.2,636.1" stroke-width="2" stroke-dasharray="1 4" stroke-linecap="round"/>
+<path class="s3 ring" stroke-width="1.5" d="M64.0,631.8 L69.0,636.8 L64.0,641.8 L59.0,636.8 Z"><title>Naive, q=100, ρ=0, n=200: 2.83e+04 (3 reps)</title></path>
+<path class="s3 ring" stroke-width="1.5" d="M92.8,625.3 L97.8,630.3 L92.8,635.3 L87.8,630.3 Z"><title>Naive, q=100, ρ=0, n=300: 3.69e+04 (3 reps)</title></path>
+<path class="s3 ring" stroke-width="1.5" d="M150.2,631.1 L155.2,636.1 L150.2,641.1 L145.2,636.1 Z"><title>Naive, q=100, ρ=0, n=500: 2.913e+04 (3 reps)</title></path>
+<path class="s4 ln" d="M64.0,658.0 L92.8,658.0 L150.2,658.0" stroke-width="2" stroke-dasharray="6 4"/>
+<path class="s4 ring" stroke-width="1.5" d="M64.0,653.0 L69.0,662.0 L59.0,662.0 Z"><title>Full Information, q=100, ρ=0, n=200: 1.989 (3 reps)</title></path>
+<path class="s4 ring" stroke-width="1.5" d="M92.8,653.0 L97.8,662.0 L87.8,662.0 Z"><title>Full Information, q=100, ρ=0, n=300: 0.9034 (3 reps)</title></path>
+<path class="s4 ring" stroke-width="1.5" d="M150.2,653.0 L155.2,662.0 L145.2,662.0 Z"><title>Full Information, q=100, ρ=0, n=500: 0.863 (3 reps)</title></path>
+<text class="ink2" x="443.0" y="500" font-size="12" text-anchor="middle">ρ = 0.3, q = 100</text>
+<line class="grid" x1="328" x2="558" y1="658.0" y2="658.0" stroke-width="1"/>
+<line class="grid" x1="328" x2="558" y1="620.5" y2="620.5" stroke-width="1"/>
+<line class="grid" x1="328" x2="558" y1="583.0" y2="583.0" stroke-width="1"/>
+<line class="grid" x1="328" x2="558" y1="545.5" y2="545.5" stroke-width="1"/>
+<line class="grid" x1="328" x2="558" y1="508.0" y2="508.0" stroke-width="1"/>
+<text class="mute" x="328.0" y="672" font-size="10" text-anchor="middle">200</text>
+<text class="mute" x="385.5" y="672" font-size="10" text-anchor="middle">400</text>
+<text class="mute" x="443.0" y="672" font-size="10" text-anchor="middle">600</text>
+<text class="mute" x="500.5" y="672" font-size="10" text-anchor="middle">800</text>
+<text class="mute" x="558.0" y="672" font-size="10" text-anchor="middle">1000</text>
+<rect class="frame" x="328" y="508" width="230" height="150" stroke-width="1"/>
+<path class="s2 ln" d="M328.0,656.4 L356.8,656.0 L414.2,656.0" stroke-width="2"/>
+<rect class="s2 ring" x="324.0" y="652.4" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=100, ρ=0.3, n=200: 2175 (3 reps)</title></rect>
+<rect class="s2 ring" x="352.8" y="652.0" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=100, ρ=0.3, n=300: 2601 (3 reps)</title></rect>
+<rect class="s2 ring" x="410.2" y="652.0" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=100, ρ=0.3, n=500: 2627 (3 reps)</title></rect>
+<path class="s1 ln" d="M328.0,645.3 L356.8,652.4 L414.2,654.6" stroke-width="2"/>
+<circle class="s1 ring" cx="328.0" cy="645.3" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=100, ρ=0.3, n=200: 1.688e+04 (3 reps)</title></circle>
+<circle class="s1 ring" cx="356.8" cy="652.4" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=100, ρ=0.3, n=300: 7525 (3 reps)</title></circle>
+<circle class="s1 ring" cx="414.2" cy="654.6" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=100, ρ=0.3, n=500: 4573 (3 reps)</title></circle>
+<path class="s3 ln" d="M328.0,648.3 L356.8,650.3 L414.2,641.7" stroke-width="2" stroke-dasharray="1 4" stroke-linecap="round"/>
+<path class="s3 ring" stroke-width="1.5" d="M328.0,643.3 L333.0,648.3 L328.0,653.3 L323.0,648.3 Z"><title>Naive, q=100, ρ=0.3, n=200: 1.297e+04 (3 reps)</title></path>
+<path class="s3 ring" stroke-width="1.5" d="M356.8,645.3 L361.8,650.3 L356.8,655.3 L351.8,650.3 Z"><title>Naive, q=100, ρ=0.3, n=300: 1.026e+04 (3 reps)</title></path>
+<path class="s3 ring" stroke-width="1.5" d="M414.2,636.7 L419.2,641.7 L414.2,646.7 L409.2,641.7 Z"><title>Naive, q=100, ρ=0.3, n=500: 2.167e+04 (3 reps)</title></path>
+<path class="s4 ln" d="M328.0,658.0 L356.8,658.0 L414.2,658.0" stroke-width="2" stroke-dasharray="6 4"/>
+<path class="s4 ring" stroke-width="1.5" d="M328.0,653.0 L333.0,662.0 L323.0,662.0 Z"><title>Full Information, q=100, ρ=0.3, n=200: 0.7744 (3 reps)</title></path>
+<path class="s4 ring" stroke-width="1.5" d="M356.8,653.0 L361.8,662.0 L351.8,662.0 Z"><title>Full Information, q=100, ρ=0.3, n=300: 0.8021 (3 reps)</title></path>
+<path class="s4 ring" stroke-width="1.5" d="M414.2,653.0 L419.2,662.0 L409.2,662.0 Z"><title>Full Information, q=100, ρ=0.3, n=500: 0.8289 (3 reps)</title></path>
+<text class="ink2" x="707.0" y="500" font-size="12" text-anchor="middle">ρ = 0.6, q = 100</text>
+<line class="grid" x1="592" x2="822" y1="658.0" y2="658.0" stroke-width="1"/>
+<line class="grid" x1="592" x2="822" y1="620.5" y2="620.5" stroke-width="1"/>
+<line class="grid" x1="592" x2="822" y1="583.0" y2="583.0" stroke-width="1"/>
+<line class="grid" x1="592" x2="822" y1="545.5" y2="545.5" stroke-width="1"/>
+<line class="grid" x1="592" x2="822" y1="508.0" y2="508.0" stroke-width="1"/>
+<text class="mute" x="592.0" y="672" font-size="10" text-anchor="middle">200</text>
+<text class="mute" x="649.5" y="672" font-size="10" text-anchor="middle">400</text>
+<text class="mute" x="707.0" y="672" font-size="10" text-anchor="middle">600</text>
+<text class="mute" x="764.5" y="672" font-size="10" text-anchor="middle">800</text>
+<text class="mute" x="822.0" y="672" font-size="10" text-anchor="middle">1000</text>
+<rect class="frame" x="592" y="508" width="230" height="150" stroke-width="1"/>
+<path class="s2 ln" d="M592.0,656.4 L620.8,656.2 L678.2,656.0" stroke-width="2"/>
+<rect class="s2 ring" x="588.0" y="652.4" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=100, ρ=0.6, n=200: 2142 (3 reps)</title></rect>
+<rect class="s2 ring" x="616.8" y="652.2" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=100, ρ=0.6, n=300: 2461 (3 reps)</title></rect>
+<rect class="s2 ring" x="674.2" y="652.0" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=100, ρ=0.6, n=500: 2671 (3 reps)</title></rect>
+<path class="s1 ln" d="M592.0,648.6 L620.8,583.9 L678.2,654.3" stroke-width="2"/>
+<circle class="s1 ring" cx="592.0" cy="648.6" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=100, ρ=0.6, n=200: 1.25e+04 (3 reps)</title></circle>
+<circle class="s1 ring" cx="620.8" cy="583.9" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=100, ρ=0.6, n=300: 9.884e+04 (3 reps)</title></circle>
+<circle class="s1 ring" cx="678.2" cy="654.3" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=100, ρ=0.6, n=500: 4870 (3 reps)</title></circle>
+<path class="s3 ln" d="M592.0,645.9 L620.8,649.5 L678.2,647.9" stroke-width="2" stroke-dasharray="1 4" stroke-linecap="round"/>
+<path class="s3 ring" stroke-width="1.5" d="M592.0,640.9 L597.0,645.9 L592.0,650.9 L587.0,645.9 Z"><title>Naive, q=100, ρ=0.6, n=200: 1.62e+04 (3 reps)</title></path>
+<path class="s3 ring" stroke-width="1.5" d="M620.8,644.5 L625.8,649.5 L620.8,654.5 L615.8,649.5 Z"><title>Naive, q=100, ρ=0.6, n=300: 1.14e+04 (3 reps)</title></path>
+<path class="s3 ring" stroke-width="1.5" d="M678.2,642.9 L683.2,647.9 L678.2,652.9 L673.2,647.9 Z"><title>Naive, q=100, ρ=0.6, n=500: 1.343e+04 (3 reps)</title></path>
+<path class="s4 ln" d="M592.0,658.0 L620.8,658.0 L678.2,658.0" stroke-width="2" stroke-dasharray="6 4"/>
+<path class="s4 ring" stroke-width="1.5" d="M592.0,653.0 L597.0,662.0 L587.0,662.0 Z"><title>Full Information, q=100, ρ=0.6, n=200: 0.7678 (3 reps)</title></path>
+<path class="s4 ring" stroke-width="1.5" d="M620.8,653.0 L625.8,662.0 L615.8,662.0 Z"><title>Full Information, q=100, ρ=0.6, n=300: 0.7969 (3 reps)</title></path>
+<path class="s4 ring" stroke-width="1.5" d="M678.2,653.0 L683.2,662.0 L673.2,662.0 Z"><title>Full Information, q=100, ρ=0.6, n=500: 0.8308 (3 reps)</title></path>
+<text class="ink2" x="971.0" y="500" font-size="12" text-anchor="middle">ρ = 0.9, q = 100</text>
+<line class="grid" x1="856" x2="1086" y1="658.0" y2="658.0" stroke-width="1"/>
+<line class="grid" x1="856" x2="1086" y1="620.5" y2="620.5" stroke-width="1"/>
+<line class="grid" x1="856" x2="1086" y1="583.0" y2="583.0" stroke-width="1"/>
+<line class="grid" x1="856" x2="1086" y1="545.5" y2="545.5" stroke-width="1"/>
+<line class="grid" x1="856" x2="1086" y1="508.0" y2="508.0" stroke-width="1"/>
+<text class="mute" x="856.0" y="672" font-size="10" text-anchor="middle">200</text>
+<text class="mute" x="913.5" y="672" font-size="10" text-anchor="middle">400</text>
+<text class="mute" x="971.0" y="672" font-size="10" text-anchor="middle">600</text>
+<text class="mute" x="1028.5" y="672" font-size="10" text-anchor="middle">800</text>
+<text class="mute" x="1086.0" y="672" font-size="10" text-anchor="middle">1000</text>
+<rect class="frame" x="856" y="508" width="230" height="150" stroke-width="1"/>
+<path class="s2 ln" d="M856.0,656.2 L884.8,656.0 L942.2,655.8" stroke-width="2"/>
+<rect class="s2 ring" x="852.0" y="652.2" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=100, ρ=0.9, n=200: 2354 (3 reps)</title></rect>
+<rect class="s2 ring" x="880.8" y="652.0" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=100, ρ=0.9, n=300: 2671 (3 reps)</title></rect>
+<rect class="s2 ring" x="938.2" y="651.8" width="8" height="8" stroke-width="1.5"><title>CLUSSO, q=100, ρ=0.9, n=500: 2882 (3 reps)</title></rect>
+<path class="s1 ln" d="M856.0,557.3 L884.8,590.6 L942.2,654.5" stroke-width="2"/>
+<circle class="s1 ring" cx="856.0" cy="557.3" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=100, ρ=0.9, n=200: 1.342e+05 (3 reps)</title></circle>
+<circle class="s1 ring" cx="884.8" cy="590.6" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=100, ρ=0.9, n=300: 8.989e+04 (3 reps)</title></circle>
+<circle class="s1 ring" cx="942.2" cy="654.5" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO, q=100, ρ=0.9, n=500: 4692 (3 reps)</title></circle>
+<path class="s3 ln" d="M856.0,653.0 L884.8,651.4 L942.2,652.3" stroke-width="2" stroke-dasharray="1 4" stroke-linecap="round"/>
+<path class="s3 ring" stroke-width="1.5" d="M856.0,648.0 L861.0,653.0 L856.0,658.0 L851.0,653.0 Z"><title>Naive, q=100, ρ=0.9, n=200: 6714 (3 reps)</title></path>
+<path class="s3 ring" stroke-width="1.5" d="M884.8,646.4 L889.8,651.4 L884.8,656.4 L879.8,651.4 Z"><title>Naive, q=100, ρ=0.9, n=300: 8778 (3 reps)</title></path>
+<path class="s3 ring" stroke-width="1.5" d="M942.2,647.3 L947.2,652.3 L942.2,657.3 L937.2,652.3 Z"><title>Naive, q=100, ρ=0.9, n=500: 7611 (3 reps)</title></path>
+<path class="s4 ln" d="M856.0,658.0 L884.8,658.0 L942.2,658.0" stroke-width="2" stroke-dasharray="6 4"/>
+<path class="s4 ring" stroke-width="1.5" d="M856.0,653.0 L861.0,662.0 L851.0,662.0 Z"><title>Full Information, q=100, ρ=0.9, n=200: 0.7822 (3 reps)</title></path>
+<path class="s4 ring" stroke-width="1.5" d="M884.8,653.0 L889.8,662.0 L879.8,662.0 Z"><title>Full Information, q=100, ρ=0.9, n=300: 0.8079 (3 reps)</title></path>
+<path class="s4 ring" stroke-width="1.5" d="M942.2,653.0 L947.2,662.0 L937.2,662.0 Z"><title>Full Information, q=100, ρ=0.9, n=500: 0.8482 (3 reps)</title></path>
+<text class="ink2" x="16" y="583.0" font-size="12" text-anchor="middle" transform="rotate(-90 16 583.0)">MSE</text>
+<line class="s2" x1="64" x2="94" y1="720" y2="720" stroke-width="2"/>
+<rect class="s2 ring" x="75.0" y="716.0" width="8" height="8" stroke-width="1.5"><title>CLUSSO</title></rect>
+<text class="ink2" x="104" y="724" font-size="12">CLUSSO</text>
+<line class="s1" x1="64" x2="94" y1="740" y2="740" stroke-width="2"/>
+<circle class="s1 ring" cx="79.0" cy="740.0" r="4.5" stroke-width="1.5"><title>FDR-CLUSSO</title></circle>
+<text class="ink2" x="104" y="744" font-size="12">FDR-CLUSSO</text>
+<line class="s3" x1="64" x2="94" y1="760" y2="760" stroke-width="2" stroke-dasharray="1 4" stroke-linecap="round"/>
+<path class="s3 ring" stroke-width="1.5" d="M79.0,755.0 L84.0,760.0 L79.0,765.0 L74.0,760.0 Z"><title>Naive</title></path>
+<text class="ink2" x="104" y="764" font-size="12">Naive</text>
+<line class="s4" x1="64" x2="94" y1="780" y2="780" stroke-width="2" stroke-dasharray="6 4"/>
+<path class="s4 ring" stroke-width="1.5" d="M79.0,775.0 L84.0,784.0 L74.0,784.0 Z"><title>Full Information</title></path>
+<text class="ink2" x="104" y="784" font-size="12">Full Information</text>
+</svg>

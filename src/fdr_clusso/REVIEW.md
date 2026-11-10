@@ -584,6 +584,43 @@ changes the live site.
 
 ---
 
+## 13. CV keeps landing on the paper grid's top edge
+
+**Where:** the 36-cell preview grid (`grid_preview/`, B = M = 10, 3 reps per
+cell, Random CLUSSO design, `--lambda-grid paper`, 2026-11-07). The probe that
+reran CV wider was a scratch script, and its results are summarised here.
+
+**What happened:** bare CLUSSO's CV picked λ = 5, the paper grid's largest
+value, in 40 of 108 fits. Another 3 picked 0.1, the grid's smallest. The rate
+grows with q: 7 of 36 at q = 20, 13 of 36 at q = 50, 23 of 36 at q = 100. The
+Full Information oracle hit an edge in 13 of 108 fits.
+
+**Rerun on a wider grid** (0.01–100, 32 values), same data, same folds rule:
+
+- Top edge, 40 fits: 35 moved above 5 (6 to 100, spread out). 5 stayed at 5.
+  2 hit 100, so even this grid isn't always wide enough.
+- Bottom edge, 3 fits: all stayed at 0.1. Going lower never helped, so these
+  aren't real edge problems.
+- CV error barely changes: the median gain over λ = 5 is 1.7% (max 52%).
+- The support does change: TPR goes 100 → 90 and FPR 6.7 → 0 (medians over the
+  40 fits).
+
+**Why the curve is flat:** CLUSSO's CV error here is in the thousands, while
+the oracle's in-sample error is about 1. The clustering error dominates, so CV
+can barely tell λ values apart. That's a property of CLUSSO's tuning on this
+design, not a bug in our code. Worth keeping in mind when reading CLUSSO's TPR
+and FPR.
+
+**Change:** `--lambda-grid paper_wide`, which is the paper's 18 values plus
+6, 7, 8, 10, 12.5, 15, 20, 30, 50, 100 (28 values). It's now the default in
+`run_grid.py`. The paper says to widen the grid when CV hits an edge (section
+3.2), so this follows the paper's own rule. `paper` is still there for an exact
+match. `stage4_clusso_fdr.py` keeps `default` as its default, so earlier runs
+reproduce unchanged. The edge check keeps printing, so we'll see if 100 still
+binds.
+
+---
+
 ## Open questions
 
 1. ~~Is the objective-gap gate criterion defensible?~~ **Settled by measurement,

@@ -1,0 +1,43 @@
+3 cohorts, n=300 q=50 design random_clusso, rho=0.3, B=10 M=10, target q=0.1
+  CLUSSO inside PS-Fdr, clustering frozen once per cohort, null ladder fine (40 steps) at 404c67a
+
+[Parallel(n_jobs=6)]: Using backend LokyBackend with 6 concurrent workers.
+[Parallel(n_jobs=6)]: Done   3 out of   3 | elapsed:  2.7min finished
+             arm  mean FDP   power  mean |S|  FDP<=q  null top  exhaust
+   CLUSSO (bare)     0.000   1.000     20.00   1.000         -        -
+         exact_k     0.000   0.867     17.33   1.000     0.923    0.000
+
+  mean over 3 cohorts
+          method        FD        FN       FDP     power     FD+FN      TPR%      FPR%      bias       MSE       |S|  test MSE test RMSE   test R2       sec
+       naive avg     6.000     0.000     0.169     1.000     6.000   100.000    20.000     0.347  4715.865    26.000         -         -         -     0.065
+   oracle (full)     0.000     0.000     0.000     1.000     0.000   100.000     0.000     0.011     0.971    20.000         -         -         -     7.230
+   CLUSSO (bare)     0.000     0.000     0.000     1.000     0.000   100.000     0.000     0.170   800.608    20.000         -         -         -     7.428
+     FDR exact-k     0.000     2.667     0.000     0.867     2.667    86.667     0.000     0.327   860.954    17.333         -         -         -   132.391
+
+  median over 3 cohorts
+          method        FD        FN       FDP     power     FD+FN      TPR%      FPR%      bias       MSE       |S|  test MSE test RMSE   test R2       sec
+       naive avg     1.000     0.000     0.048     1.000     1.000   100.000     3.333     0.225  1404.175    21.000         -         -         -     0.060
+   oracle (full)     0.000     0.000     0.000     1.000     0.000   100.000     0.000     0.011     1.013    20.000         -         -         -     7.222
+   CLUSSO (bare)     0.000     0.000     0.000     1.000     0.000   100.000     0.000     0.187   779.104    20.000         -         -         -     7.394
+     FDR exact-k     0.000     3.000     0.000     0.850     3.000    85.000     0.000     0.365   863.830    17.000         -         -         -   129.055
+
+==============================================================================
+  Gate reads arm 'exact_k' -- the ported rule. Target q = 0.1.
+
+    FDP <= q              0.000 <= 0.1        PASS
+    beats bare CLUSSO     0.000 <  0.000      FAIL
+    selects something     power 0.867 vs 1.000 bare  PASS
+    grid not exhausted    0.0000 <= 0.02     PASS
+
+  => FAIL
+
+  FDR is controlled but bare CLUSSO already controlled it here.
+  The wrapper is not being asked a hard enough question -- push
+  --q-features up, where CLUSSO false-positives at 20-30%.
+
+  cost: 6.3 CLUSSO fits per permuted-arm target
+  diagnostic: CV lambda on the grid edge for baseline 33%, oracle 0% of cohorts (the paper widens the grid if this happens)
+  diagnostic: 0.01 coefficient cut plausibly binding on 33% of cohorts
+  clustering accuracy 1.000 (every number above is conditional on it)
+==============================================================================
+wrote grid_preview\grid_n300_q50_rc_rho0.3_t0.01_lgpaper_exactk_fine_B10M10_r3.json

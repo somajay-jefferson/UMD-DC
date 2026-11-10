@@ -92,9 +92,15 @@ NULL_LADDERS = {'coarse': NULL_LAMBDA_GRID, 'fine': DEFAULT_LAMBDA_GRID}
 # c(seq(0.1, 1, 0.1), seq(1.5, 5, 0.5)), 18 values). The permuted arm's ladder
 # is separate (--null-ladder): it is our device for He et al.'s exact-k rule,
 # and a grid that stops at 0.1 could leave it unable to reach k.
+# 'paper_wide' is the paper's grid with its top end extended to 100. On the
+# 2026-11-07 preview grid, CV landed on 5 (the paper grid's top) in 40 of 108
+# CLUSSO fits; rerun on a wider grid, 35 of those 40 moved above 5. The paper
+# itself says to widen the grid when CV hits an edge (section 3.2), and that is
+# all this does. REVIEW.md section 13.
+_PAPER_GRID = np.round(np.r_[np.arange(1, 11) / 10.0, np.arange(3, 11) / 2.0], 10)
 LAMBDA_GRIDS = {'default': DEFAULT_LAMBDA_GRID,
-                'paper': np.round(np.r_[np.arange(1, 11) / 10.0,
-                                        np.arange(3, 11) / 2.0], 10)}
+                'paper': _PAPER_GRID,
+                'paper_wide': np.r_[_PAPER_GRID, 6, 7, 8, 10, 12.5, 15, 20, 30, 50, 100]}
 
 
 def run_meta(args, argv):
@@ -435,10 +441,11 @@ def main():
     ap.add_argument('--rho', type=float, default=0.0,
                     help="feature correlation among the real features; design "
                          "'random_clusso' only (the paper uses 0, .3, .6, .9)")
-    ap.add_argument('--lambda-grid', choices=('default', 'paper'), default='default',
+    ap.add_argument('--lambda-grid', choices=tuple(LAMBDA_GRIDS), default='default',
                     help="grid CV picks lambda from: 'default' (0.01-20, 40 log "
-                         "steps, every run before 2026-11) or 'paper' (the "
-                         "Random CLUSSO paper's 18 values, 0.1-5). The "
+                         "steps, every run before 2026-11), 'paper' (the "
+                         "Random CLUSSO paper's 18 values, 0.1-5) or "
+                         "'paper_wide' (paper's plus 6-100, 28 values). The "
                          "permuted arm's ladder is --null-ladder, separately")
     ap.add_argument('--arm', choices=('a', 'b', 'both'), default='both')
     ap.add_argument('--holdout', type=float, default=0.0,
