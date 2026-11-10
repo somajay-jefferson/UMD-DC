@@ -150,5 +150,5 @@ CLUSSO alone, with prediction unchanged.
 | `results/stage6_exactk_fine_reps100.json` / `.log` | headline run, 40-step ladder |
 | `notes/stage6_report.md` | full analysis of that run, including the ladder comparison and checks |
 | `results/stage5_reps100.json` / `.log` | 13-step ladder run, both FDR variants |
-| `plot_stage6.py` | regenerates every figure from the run files |
+| `python/plot_stage6.py` | regenerates every figure from the run files |
 | `results/figures/` | the three figures, plus cached Var(Y) for R² |

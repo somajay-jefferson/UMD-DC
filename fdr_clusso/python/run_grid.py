@@ -63,7 +63,7 @@ def main():
                          'are; 0.2 = its real-data 80/20 validation')
     ap.add_argument('--jobs', type=int, default=6)
     ap.add_argument('--seed', type=int, default=20260929)
-    ap.add_argument('--out', default=os.path.join(_HERE, 'results', 'grid'))
+    ap.add_argument('--out', default=os.path.join(_HERE, '..', 'results', 'grid'))
     ap.add_argument('--dry-run', action='store_true',
                     help='print the cells and commands without running')
     a = ap.parse_args()

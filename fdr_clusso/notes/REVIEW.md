@@ -6,7 +6,7 @@ would prove me wrong.
 
 Read these six. Skim the rest.
 
-Run `python check.py` first — it either passes or it doesn't, and it will tell
+Run `python check.py` (in `python/`) first — it either passes or it doesn't, and it will tell
 you whether the mechanical parts are faithful so you can spend attention here.
 
 ---

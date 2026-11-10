@@ -93,7 +93,7 @@ strong given stage 6. With 100 cohorts on the same fine ladder, the CI
 [0.093, 0.132] covers 0.10, and the 20 cohorts behind 0.138 turn out to be an
 unlucky subset (the other 80 average 0.106). I recommend regenerating the page
 from stage 6:
-`python stage4_clusso_fdr.py --from-json results/stage6_exactk_fine_reps100.json --html <out>`.
+`cd python && python stage4_clusso_fdr.py --from-json ../results/stage6_exactk_fine_reps100.json --html <out>`.
 This would change what the public site shows. Two caveats. Stage 6 has no
 fixed_lambda arm, so the page's "0.138 against 0.129" arm comparison would
 need its own source (stage 5 has both arms, but on the coarse ladder) or would

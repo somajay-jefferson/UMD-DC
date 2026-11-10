@@ -122,7 +122,9 @@ def run_meta(args, argv):
 
     return {
         'git_commit': git('rev-parse', 'HEAD'),
-        'git_dirty_src': bool(git('status', '--porcelain', '--untracked-files=no', '--', '..')),
+        # the code this run depends on (was all of src/ before the by-method layout)
+        'git_dirty_src': bool(git('status', '--porcelain', '--untracked-files=no', '--',
+                                  '.', '../../clusso/python', '../../ps_fdr/python')),
         'command': ' '.join(argv),
         'null_ladder': args.null_ladder,
         'design': args.design,

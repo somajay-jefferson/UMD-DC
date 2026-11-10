@@ -6,8 +6,8 @@
 # and draws whatever cells exist. An incomplete grid is fine: missing cells are
 # empty panels or gaps, and a lone n is a single point.
 #
-#     python plot_grid.py results/grid/*.json --out results/figures/grid
-#     python plot_grid.py results/stage6_exactk_fine_reps100.json --stat mean
+#     python plot_grid.py ../results/grid/*.json --out ../results/figures/grid
+#     python plot_grid.py ../results/stage6_exactk_fine_reps100.json --stat mean
 #
 # rho: our data generator has no feature correlation yet, so every current run
 # is rho = 0. A run that records `rho` in its args is placed by it. GRID_PLAN.md
@@ -250,7 +250,7 @@ def figure(cells, metric, stat, n_axis, methods=DEFAULT_METHODS,
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('runs', nargs='+', help='result JSONs (globs ok), one per grid cell')
-    ap.add_argument('--out', default=os.path.join(_HERE, 'results', 'figures', 'grid'))
+    ap.add_argument('--out', default=os.path.join(_HERE, '..', 'results', 'figures', 'grid'))
     ap.add_argument('--stat', choices=('median', 'mean'), default='median',
                     help='median is what the Random CLUSSO paper reports')
     ap.add_argument('--n-axis', type=int, nargs=2, default=(200, 1000),
