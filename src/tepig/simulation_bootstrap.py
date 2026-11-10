@@ -37,7 +37,7 @@ import numpy as np
 from joblib import Parallel, delayed
 
 # shared estimator modules (Mainfunction_albet, SLasso_MSE, utils) live in ../core
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'core'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'clusso', 'python'))
 from Mainfunction_albet import Mainfunction_albet, _glmnet_lasso
 from SLasso_MSE import lambda_CV_mse
 

@@ -34,7 +34,7 @@ import sys
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                '..', 'core'))
+                                '..', '..', 'clusso', 'python'))
 
 from Mainfunction_albet import Mainfunction_albet   # noqa: E402
 from SLasso_MSE import slasso_mse                   # noqa: E402

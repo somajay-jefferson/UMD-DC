@@ -41,7 +41,7 @@ import numpy as np
 from sklearn.linear_model import LassoCV
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(_HERE, '..', 'core'))
+sys.path.insert(0, os.path.join(_HERE, '..', '..', 'clusso', 'python'))
 
 from CLUSSO_Functions_Project1_6_16_23 import simulation_results  # noqa: E402
 from Mainfunction_albet_Structured_OLS import Mainfunction_albet_OLS  # noqa: E402

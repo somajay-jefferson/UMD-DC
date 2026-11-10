@@ -52,7 +52,7 @@ from collections import Counter
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                '..', 'core'))
+                                '..', '..', 'clusso', 'python'))
 
 from CLUSSO_Functions_Project1_6_16_23 import generate_design_matrices  # noqa: E402
 
