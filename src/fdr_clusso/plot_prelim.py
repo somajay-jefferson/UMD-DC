@@ -1,10 +1,10 @@
-# Figures for PRELIM_RESULTS.md, drawn from grid_prelim/*.json and nothing else.
+# Figures for PRELIM_RESULTS.md, drawn from results/grid_prelim/*.json and nothing else.
 #
 # Same plain-SVG approach and palette as plot_stage6.py (no plotting
 # dependency). Three charts: FDP by cell, TPR by cell, and the FDP-vs-TPR trade
 # with an arrow from CLUSSO to FDR-CLUSSO in each cell.
 #
-#   python plot_prelim.py            # writes figures/prelim_*.svg
+#   python plot_prelim.py            # writes results/figures/prelim_*.svg
 #   python plot_prelim.py --table    # also prints the markdown tables
 
 import argparse
@@ -26,12 +26,12 @@ def svg(w, h, body, title):
     return _svg(w, h, EXTRA + '\n' + body, title)
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-FIG = os.path.join(_HERE, 'figures')
+FIG = os.path.join(_HERE, 'results', 'figures')
 Q = 0.10
 METHODS = [('baseline', 'CLUSSO', 's2'), ('exact_k', 'FDR-CLUSSO', 's1')]
 
 
-def load(pattern=os.path.join(_HERE, 'grid_prelim', '*.json')):
+def load(pattern=os.path.join(_HERE, 'results', 'grid_prelim', '*.json')):
     cells = []
     for p in glob.glob(pattern):
         d = json.load(open(p))
@@ -190,7 +190,7 @@ def main():
     }
     for name, s in figs.items():
         open(os.path.join(FIG, name), 'w', encoding='utf-8').write(s)
-        print('wrote', os.path.join('figures', name))
+        print('wrote', os.path.join('results', 'figures', name))
     if a.table:
         print(tables(cells))
 

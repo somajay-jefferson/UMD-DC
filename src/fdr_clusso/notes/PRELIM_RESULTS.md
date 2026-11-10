@@ -50,17 +50,17 @@ Figures and tables come from `plot_prelim.py`, which reads only those files.
 
 ## 1. False discoveries
 
-![FDP by setting](figures/prelim_fdp.svg)
+![FDP by setting](../results/figures/prelim_fdp.svg)
 
 ## 2. Power
 
-![TPR by setting](figures/prelim_tpr.svg)
+![TPR by setting](../results/figures/prelim_tpr.svg)
 
 ## 3. The trade
 
 Each arrow goes from CLUSSO to FDR-CLUSSO on the same 30 datasets.
 
-![FDP vs TPR](figures/prelim_trade.svg)
+![FDP vs TPR](../results/figures/prelim_trade.svg)
 
 ## 4. Full table
 

@@ -38,7 +38,7 @@ Methods compared:
 
 ## 1. False discoveries
 
-![FDP by method](figures/stage6_fdp_by_method.svg)
+![FDP by method](../results/figures/stage6_fdp_by_method.svg)
 
 | method | mean FDP | 95% interval | median FDP | datasets ≤ 0.10 | power | picks | false picks | missed real |
 |---|---|---|---|---|---|---|---|---|
@@ -60,7 +60,7 @@ the 10 real features it found.
   above 0.10, though, so it doesn't prove control either.
 - **It's close to the oracle** (0.096), which has perfect inputs.
 
-![FDP per dataset](figures/stage6_fdp_per_dataset.svg)
+![FDP per dataset](../results/figures/stage6_fdp_per_dataset.svg)
 
 **FDR is an average, not a promise about one dataset.** FDR-CLUSSO had zero
 false picks on 33 datasets, but above 20% on 21 of them (worst 0.33). CLUSSO
@@ -69,7 +69,7 @@ alone was above 20% on 72. A single real-data analysis can land well above
 
 ## 2. Prediction and coefficient accuracy
 
-![R squared per dataset](figures/stage6_r2.svg)
+![R squared per dataset](../results/figures/stage6_r2.svg)
 
 | method | β bias, mean | β bias, median | MSE, median | R², mean | R², min |
 |---|---|---|---|---|---|
@@ -147,8 +147,8 @@ CLUSSO alone, with prediction unchanged.
 
 | file | what |
 |---|---|
-| `stage6_exactk_fine_reps100.json` / `.log` | headline run, 40-step ladder |
-| `stage6_report.md` | full analysis of that run, including the ladder comparison and checks |
-| `stage5_reps100.json` / `.log` | 13-step ladder run, both FDR variants |
+| `results/stage6_exactk_fine_reps100.json` / `.log` | headline run, 40-step ladder |
+| `notes/stage6_report.md` | full analysis of that run, including the ladder comparison and checks |
+| `results/stage5_reps100.json` / `.log` | 13-step ladder run, both FDR variants |
 | `plot_stage6.py` | regenerates every figure from the run files |
-| `figures/` | the three figures, plus cached Var(Y) for R² |
+| `results/figures/` | the three figures, plus cached Var(Y) for R² |

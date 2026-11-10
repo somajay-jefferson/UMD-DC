@@ -11,7 +11,7 @@
 #
 # R^2 needs Var(Y), which the runs don't store. It is recomputed by regenerating
 # each cohort from its seed (same draws, see stage1_noise.make_cohort_full) and
-# cached in figures/stage6_var_y.json, so only the first call is slow.
+# cached in results/figures/stage6_var_y.json, so only the first call is slow.
 
 import json
 import os
@@ -19,7 +19,7 @@ import os
 import numpy as np
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-FIG = os.path.join(_HERE, 'figures')
+FIG = os.path.join(_HERE, 'results', 'figures')
 Q = 0.10
 
 STYLE = """<style>
@@ -59,8 +59,8 @@ def ci(a):
 
 
 def load():
-    s6 = json.load(open(os.path.join(_HERE, 'stage6_exactk_fine_reps100.json')))
-    s5 = json.load(open(os.path.join(_HERE, 'stage5_reps100.json')))
+    s6 = json.load(open(os.path.join(_HERE, 'results', 'stage6_exactk_fine_reps100.json')))
+    s5 = json.load(open(os.path.join(_HERE, 'results', 'stage5_reps100.json')))
     return s6, s5
 
 
