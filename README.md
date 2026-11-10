@@ -19,23 +19,37 @@ implementation it was ported from.
 ## Directory structure
 
 ```
-docs/       GitHub Pages site (served from master /docs)
-src/
-  core/     Core CLUSSO: alternating structured lasso on (cluster, feature) matrices
-  tepig/    TEPIG extension: tensor model on (cluster, feature, slide) data
-  fdr/      PS-Fdr: false discovery control for penalized selection (He et al. 2018)
-Random_CLUSSO_*.R      "Random CLUSSO" variant applied to real biopsy data (R only)
-clussocode.zip          Clean R reference implementation, mirrors src/core/ 1:1
-Supplemental_Code.zip   Adjacent R codebase for Random CLUSSO real-data analysis
-clussocode.Rproj        RStudio project file for the R sources
+Organized by method. Each method folder holds its Python code (`python/`),
+its R original (`r/`), and its paper plus our summary (`paper/`), where they exist.
+
+```
+docs/              GitHub Pages site (served from master /docs)
+clusso/            Core CLUSSO: alternating structured lasso on (cluster, feature) matrices
+  python/
+  r/               clussocode.zip (mirrors python/ 1:1), clussocode.Rproj
+  paper/
+random_clusso/     "Random CLUSSO" variant applied to real biopsy data (R only)
+  r/               Random_CLUSSO_*.R, Supplemental_Code.zip
+  paper/           (local only, not committed; cite by DOI 10.1002/sam.70078)
+ps_fdr/            PS-Fdr: false discovery control for penalized selection (He et al. 2018)
+  python/
+  paper/
+fdr_clusso/        PS-Fdr composed with CLUSSO
+  python/          scripts
+  results/         run outputs (json, logs) and figures
+  notes/           write-ups: RESULTS, REVIEW, RUNS, ...
+tepig/             TEPIG extension: tensor model on (cluster, feature, slide) data
+  python/
+external/
+  TEPIG/           Alec's TEPIG codebase, kept as he wrote it (has its own README)
 ```
 
-### `src/core/` — CLUSSO
+### `clusso/python/` — CLUSSO
 
 | File | Purpose |
 |---|---|
 | `Mainfunction_albet.py` | Alternating optimizer: fixes `alpha`, solves sparse `beta` via lasso; fixes `beta`, solves `alpha` via OLS; repeats to convergence. `_glmnet_lasso` reimplements R `glmnet`'s centering/scaling so results match the R version exactly. |
-| `Mainfunction_albet_Structured_OLS.py` | Port of `Supplemental_Code.zip`'s `Mainfunction_albet_Structured_OLS.r`: the same alternation with plain OLS in both steps and no threshold. Random CLUSSO uses it to refit a selected feature set so the set has an MSE; `src/fdr_clusso/controls.py` uses it the same way for the PS-Fdr arms. |
+| `Mainfunction_albet_Structured_OLS.py` | Port of `Supplemental_Code.zip`'s `Mainfunction_albet_Structured_OLS.r`: the same alternation with plain OLS in both steps and no threshold. Random CLUSSO uses it to refit a selected feature set so the set has an MSE; `fdr_clusso/python/controls.py` uses it the same way for the PS-Fdr arms. |
 | `mat_vec_prd.py` | Tensor x vector products used in each alternation step. |
 | `K_prdu.py` | Kronecker product helper, used for the convergence check `‖β⊗α − β0⊗α0‖`. |
 | `coefficient.py` | Standalone glmnet-equivalent lasso path fitter with BIC lambda selection. A faithful port of the R `coefficient.r`, but currently **unused** — nothing in the Python codebase imports it, and the naive baseline calls sklearn's `LassoCV` directly. |
@@ -43,7 +57,7 @@ clussocode.Rproj        RStudio project file for the R sources
 | `CLUSSO_Simulations_Project1_6_16_23.py` | Batch driver over a large parameter grid (noise, sparsity, `n`, `q`); one job per grid row, 1000 reps each, writes CSV results. |
 | `CLUSSO_Data_Example.py` | End-to-end worked example: synthetic data -> GMM clustering -> CLUSSO fit vs. naive baseline -> printed coefficients and MSE. |
 
-### `src/tepig/` — TEPIG
+### `tepig/python/` — TEPIG
 
 | File | Purpose |
 |---|---|
@@ -51,13 +65,13 @@ clussocode.Rproj        RStudio project file for the R sources
 | `simulation_bootstrap.py` | Same estimator family, but bootstraps from real pre-clustered subject data instead of generating fully synthetic data, for a more realistic noise/covariance structure. |
 | `summarize_synthetic.py` | Aggregates the per-setting `.pkl` outputs of `simulation_synthetic.py` across the full `(n, q, sparsity)` grid into one comparison table. |
 
-`simulation_bootstrap.py` and `simulation_synthetic.py` locate `src/core/` and
+`simulation_bootstrap.py` and `simulation_synthetic.py` locate `clusso/python/` and
 the output directory relative to their own path (`sys.path` includes
-`../core`; outputs are written to `../../outputs`), so they must be run from
-inside `src/tepig/` with `src/core/` as a sibling — the layout above is
-required, not just a suggestion.
+`../../clusso/python`; outputs are written to `outputs/` at the repo root), so
+the layout above is required, not just a suggestion. Scripts in
+`fdr_clusso/python/` find `clusso/python/` and `ps_fdr/python/` the same way.
 
-### `src/fdr/` — PS-Fdr
+### `ps_fdr/python/` — PS-Fdr
 
 | File | Purpose |
 |---|---|
@@ -65,22 +79,22 @@ required, not just a suggestion.
 | `PS_Fdr_Data_Example.py` | End-to-end worked example on 70 subjects and 30 features, 5 of them real: the CV-lasso baseline, every intermediate quantity of the four steps, and (with `--reps`) the same pipeline repeated over many cohorts. `--json` dumps the numbers the documentation page renders. |
 | `PS_Fdr_Tiny_Example.py` | The same four steps at 50 subjects, 8 predictors, `B = M = 20` — small enough that every table on the docs page can be recomputed by hand, including the 20x8 bootstrap grid and the whole permuted null. `--html` writes the `<section>` that `docs/ps-fdr.html` embeds, so those tables are generated from the run rather than transcribed. |
 
-Standalone: nothing in `src/fdr/` imports `src/core/`, because PS-Fdr as
+Standalone: nothing in `ps_fdr/python/` imports `clusso/python/`, because PS-Fdr as
 published takes a fixed design matrix, and CLUSSO manufactures its design
 matrix inside the estimator. Composing the two is an open problem, written up
 at https://somajay-jefferson.github.io/UMD-DC/fdr-clusso.html.
 
 ### R implementation
 
-- `clussocode.zip` — clean R reference implementation matching `src/core/`
+- `clusso/r/clussocode.zip` — clean R reference implementation matching `clusso/python/`
   file-for-file (`Mainfunction_albet.r`, `coefficient.r`, `K_prdu.r`,
   `mat_vec_prd.r`, `SLasso_MSE.R`, `CLUSSO_Functions_Project1_6_16_23.R`,
   `CLUSSO_Data_Example.R`).
-- `Supplemental_Code.zip` / `Random_CLUSSO_*.R` — a related "Random CLUSSO"
+- `random_clusso/r/Supplemental_Code.zip` / `random_clusso/r/Random_CLUSSO_*.R` — a related "Random CLUSSO"
   variant applied to real biopsy data (reads `ptvars.sas7bdat` /
   `tubulefeatures.sas7bdat`, outcome `eGFRatBx`). This variant and its
   Flex-Threshold `Mainfunction_albet` variant exist only in R; the
-  Structured-OLS variant is ported as `src/core/Mainfunction_albet_Structured_OLS.py`.
+  Structured-OLS variant is ported as `clusso/python/Mainfunction_albet_Structured_OLS.py`.
   There is no TEPIG (tensor) equivalent.
 
 ## Cross-validation module
@@ -99,32 +113,35 @@ than five subjects raises a `ValueError` rather than silently returning `NaN`
 from an empty test fold as the R version does. Note also that
 `Supplemental_Code.zip` carries a *different* copy of these three functions with
 an extra `thresh` argument, used by Random CLUSSO — the version here matches the
-call sites in `src/`.
+call sites in this repo's Python.
 
 ## Running
 
 ```bash
 # Worked example: synthetic data, CLUSSO vs. naive baseline
-cd src/core && python CLUSSO_Data_Example.py
+cd clusso/python && python CLUSSO_Data_Example.py
 
 # Batch CLUSSO simulation grid (1-indexed job selects one grid row)
-cd src/core && python CLUSSO_Simulations_Project1_6_16_23.py <job_index>
+cd clusso/python && python CLUSSO_Simulations_Project1_6_16_23.py <job_index>
 
 # PS-Fdr worked example (add --reps 200 for the repeated-cohort study)
-cd src/fdr && python PS_Fdr_Data_Example.py
+cd ps_fdr/python && python PS_Fdr_Data_Example.py
 
 # The hand-checkable version, and the docs section it generates
-cd src/fdr && python PS_Fdr_Tiny_Example.py
-cd src/fdr && python PS_Fdr_Tiny_Example.py --html frag.html
+cd ps_fdr/python && python PS_Fdr_Tiny_Example.py
+cd ps_fdr/python && python PS_Fdr_Tiny_Example.py --html frag.html
 
 # TEPIG synthetic simulation study
-cd src/tepig && python simulation_synthetic.py --n 300 --q 10 --sparsity 0.8
+cd tepig/python && python simulation_synthetic.py --n 300 --q 10 --sparsity 0.8
 
 # Aggregate TEPIG synthetic results across the full grid
-cd src/tepig && python summarize_synthetic.py
+cd tepig/python && python summarize_synthetic.py
 
 # TEPIG bootstrap simulation from real pre-clustered data
-cd src/tepig && python simulation_bootstrap.py
+cd tepig/python && python simulation_bootstrap.py
+
+# FDR-CLUSSO: redraw the figures from the committed runs
+cd fdr_clusso/python && python plot_stage6.py && python plot_prelim.py
 ```
 
 Requires: `numpy`, `scikit-learn`, `pandas`, `joblib`.
