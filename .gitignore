@@ -20,3 +20,7 @@ CLAUDE.md
 
 # Random CLUSSO paper (Wiley download): kept local, not published. Cite by DOI 10.1002/sam.70078.
 papers/Random_CLUSSO.pdf
+
+# Console output of local runs (the run's own .log next to its .json is kept)
+*.err
+*_run.log
