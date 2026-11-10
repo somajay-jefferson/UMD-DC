@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 396" width="720" height="396" role="img" aria-label="False discovery proportion by cell (mean, 95% CI)">
+<title>False discovery proportion by cell (mean, 95% CI)</title>
+<style>
+  .bg{fill:#fcfcfb} .ink{fill:#0b0b0b} .ink2{fill:#52514e} .mute{fill:#898781}
+  .grid{stroke:#e1e0d9} .axis{stroke:#c3c2b7} .s1{fill:#2a78d6} .s1l{stroke:#2a78d6}
+  .s2{fill:#eb6834} .gray{fill:#898781} .grayl{stroke:#898781} .ring{stroke:#fcfcfb}
+  .tgt{stroke:#52514e}
+  text{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-variant-numeric:tabular-nums}
+  @media (prefers-color-scheme: dark){
+    .bg{fill:#1a1a19} .ink{fill:#ffffff} .ink2{fill:#c3c2b7}
+    .grid{stroke:#2c2c2a} .axis{stroke:#383835} .s1{fill:#3987e5} .s1l{stroke:#3987e5}
+    .s2{fill:#d95926} .ring{stroke:#1a1a19} .tgt{stroke:#c3c2b7}
+  }
+</style>
+<rect class="bg" width="720" height="396" rx="8"/>
+<style>.s2l{stroke:#eb6834} @media (prefers-color-scheme: dark){.s2l{stroke:#d95926}}</style>
+<text class="ink" x="20" y="28" font-size="15" font-weight="600">False discovery proportion by cell (mean, 95% CI)</text>
+<circle class="s2" cx="470" cy="24" r="5"/><text class="ink2" x="480" y="28" font-size="12">CLUSSO</text>
+<circle class="s1" cx="550" cy="24" r="5"/><text class="ink2" x="560" y="28" font-size="12">FDR-CLUSSO</text>
+<line class="grid" x1="130.0" x2="130.0" y1="56" y2="340"/>
+<text class="mute" x="130.0" y="358" font-size="11" text-anchor="middle">0</text>
+<line class="grid" x1="270.0" x2="270.0" y1="56" y2="340"/>
+<text class="mute" x="270.0" y="358" font-size="11" text-anchor="middle">0.1</text>
+<line class="grid" x1="410.0" x2="410.0" y1="56" y2="340"/>
+<text class="mute" x="410.0" y="358" font-size="11" text-anchor="middle">0.2</text>
+<line class="grid" x1="550.0" x2="550.0" y1="56" y2="340"/>
+<text class="mute" x="550.0" y="358" font-size="11" text-anchor="middle">0.3</text>
+<line class="grid" x1="690.0" x2="690.0" y1="56" y2="340"/>
+<text class="mute" x="690.0" y="358" font-size="11" text-anchor="middle">0.4</text>
+<text class="ink2" x="410.0" y="380" font-size="12" text-anchor="middle">false discovery proportion</text>
+<line class="tgt" x1="270.0" x2="270.0" y1="50" y2="340" stroke-dasharray="4 3" stroke-width="1.5"/>
+<text class="ink2" x="274.0" y="48" font-size="11">target 0.1</text>
+<text class="ink" x="118" y="91.0" font-size="12" text-anchor="end">q = 20, ρ = 0</text>
+<line class="s2l" x1="263.6" x2="413.3" y1="81.0" y2="81.0" stroke-width="2" stroke-linecap="round"/>
+<circle class="s2 ring" cx="338.4" cy="81.0" r="5" stroke-width="1.5"><title>CLUSSO, q = 20, ρ = 0: 0.149 [0.095, 0.202]</title></circle>
+<line class="s1l" x1="142.4" x2="190.2" y1="93.0" y2="93.0" stroke-width="2" stroke-linecap="round"/>
+<circle class="s1 ring" cx="166.3" cy="93.0" r="5" stroke-width="1.5"><title>FDR-CLUSSO, q = 20, ρ = 0: 0.026 [0.009, 0.043]</title></circle>
+<text class="ink" x="118" y="137.0" font-size="12" text-anchor="end">q = 20, ρ = 0.6</text>
+<line class="s2l" x1="199.6" x2="353.7" y1="127.0" y2="127.0" stroke-width="2" stroke-linecap="round"/>
+<circle class="s2 ring" cx="276.6" cy="127.0" r="5" stroke-width="1.5"><title>CLUSSO, q = 20, ρ = 0.6: 0.105 [0.050, 0.160]</title></circle>
+<line class="s1l" x1="130.0" x2="156.1" y1="139.0" y2="139.0" stroke-width="2" stroke-linecap="round"/>
+<circle class="s1 ring" cx="141.0" cy="139.0" r="5" stroke-width="1.5"><title>FDR-CLUSSO, q = 20, ρ = 0.6: 0.008 [0.000, 0.019]</title></circle>
+<text class="ink" x="118" y="183.0" font-size="12" text-anchor="end">q = 50, ρ = 0</text>
+<line class="s2l" x1="332.4" x2="479.1" y1="173.0" y2="173.0" stroke-width="2" stroke-linecap="round"/>
+<circle class="s2 ring" cx="405.7" cy="173.0" r="5" stroke-width="1.5"><title>CLUSSO, q = 50, ρ = 0: 0.197 [0.145, 0.249]</title></circle>
+<line class="s1l" x1="147.0" x2="198.5" y1="185.0" y2="185.0" stroke-width="2" stroke-linecap="round"/>
+<circle class="s1 ring" cx="172.7" cy="185.0" r="5" stroke-width="1.5"><title>FDR-CLUSSO, q = 50, ρ = 0: 0.031 [0.012, 0.049]</title></circle>
+<text class="ink" x="118" y="229.0" font-size="12" text-anchor="end">q = 50, ρ = 0.6</text>
+<line class="s2l" x1="152.7" x2="236.2" y1="219.0" y2="219.0" stroke-width="2" stroke-linecap="round"/>
+<circle class="s2 ring" cx="194.4" cy="219.0" r="5" stroke-width="1.5"><title>CLUSSO, q = 50, ρ = 0.6: 0.046 [0.016, 0.076]</title></circle>
+<line class="s1l" x1="130.0" x2="154.0" y1="231.0" y2="231.0" stroke-width="2" stroke-linecap="round"/>
+<circle class="s1 ring" cx="140.1" cy="231.0" r="5" stroke-width="1.5"><title>FDR-CLUSSO, q = 50, ρ = 0.6: 0.007 [0.000, 0.017]</title></circle>
+<text class="ink" x="118" y="275.0" font-size="12" text-anchor="end">q = 100, ρ = 0</text>
+<line class="s2l" x1="416.8" x2="587.6" y1="265.0" y2="265.0" stroke-width="2" stroke-linecap="round"/>
+<circle class="s2 ring" cx="502.2" cy="265.0" r="5" stroke-width="1.5"><title>CLUSSO, q = 100, ρ = 0: 0.266 [0.205, 0.327]</title></circle>
+<line class="s1l" x1="183.6" x2="308.4" y1="277.0" y2="277.0" stroke-width="2" stroke-linecap="round"/>
+<circle class="s1 ring" cx="246.0" cy="277.0" r="5" stroke-width="1.5"><title>FDR-CLUSSO, q = 100, ρ = 0: 0.083 [0.038, 0.127]</title></circle>
+<text class="ink" x="118" y="321.0" font-size="12" text-anchor="end">q = 100, ρ = 0.6</text>
+<line class="s2l" x1="143.7" x2="195.8" y1="311.0" y2="311.0" stroke-width="2" stroke-linecap="round"/>
+<circle class="s2 ring" cx="169.7" cy="311.0" r="5" stroke-width="1.5"><title>CLUSSO, q = 100, ρ = 0.6: 0.028 [0.010, 0.047]</title></circle>
+<line class="s1l" x1="136.0" x2="195.3" y1="323.0" y2="323.0" stroke-width="2" stroke-linecap="round"/>
+<circle class="s1 ring" cx="165.7" cy="323.0" r="5" stroke-width="1.5"><title>FDR-CLUSSO, q = 100, ρ = 0.6: 0.025 [0.004, 0.047]</title></circle>
+</svg>
