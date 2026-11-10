@@ -5,8 +5,8 @@
 # lands on twentieths, D(u) is a two-step calculation, and the whole permuted
 # null fits in one 20 x 8 table.
 #
-#   cd src/fdr && python PS_Fdr_Tiny_Example.py
-#   cd src/fdr && python PS_Fdr_Tiny_Example.py --html frag.html
+#   cd ps_fdr/python && python PS_Fdr_Tiny_Example.py
+#   cd ps_fdr/python && python PS_Fdr_Tiny_Example.py --html frag.html
 #
 # --html writes the <section> that docs/ps-fdr.html embeds, so every table on
 # that page comes out of this run instead of being transcribed by hand.
@@ -197,7 +197,7 @@ def html(r, probe):
     w = o.append
 
     w('<!-- ============ TINY EXAMPLE — generated, do not hand-edit ============ -->')
-    w('<!-- cd src/fdr && python PS_Fdr_Tiny_Example.py --html frag.html        -->')
+    w('<!-- cd ps_fdr/python && python PS_Fdr_Tiny_Example.py --html frag.html        -->')
     w('  <section>')
     w('    <h2>Fifty subjects, eight predictors, nothing left out</h2>')
     w('    <h3>Small enough to check by hand</h3>')

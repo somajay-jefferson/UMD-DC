@@ -11,8 +11,8 @@
 #
 # Run with --json <path> to dump the numbers the documentation page renders.
 #
-#   cd src/fdr && python PS_Fdr_Data_Example.py
-#   cd src/fdr && python PS_Fdr_Data_Example.py --reps 200 --json out.json
+#   cd ps_fdr/python && python PS_Fdr_Data_Example.py
+#   cd ps_fdr/python && python PS_Fdr_Data_Example.py --reps 200 --json out.json
 
 import argparse
 import json

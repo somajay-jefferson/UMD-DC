@@ -1,7 +1,7 @@
 # CLUSSO plugged into PS-Fdr's estimator seam.
 #
 # `ps_fdr` calls its estimator in exactly four places and never inspects it
-# otherwise (see the seam comment in src/fdr/ps_fdr.py). This module supplies
+# otherwise (see the seam comment in ps_fdr/python/ps_fdr.py). This module supplies
 # those four methods for CLUSSO, so PS-Fdr runs unchanged with CLUSSO where the
 # lasso was.
 #
@@ -18,7 +18,7 @@
 #   lives on the selector object and the caller reads it afterwards.
 #
 # Kept separate from clusso_select.py on purpose: that module deliberately
-# imports only from src/core/, and this one needs src/fdr/.
+# imports only from clusso/python/, and this one needs ps_fdr/python/.
 
 import os
 import sys

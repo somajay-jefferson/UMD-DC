@@ -1,12 +1,12 @@
 # CLUSSO as a pure, deterministic selection rule.
 #
-# PS-Fdr (src/fdr/ps_fdr.py) needs one thing from an estimator: given a design
+# PS-Fdr (ps_fdr/python/ps_fdr.py) needs one thing from an estimator: given a design
 # and an outcome, hand back the set of variables it kept. This module supplies
 # that for CLUSSO, in the two forms PS-Fdr asks for -- a CV-tuned rule for the
 # real-data arm, and a size-constrained rule for the permuted arm.
 #
 # Two properties are load-bearing and are the reason this file exists rather
-# than the call sites in src/core/ being reused directly:
+# than the call sites in clusso/python/ being reused directly:
 #
 #   Pure. Nothing here touches the global numpy random stream. `Mainfunction_albet`
 #   is already a pure deterministic function of its arguments -- sklearn's Lasso
@@ -24,7 +24,7 @@
 #   this way is conditional on that one clustering solution. That is a real
 #   caveat, not a technicality -- clustering accuracy dominates CLUSSO's error.
 #
-# src/core/ is not modified. `Mainfunction_albet` and `slasso_mse` are called
+# clusso/python/ is not modified. `Mainfunction_albet` and `slasso_mse` are called
 # directly; only the fold logic is reimplemented.
 
 import functools

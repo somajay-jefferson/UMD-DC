@@ -203,7 +203,7 @@ The paper's own discussion lists these extensions:
   unfinished business by CLUSSO's own authors.
 - Extending Ou-Yang et al.'s sparse tensor regression to generalize CLUSSO from
   2D unbalanced predictors to unbalanced arrays of >2 dimensions — this is
-  essentially what this repo's `src/tepig/` code already does (adding a "slide"
+  essentially what this repo's `tepig/python/` code already does (adding a "slide"
   mode `S` on top of cluster `G` and feature `q`).
 - Allowing different subjects to have different numbers of latent clusters.
 - Studying CLUSSO's performance under different measurement-error models for

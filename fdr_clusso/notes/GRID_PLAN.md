@@ -73,7 +73,7 @@ From the paper's §3.2 and `Random_CLUSSO_Functions_Simulate_Real_Data.R`.
 - It's smaller than it looks. Their generator is the same as core's except for one draw: each subject's latent 2 × q matrix comes from a matrix normal instead of independent normals.
   - At ρ = 0 the two are the same distribution, just with different constants.
   - So the change is that one draw (X = M + A Z Bᵀ, done in numpy, with no MixMatrix dependency) plus their constants: means 5/10, 100 tubules, β = 3 on the middle 40%.
-- It belongs in `src/fdr_clusso/`, not `src/core/`. Core's generator stays untouched, and the R file is its twin.
+- It belongs in `fdr_clusso/`, not `clusso/python/`. Core's generator stays untouched, and the R file is its twin.
 - New args: `--design`, `--rho`. `run_grid.py` gets a `--rho` list. `plot_grid.py` already places runs by `args.rho`.
 - **Effort:** small to medium. **Check needed:** at ρ = 0, the port's summary statistics should match core's generator with the constants swapped.
 
@@ -84,7 +84,7 @@ From the paper's §3.2 and `Random_CLUSSO_Functions_Simulate_Real_Data.R`.
 - **Risk:** their grid tops out at λ = 5. Our permuted arm needs a λ sparse enough to land under k, so check `exhausted_rate` on a quick run before trusting it.
 
 **#3. The 0.01 coefficient threshold. ✅ Done in #16:** `--thresh`, default 0.01 for the whole pipeline; core keeps 0.001 as its own default. The original reasoning follows.
-- 0.001 is hardcoded inside core's `Mainfunction_albet`. Matching theirs means a parameter in `src/core/`, which is REVIEW open question 3. Default 0.001 would change no existing result.
+- 0.001 is hardcoded inside core's `Mainfunction_albet`. Matching theirs means a parameter in `clusso/python/`, which is REVIEW open question 3. Default 0.001 would change no existing result.
 - It matters. The stage 4 and 5 runs found the cut plausibly deciding bare CLUSSO's support on 44–60% of cohorts (REVIEW §6 has the mechanism), so 0.01 will change TPR/FPR, especially for CLUSSO.
 - **Decision needed:** edit core, or plot with ours and say so on the figures.
 

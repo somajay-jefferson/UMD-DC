@@ -110,8 +110,8 @@ drifting; I added a third.
 Currently 0.00e+00.
 
 **The better fix I did not do:** factor the scoring out of `slasso_mse` so there
-is one copy. That means editing `src/core/`, which the whole design avoids. If
-you would rather take the `src/core/` edit, say so — I think it is the cleaner
+is one copy. That means editing `clusso/python/`, which the whole design avoids. If
+you would rather take the `clusso/python/` edit, say so — I think it is the cleaner
 end state.
 
 ---
@@ -183,7 +183,7 @@ previously printed the number and gated on nothing.
 
 ---
 
-## 6. The support definition inherited from `src/core/`
+## 6. The support definition inherited from `clusso/python/`
 
 **Where:** `clusso_select.py:support_mask`, `threshold_binding`
 
@@ -207,14 +207,14 @@ plausibly deciding the answer. That is a diagnostic, not a fix.
 **The real fix:** make the threshold a parameter of `Mainfunction_albet` — which
 the R Random-CLUSSO variant already does (`Random_CLUSSO_Functions_Simulate_Real_Data.R:685`
 takes a `thresh` argument). The Python port hardcodes it. Doing this means
-editing `src/core/`.
+editing `clusso/python/`.
 
 ---
 
 ## Things I am NOT asking you to review
 
 `clusso_fit`, `clusso_objective`, `make_folds`, `cv_mse`, `clusso_fit_cv`,
-`support_mask` are thin and pinned against `src/core/` by `check.py`. If the
+`support_mask` are thin and pinned against `clusso/python/` by `check.py`. If the
 checks pass, they are faithful. If you want to spot-check one, `clusso_objective`
 is the only one with no parity check — it follows
 `CLUSSO_Data_Example.py:162-166` by eye, and only ever ranks starts against each
@@ -341,7 +341,7 @@ normalised-then-cut coefficients. `check.py` c13 pins it.
 a diagnostic finding. Truncation now ranks features *by* those same coefficients,
 so the cut is no longer only deciding the support -- it is also deciding which
 features survive truncation. That raises the stakes on section 6's "real fix"
-(parameterising the threshold, which means editing `src/core/`) without settling
+(parameterising the threshold, which means editing `clusso/python/`) without settling
 it. `stage4_clusso_fdr.py` reports the binding rate per run.
 
 **What would prove this wrong:** a material `exhausted_rate` in `stage4.json`, or
@@ -489,9 +489,9 @@ the page alone until the 100-replication run below replaces the numbers.
    al. use 0.25-0.40 with random signs). The sparsity axis is the direct test of
    whether the null_top gap is a k/p accident. Confirm odd cells with arm A.
 3. Correlated features (He et al. AR1 0.6, Rubin's Random CLUSSO ρ=0.9) last. It
-   needs a `src/core/` generator change and the matching R change.
+   needs a `clusso/python/` generator change and the matching R change.
 
-Keep the 0.001 coefficient threshold -- it matches the paper and `src/core/`.
+Keep the 0.001 coefficient threshold -- it matches the paper and `clusso/python/`.
 Rubin's later code uses 0.01, and since the cut binds on 60% of baseline fits,
 switching would change results, not tidy them.
 
@@ -628,7 +628,7 @@ binds.
    deterministic rule matches it 80% of the time. It was on the ceiling.
 2. ~~Is conditional-on-one-clustering statable or fatal?~~ **Decided: proceed
    frozen, measure the cost in stage 5. See section 4.**
-3. Is taking the `src/core/` edit worth it? **Still open.** My recommendation is
+3. Is taking the `clusso/python/` edit worth it? **Still open.** My recommendation is
    no to the `_score_fold` de-duplication, since `check.py` already pins it at
    zero tolerance, and not yet to parameterising the 0.001 threshold, since that
    is currently a diagnostic finding rather than a demonstrated problem. Worth

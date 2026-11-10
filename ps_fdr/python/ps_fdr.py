@@ -165,7 +165,7 @@ def lasso_support_at_lambda(X, y, lam):
 # `LASSO_SELECTOR` calls exactly what this module called before the seam
 # existed, so the default path is unchanged by construction.  An alternative
 # estimator supplies the same four methods; see
-# src/fdr_clusso/clusso_ps_fdr.py.
+# fdr_clusso/python/clusso_ps_fdr.py.
 #
 # Nothing below indexes X beyond `X[idx]` (resample along axis 0) and
 # `X.shape[-1]` (count features), both of which mean the right thing for a 2-D

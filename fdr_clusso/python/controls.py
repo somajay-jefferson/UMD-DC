@@ -7,7 +7,7 @@
 #            line from the naive block inside core's CLUSSO_performance
 #            (CLUSSO_Functions_Project1_6_16_23.py:217-266). That block is
 #            inline there, so it can't be called alone without editing
-#            src/core/. It is also what He et al. call CV-lasso.
+#            clusso/python/. It is also what He et al. call CV-lasso.
 #
 #   oracle   Full Information Structured Lasso: CLUSSO's own estimator on the
 #            TRUE latent tubules, so no clustering error at all. Fitted exactly

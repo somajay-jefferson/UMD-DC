@@ -7,7 +7,7 @@
 #
 # The valuable ones are the PARITY checks. clusso_select.py wraps code that
 # already exists and is already trusted, so the question that matters is not
-# "does it look right" but "does it reproduce what src/core/ does". Anywhere the
+# "does it look right" but "does it reproduce what clusso/python/ does". Anywhere the
 # answer is no, either the wrapper is broken or the difference is deliberate --
 # and the deliberate ones are named here so they cannot hide.
 #
@@ -69,7 +69,7 @@ def toy(seed=0, P=2, q=25, n=90, sigma=1.0):
 
 
 # ---------------------------------------------------------------------------
-# parity: does the wrapper reproduce src/core exactly?
+# parity: does the wrapper reproduce clusso/python exactly?
 # ---------------------------------------------------------------------------
 
 def c1_fit_is_passthrough():

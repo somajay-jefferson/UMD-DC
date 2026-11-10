@@ -4,7 +4,7 @@ Every saved result in `../results/`, with what produced it. One row per file.
 Add a row when a run is committed.
 
 From 2026-10-26 on, `stage4_clusso_fdr.py` stamps a `meta` block into its JSON:
-git commit, whether `src/` had uncommitted changes, the exact command, both λ
+git commit, whether the code it depends on (`fdr_clusso/python`, `clusso/python`, `ps_fdr/python`; all of `src/` before the by-method layout) had uncommitted changes, the exact command, both λ
 ladders, start and finish time, and wall-clock minutes. Older files predate it,
 so their code version below is reconstructed from git history.
 
